@@ -4,7 +4,7 @@
   <title><![CDATA[Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T18:27:42-05:00</updated>
+  <updated>2013-12-01T18:42:27-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,36 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Predefined Macros]]></title>
+    <link href="http://741MHz.com/predefined-macros/"/>
+    <updated>2010-10-17T00:00:00-04:00</updated>
+    <id>http://741MHz.com/predefined-macros</id>
+    <content type="html"><![CDATA[<p>Every C and C++ compiler has several object-like macros that are implicitly defined and can be used  without supplying their definitions on the command line or through including header files. Such macros are called &ldquo;predefined&rdquo; and can help figure out for what architecture you compile for, on what platform, if the source code being compiled is C or C++, and even tell the language standard of the code being used.</p>
+
+<p>All predefined macros are described in GCC online documentation. However, not all of them are guaranteed to be defined. Sometimes it is helpful to see a list of macros defined by the compiler with their values, if any. To do that, run a preprocessor with zero input, using the following command:</p>
+
+<pre><code>cpp -dM &lt;/dev/null
+</code></pre>
+
+<p>This will produce the output like this:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>#define __unix__ 1
+</span><span class='line'>#define __x86_64 1
+</span><span class='line'>#define __DBL_MIN_10_EXP__ (-307)
+</span><span class='line'>#define __FINITE_MATH_ONLY__ 0
+</span><span class='line'>#define __GNUC_PATCHLEVEL__ 3</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the above output we can tell that code is being compiled for x86_64 architecture. The output may change depending on the platform and/or compiler settings.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Inotify: Wait For File]]></title>
