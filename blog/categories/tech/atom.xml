@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Tech | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/tech/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T18:42:27-05:00</updated>
+  <updated>2013-12-01T19:04:42-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,20 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Unique Lines Without Sorting]]></title>
+    <link href="http://741MHz.com/awk-uniq/"/>
+    <updated>2010-10-23T00:00:00-04:00</updated>
+    <id>http://741MHz.com/awk-uniq</id>
+    <content type="html"><![CDATA[<p>Today I ran into a small problem where I had a set of unsorted lines of text and wanted to remove duplicate lines without sorting the data. Both <code>uniq</code> and <code>sort -u</code> commands require data to be sorted, so they won&rsquo;t work. There is a way of doing this with AWK:</p>
+
+<pre><code>awk '!($0 in lines) { lines[$0]; print }'
+</code></pre>
+
+<p>The above script will collect unique lines in order of their appearance and store them in array called lines that gets printed at the end. This probably won&rsquo;t work for huge data sets but works well on up to a few thousand lines of text.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Predefined Macros]]></title>
@@ -46,7 +60,7 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Inotify: Wait For File]]></title>
+    <title type="html"><![CDATA[Wait For File With Inotify]]></title>
     <link href="http://741MHz.com/inotify-wait/"/>
     <updated>2010-09-29T00:00:00-04:00</updated>
     <id>http://741MHz.com/inotify-wait</id>

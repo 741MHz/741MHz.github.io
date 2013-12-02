@@ -2,11 +2,15 @@
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
         <loc>http://741MHz.com/inotify-wait/</loc>
-        <lastmod>2013-12-01T18:16:20-05:00</lastmod>
+        <lastmod>2013-12-01T19:02:07-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/predefined-macros/</loc>
-        <lastmod>2013-12-01T18:35:16-05:00</lastmod>
+        <lastmod>2013-12-01T18:59:12-05:00</lastmod>
+    </url>
+    <url>
+        <loc>http://741MHz.com/awk-uniq/</loc>
+        <lastmod>2013-12-01T18:58:52-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/assets/bootstrap/about.html</loc>
@@ -30,7 +34,7 @@
     </url>
     <url>
         <loc>http://741MHz.com/assets/bootstrap/</loc>
-        <lastmod>2013-12-01T18:35:16-05:00</lastmod>
+        <lastmod>2013-12-01T19:02:07-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/assets/bootstrap/javascript.html</loc>
@@ -38,11 +42,11 @@
     </url>
     <url>
         <loc>http://741MHz.com/blog/archives/</loc>
-        <lastmod>2013-12-01T18:35:16-05:00</lastmod>
+        <lastmod>2013-12-01T19:02:07-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/</loc>
-        <lastmod>2013-12-01T18:35:16-05:00</lastmod>
+        <lastmod>2013-12-01T19:02:07-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/robots.txt</loc>

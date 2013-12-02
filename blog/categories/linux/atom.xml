@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linux | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T18:42:27-05:00</updated>
+  <updated>2013-12-01T19:04:42-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Inotify: Wait For File]]></title>
+    <title type="html"><![CDATA[Wait For File With Inotify]]></title>
     <link href="http://741MHz.com/inotify-wait/"/>
     <updated>2010-09-29T00:00:00-04:00</updated>
     <id>http://741MHz.com/inotify-wait</id>
