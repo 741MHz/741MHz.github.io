@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Tech | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/tech/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T21:38:07-05:00</updated>
+  <updated>2013-12-01T22:07:58-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -14,9 +14,572 @@
 
   
   <entry>
+    <title type="html"><![CDATA[C++ Exceptions, Stack Trace and GDB Automation]]></title>
+    <link href="http://741MHz.com/throw-stacktrace/"/>
+    <updated>2013-04-16T00:00:00-04:00</updated>
+    <id>http://741MHz.com/throw-stacktrace</id>
+    <content type="html"><![CDATA[<p>The tricky part about any exception is that the stack is already unwinded by the time exception is caught and there is no easy way to figure out from which part of the code it was thrown. Have you ever caught an exception that has no information that can be used to find where the problem is? The one that says «this should never happen» or even has no text at all. Hopefully, this doesn’t happen to you very often. But if you work with a large C++ codebase with tons of different components written by different developers then sooner or later it would definitely happen. It can be quite disappointing and take a lot of time going through the pile of somebody else’s code trying to figure out what went wrong. So you must be prepared. I might be a little bit unlucky in this regard – this happened to me a lot, so I decided to share a few ways for overcoming this type of situations.</p>
+
+<h2>Backtrace API</h2>
+
+<p>Quite a few C runtime libraries provide a mechanism to examine the current thread’s call stack. It consists of three functions declared in <code>execinfo.h</code> header:</p>
+
+<p>```c
+int backtrace(void** array, int size);</p>
+
+<p>char<em><em> backtrace_symbols(void</em> const</em> array, int size);</p>
+
+<p>void backtrace_symbols_fd(void<em> const</em> array, int size, int fd);
+```</p>
+
+<p>Using those functions, one can access the stack trace at any given point of program execution. Here is a simple example that prints the stack to standard output:</p>
+
+<p>```c++</p>
+
+<h1>include &lt;execinfo.h></h1>
+
+<h1>include <iostream></h1>
+
+<p>int main()
+{</p>
+
+<pre><code>void *callstack[256];
+int frames = ::backtrace(
+    callstack, sizeof(callstack) / sizeof(callstack[0]));
+char **symbols = ::backtrace_symbols(callstack, frames);
+std::cout &lt;&lt; "Stack Trace:\n";
+for (int i = 0; i &lt; frames; ++i) {
+    std::cout &lt;&lt; '\t' &lt;&lt; symbols[i] &lt;&lt; '\n';
+}
+std::free(symbols);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This method can be used to get the stack trace before the exception is thrown and before the stack is unwinded. In order to do that, one could define a custom exception class that grabs the stack trace in its constructor. For example:</p>
+
+<p>```c++</p>
+
+<h1>include &lt;execinfo.h></h1>
+
+<h1>include <string></h1>
+
+<h1>include <stdexcept></h1>
+
+<h1>include <cstdlib></h1>
+
+<h1>include <iostream></h1>
+
+<p>class Exception : public std::exception {
+  public:</p>
+
+<pre><code>Exception() {
+    grab_backtrace();
+}
+
+explicit Exception(const std::string &amp;reason) : reason_(reason) {
+    reason_.append(1, '\n');
+    grab_backtrace();
+}
+
+virtual ~Exception() throw() { }
+
+virtual const char *what() const throw() {
+    return reason_.c_str();
+}
+</code></pre>
+
+<p>  private:</p>
+
+<pre><code>void grab_backtrace() {
+    void *callstack[256];
+    int frames = ::backtrace(
+        callstack, sizeof(callstack) / sizeof(callstack[0]));
+    char **symbols = backtrace_symbols(callstack, frames);
+    try {
+        reason_.append("Stack Trace:");
+        for (int i = 0; i &lt; frames; ++i) {
+            reason_.append("\n\t").append(symbols[i]);
+        }
+    } catch(const std::exception &amp;) {
+        std::free(symbols);
+        throw;
+    }
+    std::free(symbols);
+}
+
+std::string reason_;
+</code></pre>
+
+<p>};</p>
+
+<p>static void do_something(int n, int i = 0)
+{</p>
+
+<pre><code>if (i &lt; n) {
+    do_something(n, ++i);
+} else {
+    throw Exception("Recursion limit exceeded");
+}
+</code></pre>
+
+<p>}</p>
+
+<p>int main(int argc, char *argv[])
+{</p>
+
+<pre><code>try {
+    do_something(argc &gt; 1 ? std::atoi(argv[1]) : 10, argc);
+} catch(const std::exception &amp;e) {
+    std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
+    return EXIT_FAILURE;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>So far so good! Here is an example of running the above program:</p>
+
+<p>```
+$ clang++ -Wall -pedantic ./test.cpp &amp;&amp; ./a.out 3
+Recursion limit exceeded
+Stack Trace:</p>
+
+<pre><code>0   a.out                0x00000001034fa7af _ZN9Exception14grab_backtraceEv + 63
+1   a.out                0x00000001034fa6f4 _ZN9ExceptionC2ERKSs + 116
+2   a.out                0x00000001034fa56d _ZN9ExceptionC1ERKSs + 29
+3   a.out                0x00000001034fa33c _Z12do_somethingii + 140
+4   a.out                0x00000001034fa2df _Z12do_somethingii + 47
+5   a.out                0x00000001034fa42d main + 93
+6   libdyld.dylib        0x00007fff935e27e1 start + 0
+</code></pre>
+
+<p>```</p>
+
+<p>Unfortunately, there are a few problems with this approach. Firstly, there no file names and no line numbers. Secondly, this approach requires to use the “Exception” class as a base class of all exceptions in the project (well, at least for those you want to get a stack trace for), which indeed can be very problematic if not impossible. But even if all of the above is fine with you, this approach may still not work out for you because frame pointers can be omitted in optimized builds. For example, omitting frame pointers is a default behavior of recent GCC compilers for x86_64 platforms (which can also be turned on/off using <code>-fomit-frame-pointer</code> option). Our call stack becomes useless if frame pointers are omitted:</p>
+
+<p>```
+$ clang++ -Wall -fomit-frame-pointer ./test.cpp &amp;&amp; ./a.out 3
+Recursion limit exceeded
+Stack Trace:</p>
+
+<pre><code>0   a.out                0x0000000105eca82d _ZN9Exception14grab_backtraceEv + 61
+</code></pre>
+
+<p>```</p>
+
+<p>Depending on the system, there could be other requirements in order to make this API work. For example, GNU runtime requires you to specify “-rdynamic” flag to instruct the linker to add all symbols, not only used ones, to the dynamic symbol table. So don’t forget to read a manual page for this API in your system before using this.</p>
+
+<h2>__FILE__ and __LINE__</h2>
+
+<p>C++ has many <a href="http://gcc.gnu.org/onlinedocs/cpp/Standard-Predefined-Macros.html">standard predefined macros</a>. <code>__FILE__</code> and <code>__LINE__</code> macros are those two that come handy in order to identify a point in a program:</p>
+
+<p><code>__FILE__</code>  macros expands to the name of the current input file, in the form of a C string constant. This is the path by which the preprocessor opened the file, not the short name specified in ‘#include’ or as the input file name argument. For example, “/usr/local/include/myheader.h” is a possible expansion of this macros.</p>
+
+<p><code>__LINE__</code> macros expands to the current input line number, in the form of a decimal integer constant. While we call it a predefined macro, it’s a pretty strange macro, since its “definition” changes with each new line of source code.|</p>
+
+<p>Using the above macros, it is possible to include both file and line information along with exception’s text, or maybe as additional member fields of any given exception class. There are multiple choices. Here is an example of one of possible implementations:</p>
+
+<p>```c++</p>
+
+<h1>include <stdexcept></h1>
+
+<h1>include <cstdlib></h1>
+
+<h1>include <iostream></h1>
+
+<p>class Exception : public std::runtime_error {
+  public:</p>
+
+<pre><code>template &lt;unsigned int location_len&gt;
+inline Exception(const char (&amp;location)[location_len],
+                 const std::string &amp;reason)
+    : std::runtime_error(reason + location)
+{ }
+
+virtual ~Exception() throw() { }
+</code></pre>
+
+<p>};</p>
+
+<h1>define MY_THROW_STR_I(Arg) #Arg</h1>
+
+<h1>define MY_THROW_STR(Arg) MY_THROW_STR_I(Arg)</h1>
+
+<h1>define MY_THROW(Type, &hellip;)                                             \</h1>
+
+<pre><code>do {                                                                \
+    throw Type(" @ "; __FILE__ ";:" MY_THROW_STR(__LINE__), ##__VA_ARGS__); \
+} while (0)
+</code></pre>
+
+<p>static void do_something(int n, int i = 0)
+{</p>
+
+<pre><code>if (i &lt; n) {
+    do_something(n, ++i);
+} else {
+    MY_THROW(Exception, "Recursion limit exceeded");
+}
+</code></pre>
+
+<p>}</p>
+
+<p>int main(int argc, char *argv[])
+{</p>
+
+<pre><code>try {
+    do_something(argc &gt; 1 ? std::atoi(argv[1]) : 10, argc);
+} catch(const std::exception &amp;e) {
+    std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
+    return EXIT_FAILURE;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>When the exception is caught and printed, the source file name and a line numbers are included, which makes it easy to trace the origins of such an exception:</p>
+
+<p><code>
+$ ./a.out
+Recursion limit exceeded @ ./test.cpp:26
+</code></p>
+
+<p>Of course, this does not include a stack trace. But it works if frame pointers are omitted, tail recursion optimization is applied, or even if all symbol names are stripped out of the executable. There is one problem though — it may not be useful without a stack trace in certain cases. For example, one may declare a helper function used to throw an exception, like this:</p>
+
+<p>```c++
+<strong>attribute</strong>((noreturn)) void report_error(const std::string &amp;reason) {</p>
+
+<pre><code>MY_THROW(Exception, reason);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>In that case, the file and line of the exception origins will always be the same even if it was called from different places in the program. So this approach is also not a cure for all diseases.</p>
+
+<h2>GDB Scripting: Automatic Backtrace on Exception Catchpoints</h2>
+
+<p>And the last but not least method is to use <a href="http://www.gnu.org/software/gdb/">GDB debugger</a>. If you are not familiar with this debugger, you definitely should spend some time learning it. It is one of the most powerful tools out there. And it comes extremely handy when dealing with exceptions.</p>
+
+<p><a href="http://sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html">GDB provides special catch points</a>, including those to catch exceptions being thrown, caught or even unhandled. We are interested in exceptions that are being thrown and so must use <code>catch throw</code> command. Here is an example of manually using GDB in order to examine a stack trace before the exception is thrown:</p>
+
+<p>```
+$ gdb -args ./a.out 5
+Reading symbols from /tmp/a.out&hellip;done.
+(gdb) catch throw
+Catchpoint 1 (throw)
+(gdb) run
+Starting program: /tmp/a.out 5
+Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</p>
+
+<pre><code>at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
+</code></pre>
+
+<p>70    header->exc.unexpectedHandler = __unexpected_handler;
+(gdb) backtrace</p>
+
+<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</h1>
+
+<pre><code>at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
+</code></pre>
+
+<h1>1  0x0000000000400fee in report_error (reason=&ldquo;Recursion limit exceeded&rdquo;) at ./test.cpp:25</h1>
+
+<h1>2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</h1>
+
+<h1>3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</h1>
+
+<h1>4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</h1>
+
+<h1>5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</h1>
+
+<h1>6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</h1>
+
+<p>(gdb) continue
+Continuing.
+Recursion limit exceeded @ ./test.cpp:25
+[Inferior 1 (process 3865) exited with code 01]
+(gdb) quit
+```</p>
+
+<p>At first, this might sound silly because in the real world a program may encounter a lot of exceptions and manually typing “backtrace” and “continue” every type that happens is nothing but a waste of time. But there is one trick — GDB can be automated. There are two ways of doing this — use a batch mode or a more sophisticated <a href="http://sourceware.org/gdb/wiki/PythonGdbTutorial">Python scripting</a>. For our purpose, a batch script will do just fine. Here is a simple script that turns off verbose output and paging, sets up a <code>throw</code> catch point and executes <code>backtrace</code> + <code>continue</code> commands every time the event is caught:</p>
+
+<p><code>
+set verbose off
+set pagination off
+catch throw
+commands
+backtrace
+continue
+end
+run
+quit
+</code></p>
+
+<p>Save the above script into a file, and then run GDB in batch mode telling it to use that file, which in my case is called “gdb_bt_script”:</p>
+
+<p>```
+$ gdb -n -batch -x ./gdb_bt_script &mdash;args ./a.out 5
+Catchpoint 1 (throw)
+Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
+70    header->exc.unexpectedHandler = __unexpected_handler;</p>
+
+<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</h1>
+
+<h1>1  0x0000000000400fee in report_error (reason=&ldquo;Recursion limit exceeded&rdquo;) at ./test.cpp:25</h1>
+
+<h1>2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</h1>
+
+<h1>3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</h1>
+
+<h1>4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</h1>
+
+<h1>5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</h1>
+
+<h1>6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</h1>
+
+<p>Recursion limit exceeded @ ./test.cpp:25
+[Inferior 1 (process 5849) exited with code 01]
+$
+```</p>
+
+<p>Whoala! Now we get a full stack trace including function parameters, their values, and file and line numbers. If the program is optimized and has no debug symbols, however, we get a little bit less:</p>
+
+<p>```
+$ gdb -n -batch -x ./gdb_bt_script &mdash;args ./a.out 5
+Catchpoint 1 (throw)
+Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
+70    header->exc.unexpectedHandler = __unexpected_handler;</p>
+
+<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</h1>
+
+<h1>1  0x00000000004010a8 in report_error(std::string const&amp;) ()</h1>
+
+<h1>2  0x000000000040121e in do_something(int, int) ()</h1>
+
+<h1>3  0x0000000000400ef6 in main ()</h1>
+
+<p>Recursion limit exceeded @ ./test.cpp:25
+[Inferior 1 (process 1877) exited with code 01]
+```</p>
+
+<p>Yet still a lot more than we get using backtrace API. But the most beautiful part is that this method does not require any code changes and works for pretty much any binary.</p>
+
+<h2>The End</h2>
+
+<p>Those were three fundamental methods that can help to identify a place where exception is thrown from. They are not mutually exclusive. Each has its cons and pros. I personally prefer to use GDB because it doesn’t require a code change, but use other two methods as well, depending on a situation. It is up to you to decide which one to use.</p>
+
+<p>Hope it helps and Good Luck!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Two Different Languages - C and C++]]></title>
+    <link href="http://741MHz.com/c-vs-cxx/"/>
+    <updated>2013-04-15T00:00:00-04:00</updated>
+    <id>http://741MHz.com/c-vs-cxx</id>
+    <content type="html"><![CDATA[<p>Good news everyone, we are looking for a C/C++ developer! Wait, that’s not good news at all!</p>
+
+<p>You see, the term «C/C++» is likely to piss off those who actually know both C and C++. On the other hand, majority of C++ developers mistakenly think they know C. And it would take at least a year or two for a C developer to learn C++. Yet «C/C++» is mentioned in way too many job postings. So who exactly are we looking for?</p>
+
+<p>Let’s start by asking a simple question — what would the main() function return in the below C/C++ program?</p>
+
+<p>```c++
+extern int T;</p>
+
+<p>int main()
+{</p>
+
+<pre><code>struct T { int a; int b; };
+return sizeof(T) + sizeof('T');
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Of course it depends on architecture. But let’s assume that size of int is 4 bytes and structure T has no extra padding. The code is legal in both C and C++. Yet the correct answer depends on whether this is a C or C++ program. If it is a C program then the correct answer is 8. In case of C++ the answer is 9.</p>
+
+<h2>C is not C++</h2>
+
+<p>C++ originated back in 1979 and at that time it was based on C. It wasn’t even called C++ — its first name was «C with Classes». The language was renamed to «C++» only in 1983. At that time, both languages were closely related. However, from that point both C and C++ took a different evolution path and today, some 30+ years later, both languages are as different as Objective-C and C++, Java and C#, Python and Ruby, OCaml and F#. There is only one catch — the basic syntax of both is very similar to such a degree that it is possible to have a program that is both legal C and legal C++, which may or may not behave differently. Generally, everyone knows that C++ has tons of features that are not available in C but any C code can be compiled as C++. Therefore, C++ developers also think that they know C. And in most cases they are dangerously mistaken. Below is a list of the most common features of C language serving as traps for C++ fellows.</p>
+
+<h3>Casting void pointer</h3>
+
+<p>In C, void pointer can be implicitly casted to a pointer of any other type. For example:</p>
+
+<p><code>c
+void *ptr = 0xDEADDEAD;
+int *i = ptr;
+</code></p>
+
+<p>C developers use this convenient feature all the time. However, any C++ compiler would choke on that and die.</p>
+
+<h3>Implicit function declaration</h3>
+
+<p>In C, it is not always necessary to declare a function before using it. Using an undeclared function implicitly declares it. This feature has been declared deprecated since 1999 but is still used here and there. For example:</p>
+
+<p>```c
+int main() {</p>
+
+<pre><code>    return foo();
+</code></pre>
+
+<p>}</p>
+
+<p>int foo() {</p>
+
+<pre><code>    return 0;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>A perfectly legal C program that is illegal C++:</p>
+
+<p><code>
+$ gcc ./test.c
+$ g++ ./test.cpp
+./test.cpp: In function ‘int main()’:
+./test.cpp:3: error: ‘foo’ was not declared in this scope
+</code></p>
+
+<h3>No arguments vs any arguments</h3>
+
+<p>In C, function prototype without parameters imply that function accepts any number of arguments and it is legal to call such a function with one or more arguments. In C++, function prototype without parameters means that function accepts no arguments and it is illegal to call such function with arguments. For example:</p>
+
+<p>```c
+void foo();</p>
+
+<p>int main() {</p>
+
+<pre><code>    foo(1, "hello");
+</code></pre>
+
+<p>}</p>
+
+<p>void foo() {
+}
+```</p>
+
+<p>The above is absolutely legal C code that won’t compile as C++. As a matter of fact, I haven’t seen many C++ developers who can tell the difference between <code>void foo();</code> and <code>void foo(void);</code></p>
+
+<h3>Crossing initialization with goto or switch</h3>
+
+<p>```c
+int main()
+{</p>
+
+<pre><code>goto out;
+int i = 1;
+</code></pre>
+
+<p>  out:</p>
+
+<pre><code>return 0;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above is a perfectly legal C code but is rejected by C++ compiler as C++ does not allow to cross initialization:</p>
+
+<p>```
+$ clang++ ./test.cpp
+./test.cpp:3:5: error: goto into protected scope</p>
+
+<pre><code>goto out;
+^
+</code></pre>
+
+<p>./test.cpp:4:9: note: jump bypasses variable initialization</p>
+
+<pre><code>int i = 1;
+    ^
+</code></pre>
+
+<p>1 error generated.
+```</p>
+
+<h3>Keywords clash</h3>
+
+<p>C++ would fail to compile any legal C code that happen to use C++ keywords:</p>
+
+<p>```c
+struct foo {</p>
+
+<pre><code>int old;
+int new;
+</code></pre>
+
+<p>};
+```</p>
+
+<h2>More! More! More!</h2>
+
+<p>Oh, you knew that? If you knew all of the above and still consider yourself a “C/C++” developer, hold on a second. Name at least 10 more differences. Huh?</p>
+
+<ul>
+<li>In C++, comma operator can yield an l-value. In C it cannot.</li>
+<li>C does not allow duplicate typedefs while C++ does.</li>
+<li>C++ does not allow non-prototype function declarations while C does.</li>
+<li>C allows struct, union and enum to be declared in function prototypes, C++ doesn’t.</li>
+<li>C allows for implicit discard of pointer const qualifiers. This trick won’t work in C++.</li>
+<li>In C++, struct, union and enum declarations automatically imply a typedef with the same name. This is not the case in C.</li>
+<li>Character literals in C are of type int. In C++ they are of type char.</li>
+<li>C++ implicitly treats any const global as file scope unless it is explicitly declared extern, unlike C in which extern is the default.</li>
+<li>Functions market as “inline” in C are of file scope whereas they have external linkage by default in C++.</li>
+<li>C has VLA (Variable Length Arrays) support whereas C++ does not (until C++14).</li>
+</ul>
+
+
+<p>And the list of technical differences/incompatibilities of C and C++ can go on and on. The list is so big that it is impossible to fit it into a blog post. But if you are interested, check out References section in the bottom of this post.</p>
+
+<p>Aside of technical differences, it would also be a mistake not to mention the coding style. Not a formatting style or using tabs versus spaces, but coding style. For example, C++ developers would always cast a result of <code>malloc()</code> whereas C developers would almost never do that.</p>
+
+<h2>Grammar of «C/C++»</h2>
+
+<p>Trying to figure out the meaning behind «C/C++», I dug the usage of slash as a punctuation sign in English text. I have never learn English grammar in school so you may want to check me on this one. Anyhow, according to Wikipedia the slash is most commonly used as the word substitute for “or” which indicates a choice (often mutually-exclusive) is present.</p>
+
+<p>If that is the case, then companies are actually looking for either C or C++ developers, not both. Which doesn’t make any sense at all. Why nobody is looking for “Cobol/Ada” or “Lisp/Verilog” developers? Looking at other industries, there seem to be no companies searching for “Linguist/Plumber”-like people.</p>
+
+<p>So the grammar doesn’t seem to back up the usage of «C/C++» term. This leaves everyone guessing as to what it actually means and the only way to figure out is from the context.</p>
+
+<h2>What it actually means</h2>
+
+<p>The actual meaning of «C/C++» depends. Here are some examples of what this means according to my observations.</p>
+
+<p>In job postings, “We are looking for C/C++ developers” generally means “We are looking for C++ developers, nobody knows C here but why not put that in a title, too?”</p>
+
+<p>When somebody brags about being a “C/C++” developers it means they don’t really know any of those languages but learned to write a “Hello, World!” application using printf() and compile it with C++ compiler.</p>
+
+<p>In forums, «C/C++» section is usually dedicated for C++ crowd that might as well be able to answer some C-related questions if you get lucky.</p>
+
+<h2>Tip: Don’t Use «C/C++»</h2>
+
+<p>If you are looking for a developer, make sure you clearly specify requirements and avoid the use of «C/C++». If it so happens that you are actually looking for someone who knows both, say «C and C++». If you are willing to spend a few years teaching C developer C++ language, say «C++ developer or C developer willing to learn C++». Using «C/C++» will only bring confusion to those reading the job posting.</p>
+
+<p>End of rant.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Slash_(punctuation">Slash in English text.</a></li>
+<li><a href="http://david.tribble.com/text/cdiffs.htm">Incompatibilities Between ISO C and ISO C++</a> by David R. Tribble</li>
+<li><a href="http://en.wikipedia.org/wiki/Compatibility_of_C_and_C%2B%2B">Compatibility of C and C++</a></li>
+<li><a href="http://c-faq.com/malloc/mallocnocast.html">What’s wrong with casting malloc’s return value?</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[The Evolution of Computer Networking]]></title>
     <link href="http://741MHz.com/network-evolution/"/>
-    <updated>2013-03-30T00:00:00-04:00</updated>
+    <updated>2013-03-29T21:00:00-04:00</updated>
     <id>http://741MHz.com/network-evolution</id>
     <content type="html"><![CDATA[<p>Do you remember 56k modems? Me too. The sound it used to produce when connecting still gives me a warm fuzzy feeling and a bit of excitement. The last time I have used that modem was in 2003. Fifty six thousand bits per seconds — that was a lot back then. For the sake of comparison, I went to speedtest.net to check the speed of my phone that uses 4G LTE from Verizon, and my Verizon Fios home network. Here are my results:</p>
 
@@ -270,163 +833,6 @@ $ ./a.out | tr '\1' '|'
 </code></p>
 
 <p>That is pretty much all you need to know to successfully calculate a FIX checksum. There is also one little detail that might come handy — checksums are meant to help verify data integrity and make sure that no part of the message got corrupted during transmission from one application to another. These days, FIX messages are transmitted using TCP/IP or UDP. Both TCP/IP and UDP protocols guarantee data integrity out of the box and therefore a FIX checksum doesn’t make a lot of sense. Given that calculating FIX checksums requires a lot of CPU resources and is even likely to be the bottleneck, make sure that exchange or broker, with which you intend to communicate using FIX Protocol, require a checksum. There are a number of technically wise brokers and exchanges out there that do not require you to provide the correct checksum. If that is the case, simply put <code>10=000|</code> at the end of every message.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Use free and delete correctly.]]></title>
-    <link href="http://741MHz.com/free-delete/"/>
-    <updated>2013-03-13T00:00:00-04:00</updated>
-    <id>http://741MHz.com/free-delete</id>
-    <content type="html"><![CDATA[<p>The Internet is full of programming jokes <a href="http://bash.org/?946461">like this one</a>:</p>
-
-<blockquote><p>&lt;@joosa> how do you say float in java? just 1.5f?<br/>
-&lt;@Gliptic> FloatFactoryFactory.getInstance (FloatFactoryFactory.defaultInstanceDescriptionString).getFactory (Locale.getLocale (“en-US”)).createBuilder ().setString (“1.5″).getResult ()</p></blockquote>
-
-<p>Java people please read on, that’s only a joke! More often than not the jokes are directed at those using higher-level programming languages. This is a little unfair because C programmers (and C++ ones for that matter) write some funny code, too. For example:</p>
-
-<p>```c
-void foo(void *ptr) {</p>
-
-<pre><code>if (ptr)
-    free(ptr);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>This perhaps could be a joke or maybe even an interview question. What’s wrong with the above C code (assuming everything else including the usage is correct)? It turns out that many can’t spot anything. If you do — congratulations! For those who don’t, let’s read the <a href="http://man7.org/linux/man-pages/man3/free.3.html">documentation of <code>free()</code> function</a>:</p>
-
-<blockquote><p>The free() function frees the memory space pointed to by ptr, which must have been returned by a previous call to malloc(), calloc() or realloc(). Otherwise, or if free(ptr) has already been called before, undefined behavior occurs. If ptr is NULL, no operation is performed.</p></blockquote>
-
-<p>In other words, there is no need to check if pointer is not NULL. The same applies to C++ programmers who often check for <strike><code>NULL</code></strike> <code>nullptr</code> before calling <code>delete</code>. If you don’t trust manual pages, check out §7.20.3/2 of the C standard that states the following:</p>
-
-<blockquote><p>The free function causes the space pointed to by ptr to be deallocated, that is, made available for further allocation. If ptr is a null pointer, no action occurs. Otherwise, if the argument does not match a pointer earlier returned by the calloc, malloc, or realloc function, or if the space has been deallocated by a call to free or realloc, the behavior is undefined.</p></blockquote>
-
-<p>For C++, see §5.3.5/2:</p>
-
-<blockquote><p>… if the value of the operand of delete is the null pointer the operation has no effect.</p></blockquote>
-
-<p>Possibly, an extra checking for NULL was a necessity some 20 years ago, according to some Internet rumors claiming that a few implementations of the standard C library had a bug back then and free() could crash the program when passed a NULL pointer. I couldn’t find any information about what it was. But no matter what was going on two decades ago — it is pretty hard to find pre-ANSI C code these days. Yet unnecessary NULL checking can be seen a lot. For example, <a href="http://krugle.org/">krugle.org</a> shows the following three projects right away:</p>
-
-<ul>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/apache_http_server1945779753/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_305/tags/1.3/djg_nspr_split/src/regex/regfree.c">Apache Web Server</a></li>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/apache_hadoop618243895/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_528/trunk/hadoop-common-project/hadoop-common/src/main/native/src/org/apache/hadoop/security/getGroup.c">Apache Hadoop</a></li>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/miranda1067994304/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_705/miranda/protocols/Gadu-Gadu/ownerinfo.c">Miranda</a> (an ICQ client popular in ex-USSR countries)</li>
-</ul>
-
-
-<p>I thought that maybe people are worrying about performance too much and don’t want to do an extra function call (extra cycles, procedure linkage tables, etc). But then using <code>malloc()</code> and <code>free()</code> in performance critical path would have been even more silly.</p>
-
-<p>So is it paranoia, a failure to read documentation, or maybe a thoughtless copy-paste that went too far?</p>
-
-<p>Who knows.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Linux, HID and PyUSB]]></title>
-    <link href="http://741MHz.com/pyusb/"/>
-    <updated>2013-03-04T00:00:00-05:00</updated>
-    <id>http://741MHz.com/pyusb</id>
-    <content type="html"><![CDATA[<p>Today I was going through some stuff in my desk’s locker and ran into this nice toy — a big red electronic panic button. It has been there for years but I never had a chance to use it because a company making those does not have a driver for OS X, and of course I couldn’t find one for Linux either. But pushing a big red button is always fun and this time I have decided to try and make it work. So I brought it home with me into my “lab” to see what I can do.</p>
-
-<p>After plugging it into a USB port, it immediately showed up in a list of USB devices (which you can see with lsusb tool). My Linux box has identified it as a Dream Cheeky Stress/Panic Button:</p>
-
-<pre><code>Bus 007 Device 010: ID 04f3:04a0 Elan Microelectronics Corp. Dream Cheeky Stress/Panic Button
-</code></pre>
-
-<p>Meanwhile, the kernel has also logged a message saying that it has found a new USB device. So the magic button seemed somewhat operational and I already knew two important things about it — a vendor and a product IDs. They were <code>0x04f3</code> and <code>0x04a0</code> respectively.</p>
-
-<h2>Writing a USB driver</h2>
-
-<p>The only little detail missing was actually a driver. I tried to <a href="https://duckduckgo.com/">Duck Duck Go</a> it real quick but nothing showed up, and I decided to write it myself. How hard can it be, after all?</p>
-
-<h2>Reverse Engineering</h2>
-
-<p>In order to write a device driver, one must know what the device is doing. Obviously, I didn’t have any specification, neither I wanted to deal with Elan Microelectronics support department. So the only way to figure it out was reverse engineering. Luckily, Linux has <a href="https://www.kernel.org/doc/Documentation/usb/usbmon.txt"><em>usbmon</em></a> — a facility in the kernel that is used to collect traces of I/O on the USB bus. After a quick pick at its documentation, I loaded the module using <code>modprobe usbmon</code> command and the device showed up in <code>/sys/kernel/debug/usb/devices</code>. Since it was attached to bus #7, I traced the I/O by reading the <code>/sys/kernel/debug/usb/usbmon/7u</code> file and pushing my panic button a few times to see if anything shows up. And every time I hit the button, the device was sending the following data to the host:</p>
-
-<p><code>
-ffff8801b2efc9c0 1873321198 C Ii:7:010:1 0:8 8 = 02000000 00000000
-ffff8801b2efc9c0 1873457204 C Ii:7:010:1 0:8 8 = 06000000 00000000
-ffff8801b2efc9c0 1873633203 C Ii:7:010:1 0:8 8 = 06001300 00000000
-ffff8801b2efc9c0 1873801206 C Ii:7:010:1 0:8 8 = 06000000 00000000
-ffff8801b2efc9c0 1873977211 C Ii:7:010:1 0:8 8 = 02000000 00000000
-</code></p>
-
-<p>Not only this proved that button itself works, it also uncovered a pattern — the device was sending <code>02000000</code> and <code>06000000</code> twice with <code>06001300</code> in between. So <code>06001300</code> seemed like a good indication of the button being pressed.</p>
-
-<h2>Linux Kernel USB Driver</h2>
-
-<p>The next step was to write a USB Device Driver for Linux. I dealt with PCI Express, DMA and Ethernet network drivers, but never wrote a single USB driver before. So I pulled my copy of the Linux Device Drivers book off the shelf and opened it on Chapter 13 “USB Drivers”. I have to say I got surprised — that rant is about 100 pages long. I would of course suck it up, enjoy the reading and proceed to hacking. If only it was something serious. And what I had was a simple USB button that did nothing but sending two 32-bit integers, 0x06 and 0x13, every time it gets hit. Going through the hundred pages just to read 64-bit of data off the USB cable, on Monday night, after a hard 10 hours working day… Ain’t nobody got time for that?</p>
-
-<h2>PyUSB</h2>
-
-<p>A bit disappointed, I tried to find an easier way and once against ducked for a few keywords like “USB”, “driver”, “read”, “HID” and so on…</p>
-
-<blockquote><p>Ask and it will be given to you; seek and you will find; knock and the door will be opened to you.
-— Matthew 7:7</p></blockquote>
-
-<p>Turned out, it is possible to write a USB driver in just a few lines of Python. Sir <a href="http://www.micahcarrick.com/">Micah Carrick</a> have managed to make a driver for his credit card reader and wrote about his experience in <a href="http://www.micahcarrick.com/credit-card-reader-pyusb.html">this nice article</a>. Following in his footsteps, I quickly glanced at <a href="http://sourceforge.net/apps/trac/pyusb/">PyUSB</a> that he was using in his work, read a few other examples, and came up with a driver for my magic button. This is truly the shortest and simplest device driver that I have made in my life:</p>
-
-<p>```python</p>
-
-<h1>!/usr/bin/env python</h1>
-
-<p>import sys, usb.core</p>
-
-<p>dev = usb.core.find(idVendor=0x04f3, idProduct=0x04a0)
-if dev is None:</p>
-
-<pre><code>sys.exit("No Panic button found in the system");
-</code></pre>
-
-<p>try:</p>
-
-<pre><code>if dev.is_kernel_driver_active(0) is True:
-    dev.detach_kernel_driver(0)
-</code></pre>
-
-<p>except usb.core.USBError as e:</p>
-
-<pre><code>sys.exit("Kernel driver won't give up control over device: %s" % str(e))
-</code></pre>
-
-<p>try:</p>
-
-<pre><code>dev.set_configuration()
-dev.reset()
-</code></pre>
-
-<p>except usb.core.USBError as e:</p>
-
-<pre><code>sys.exit("Cannot set configuration the device: %s" % str(e))
-</code></pre>
-
-<p>endpoint = dev[0][(0,0)][0]
-while 1:</p>
-
-<pre><code>try:
-    data = dev.read(endpoint.bEndpointAddress, endpoint.wMaxPacketSize,
-                    timeout=10000)
-    if data is not None and len(data) &gt; 2:
-        if data[0] == 6 and data[2] == 19:
-            # Panic button was pressed!
-            print "OH MY GOD! OH MY GOD! DOUBLE RAINBOW!!!"
-except usb.core.USBError as e:
-    if e.errno != 110: # 110 is a timeout.
-        sys.exit("Error readin data: %s" % str(e))
-</code></pre>
-
-<p>```</p>
-
-<p>So now I have my beautiful toy working!</p>
-
-<h2>UPDATE</h2>
-
-<p><a href="https://twitter.com/pdp7">Drew Fustini</a> have hooked this up to the BeagleBone Next-Gen and made this video:</p>
-
-<p><div class="embed-video-container"><iframe src="http://www.youtube.com/embed/52b5RGd4yrE "></iframe></div></p>
 ]]></content>
   </entry>
   

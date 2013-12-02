@@ -114,53 +114,230 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-23T00:00:00-04:00" pubdate data-updated="true">Mar 23<span>rd</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-04-15T00:00:00-04:00" pubdate data-updated="true">Apr 15<span>th</span>, 2013</time>
         
-           | <a href="/stranded/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/stranded/">Comments</a>
+           | <a href="/c-vs-cxx/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/c-vs-cxx/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/stranded/">Stranded</a></h1>
+      <h1 class="entry-title"><a href="/c-vs-cxx/">Two Different Languages - C and C++</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>One of the things I really love about WordPress.com is its community. The Daily Prompt movement is especially great — it helps to connect so many people together, share so many great stories, and ideas. I am relatively new to blogging in general and WordPress in particular, so most of the time I just enjoy good reads. But today’s Daily Prompt’s topic “Stranded” brought back some of my old good memories and I decided to share my story about how I got stranded in a foreign city for a few days with no money and no friends.</p>
+  <div class="entry-content clearfix"><p>Good news everyone, we are looking for a C/C++ developer! Wait, that’s not good news at all!</p>
 
-<p>I have lived in New York area for a while now. But I am an immigrant, so I wasn’t always here. My life journey started in Illichivsk — a small half-resort, half-port city on the shores of the Black Sea, named after Vladimir Lenin. I was born there, in a country that does not exist anymore — USSR. In 1991, USSR fell apart, Ukraine got its independence, and I acquired a Ukrainian citizenship.</p>
+<p>You see, the term «C/C++» is likely to piss off those who actually know both C and C++. On the other hand, majority of C++ developers mistakenly think they know C. And it would take at least a year or two for a C developer to learn C++. Yet «C/C++» is mentioned in way too many job postings. So who exactly are we looking for?</p>
 
-<p>The Illichivsk is a very small town. Back in the day there was no public transportation, no universities, no businesses, no jobs, no nothing. To say that it has always been extremely hard to make a living there is to say nothing at all. Both of my parents were working from dusk till dawn, and the income was barely enough to buy groceries. Everything was pretty much dead all year around except for the summers. I loved summers. It was a great chance for me to make some pocket-money. I used to buy some ice cream in the town, put it into a backpack and rush to the beach to sell it to lazy tourists. I would make enough money to buy an ice cream for my crush. Usually boys buy movie tickets and flowers, but we had no cinemas in Illichivsk. And flowers I used to steal from somebody’s lawn.</p>
+<p>Let’s start by asking a simple question — what would the main() function return in the below C/C++ program?</p>
 
-<p>One day my parents bought me a computer despite the fear that I would start playing video games all the time — they believed that computer would help me study. It worked out great — instead of playing video games I got into programming. First thing I installed on my computer was FreeBSD — operating system that somebody recommended to me in a local bookstore. It did not support my video card so I was working in console, 100% text mode. I got an English dictionary and translated manual pages word by word. That is pretty much how I learned to understand English and got my first experience with UNIX. I also bought a few Russian books about C programming and after about a year of studying day and night I started working as a freelancer taking on simple programming gigs. It was not paying a lot. But it was enough for me to quit my seasonal ice cream sales business.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="n">T</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">struct</span> <span class="n">T</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">a</span><span class="p">;</span> <span class="kt">int</span> <span class="n">b</span><span class="p">;</span> <span class="p">};</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="sc">&#39;T&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>I always knew that to achieve something in my life I had to get out of that town. And by the time I was finishing the high school I sent my résumé to pretty much every company in Ukraine that I could find. Most of them never got back. But one day I got a phone call from Miratech — a big outsourcing company with headquarters in Kiev — the capital of Ukraine. Boy was I excited. The bags got packed with a speed of light, the piggy bank crushed to finance the trip, and I hopped on the next train to Kiev to get to a job interview, before my parents could understand what is going on.</p>
 
-<p>I was hired. I was excited. It felt great. I will never forget that moment, those overwhelming feelings, that small success, an achievement, a coincidence, a chance that I was given. There was only one small problem — you don’t get paid until the end of the month, and I haven’t even started yet. I had no money. I had no friends. I was a kid all by myself in the big city that I knew absolutely nothing about. Where do I go; what do I do? I was stranded.</p>
+<p>Of course it depends on architecture. But let’s assume that size of int is 4 bytes and structure T has no extra padding. The code is legal in both C and C++. Yet the correct answer depends on whether this is a C or C++ program. If it is a C program then the correct answer is 8. In case of C++ the answer is 9.</p>
 
-<p>Having no other choice, I immediately called my parents for help. They could have sent some money and have me return home. But going home was not an option for me — it would have been a huge step back. I had different goals. I wanted to show up at work next day, make a career and settle in Kiev. My parents knew that, and so they took last $300 of family money that we had and my father hopped on the next train to Kiev to help me out. The idea was to rent an apartment for $150 (for one month), buy a ticket so he can go back home. And leave the rest to me so I can buy some food and go to work.</p>
+<h2>C is not C++</h2>
 
-<p>Frankly speaking that was a very brave, naïve and indeed optimistic move. After my dad arrived on the scene, we spent the whole day rushing from one place to another trying to find an apartment. But nothing was up for rent for the money we had. A few apartments that we could afford were so far from the city that the only way to get to work for me would have been to drive a car, which I didn’t have. After a day of rat-running from one part of the city to another, we ended up in the middle of nowhere. It was 11 PM — too late to search for anything. We stood right there. We were hungry and freezing. We have stranded in a foreign city with no money and no friends. Where do we go; what do we do?</p>
+<p>C++ originated back in 1979 and at that time it was based on C. It wasn’t even called C++ — its first name was «C with Classes». The language was renamed to «C++» only in 1983. At that time, both languages were closely related. However, from that point both C and C++ took a different evolution path and today, some 30+ years later, both languages are as different as Objective-C and C++, Java and C#, Python and Ruby, OCaml and F#. There is only one catch — the basic syntax of both is very similar to such a degree that it is possible to have a program that is both legal C and legal C++, which may or may not behave differently. Generally, everyone knows that C++ has tons of features that are not available in C but any C code can be compiled as C++. Therefore, C++ developers also think that they know C. And in most cases they are dangerously mistaken. Below is a list of the most common features of C language serving as traps for C++ fellows.</p>
 
-<p>The thought of giving up and going home has crossed my mind many times. Perhaps my father thought about that too, but he never said anything like that. Instead, he was telling me not to worry, that we would find the way out. Though of course he had no idea what to do either. We were about to go to the train terminal, try to sleep there and resume our journey in the early morning.
-Semiconscious, I was going through my phone’s address book looking for at least someone I could ask for help. But whom can I send an S.O.S. if I don’t know anyone who lives anywhere close? Suddenly, my eyes stopped on the entry that said “The Key”, and a phone number. What does it mean, whose phone number is that? Flashback. I remembered — a few months ago I was talking online on #rain IRC channel with a girl whose nickname was “key”. I told her that I would love to move to Kiev one day, if I ever get a chance. And she gave me her number just in case I get in trouble and would need help. I didn’t even know her name, but called the number. I said, — “Hello, this is Vlad, the kid from IRC chat. We met online, remember? I am here, uhm… I am not sure where I am exactly, I am here with my daddy, and we don’t know what to do… can you help us? Please.”</p>
+<h3>Casting void pointer</h3>
 
-<p>I don’t know if she remembered me or not. She quickly asked what do we see in order to pinpoint our location, instructed us to get on a subway, told which train to take, what stop we should get off, and promised to meet us there. When we arrived, she was waiting for us, accompanied by quite big, nice and very beautiful dog — that was for her own protection, because you never know. “Hello, I’m Dasha. Follow me,” she said. My dad and me said “Hi,” introduced ourselves and started to tell our story while walking to her apartment.</p>
+<p>In C, void pointer can be implicitly casted to a pointer of any other type. For example:</p>
 
-<p>When we arrived, Dasha poured us some tea, regaled us with cookies, and introduced us to her dog, her husband and two beautiful kids. After hearing our story, Dasha said we could stay at her place as long as we need until we settle down. With her help, we were able to find a rental place in the next few days. My dad went back home. He left me all the money. It was enough for me to buy trolley bus tickets and buckwheat groats until I got my first paycheck.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="mh">0xDEADDEAD</span><span class="p">;</span>
+</span><span class='line'><span class="kt">int</span> <span class="o">*</span><span class="n">i</span> <span class="o">=</span> <span class="n">ptr</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>This was a life changing experiences for me, and a great lesson. We have been friends with Dasha and her family ever since. I am very grateful for our friendship. She and her family have moved to U.S. recently, so we are neighbors again. Her kids have grown up now. Oh, the time is flying so quickly…</p>
 
-<p>Catch every single moment of life.</p>
+<p>C developers use this convenient feature all the time. However, any C++ compiler would choke on that and die.</p>
 
-<p>Enjoy it as long as you can.</p>
+<h3>Implicit function declaration</h3>
 
-<p>Never give up.</p>
+<p>In C, it is not always necessary to declare a function before using it. Using an undeclared function implicitly declares it. This feature has been declared deprecated since 1999 but is still used here and there. For example:</p>
 
-<p>Help each other.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>Be happy!</p>
+
+<p>A perfectly legal C program that is illegal C++:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">gcc</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">c</span>
+</span><span class='line'><span class="err">$</span> <span class="n">g</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span> <span class="n">In</span> <span class="n">function</span> <span class="err">‘</span><span class="kt">int</span> <span class="n">main</span><span class="p">()</span><span class="err">’</span><span class="o">:</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="err">‘</span><span class="n">foo</span><span class="err">’</span> <span class="n">was</span> <span class="n">not</span> <span class="n">declared</span> <span class="n">in</span> <span class="n">this</span> <span class="n">scope</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>No arguments vs any arguments</h3>
+
+<p>In C, function prototype without parameters imply that function accepts any number of arguments and it is legal to call such a function with one or more arguments. In C++, function prototype without parameters means that function accepts no arguments and it is illegal to call such function with arguments. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;hello&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above is absolutely legal C code that won’t compile as C++. As a matter of fact, I haven’t seen many C++ developers who can tell the difference between <code>void foo();</code> and <code>void foo(void);</code></p>
+
+<h3>Crossing initialization with goto or switch</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>  <span class="nl">out:</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above is a perfectly legal C code but is rejected by C++ compiler as C++ does not allow to cross initialization:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span><span class="mi">5</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="k">goto</span> <span class="n">into</span> <span class="n">protected</span> <span class="n">scope</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span><span class='line'>    <span class="o">^</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">4</span><span class="o">:</span><span class="mi">9</span><span class="o">:</span> <span class="n">note</span><span class="o">:</span> <span class="n">jump</span> <span class="n">bypasses</span> <span class="n">variable</span> <span class="n">initialization</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">^</span>
+</span><span class='line'><span class="mi">1</span> <span class="n">error</span> <span class="n">generated</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Keywords clash</h3>
+
+<p>C++ would fail to compile any legal C code that happen to use C++ keywords:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">old</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">new</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>More! More! More!</h2>
+
+<p>Oh, you knew that? If you knew all of the above and still consider yourself a “C/C++” developer, hold on a second. Name at least 10 more differences. Huh?</p>
+
+<ul>
+<li>In C++, comma operator can yield an l-value. In C it cannot.</li>
+<li>C does not allow duplicate typedefs while C++ does.</li>
+<li>C++ does not allow non-prototype function declarations while C does.</li>
+<li>C allows struct, union and enum to be declared in function prototypes, C++ doesn’t.</li>
+<li>C allows for implicit discard of pointer const qualifiers. This trick won’t work in C++.</li>
+<li>In C++, struct, union and enum declarations automatically imply a typedef with the same name. This is not the case in C.</li>
+<li>Character literals in C are of type int. In C++ they are of type char.</li>
+<li>C++ implicitly treats any const global as file scope unless it is explicitly declared extern, unlike C in which extern is the default.</li>
+<li>Functions market as “inline” in C are of file scope whereas they have external linkage by default in C++.</li>
+<li>C has VLA (Variable Length Arrays) support whereas C++ does not (until C++14).</li>
+</ul>
+
+
+<p>And the list of technical differences/incompatibilities of C and C++ can go on and on. The list is so big that it is impossible to fit it into a blog post. But if you are interested, check out References section in the bottom of this post.</p>
+
+<p>Aside of technical differences, it would also be a mistake not to mention the coding style. Not a formatting style or using tabs versus spaces, but coding style. For example, C++ developers would always cast a result of <code>malloc()</code> whereas C developers would almost never do that.</p>
+
+<h2>Grammar of «C/C++»</h2>
+
+<p>Trying to figure out the meaning behind «C/C++», I dug the usage of slash as a punctuation sign in English text. I have never learn English grammar in school so you may want to check me on this one. Anyhow, according to Wikipedia the slash is most commonly used as the word substitute for “or” which indicates a choice (often mutually-exclusive) is present.</p>
+
+<p>If that is the case, then companies are actually looking for either C or C++ developers, not both. Which doesn’t make any sense at all. Why nobody is looking for “Cobol/Ada” or “Lisp/Verilog” developers? Looking at other industries, there seem to be no companies searching for “Linguist/Plumber”-like people.</p>
+
+<p>So the grammar doesn’t seem to back up the usage of «C/C++» term. This leaves everyone guessing as to what it actually means and the only way to figure out is from the context.</p>
+
+<h2>What it actually means</h2>
+
+<p>The actual meaning of «C/C++» depends. Here are some examples of what this means according to my observations.</p>
+
+<p>In job postings, “We are looking for C/C++ developers” generally means “We are looking for C++ developers, nobody knows C here but why not put that in a title, too?”</p>
+
+<p>When somebody brags about being a “C/C++” developers it means they don’t really know any of those languages but learned to write a “Hello, World!” application using printf() and compile it with C++ compiler.</p>
+
+<p>In forums, «C/C++» section is usually dedicated for C++ crowd that might as well be able to answer some C-related questions if you get lucky.</p>
+
+<h2>Tip: Don’t Use «C/C++»</h2>
+
+<p>If you are looking for a developer, make sure you clearly specify requirements and avoid the use of «C/C++». If it so happens that you are actually looking for someone who knows both, say «C and C++». If you are willing to spend a few years teaching C developer C++ language, say «C++ developer or C developer willing to learn C++». Using «C/C++» will only bring confusion to those reading the job posting.</p>
+
+<p>End of rant.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Slash_(punctuation">Slash in English text.</a></li>
+<li><a href="http://david.tribble.com/text/cdiffs.htm">Incompatibilities Between ISO C and ISO C++</a> by David R. Tribble</li>
+<li><a href="http://en.wikipedia.org/wiki/Compatibility_of_C_and_C%2B%2B">Compatibility of C and C++</a></li>
+<li><a href="http://c-faq.com/malloc/mallocnocast.html">What’s wrong with casting malloc’s return value?</a></li>
+</ul>
+
 </div>
   
   
@@ -191,15 +368,15 @@ Semiconscious, I was going through my phone’s address book looking for at leas
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a>
+    
+    <a class="list-group-item " href="/c-vs-cxx/">Two Different Languages - C and C++</a>
+    
+    <a class="list-group-item " href="/ask-smart/">Ask Smart Questions and You Will Succeed</a>
+    
     <a class="list-group-item " href="/network-evolution/">The Evolution of Computer Networking</a>
     
     <a class="list-group-item " href="/stranded/">Stranded</a>
-    
-    <a class="list-group-item " href="/c-oop/">OOP With ANSI C</a>
-    
-    <a class="list-group-item " href="/fix-checksum/">Calculating FIX Message Checksum</a>
-    
-    <a class="list-group-item " href="/free-delete/">Use Free and Delete Correctly.</a>
     
   </div>
 </section>
@@ -211,7 +388,7 @@ Semiconscious, I was going through my phone’s address book looking for at leas
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">10</span>
+        <span class="badge">12</span>
         C++
       </a>
     
@@ -223,7 +400,7 @@ Semiconscious, I was going through my phone’s address book looking for at leas
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">16</span>
+        <span class="badge">18</span>
         Tech
       </a>
     
@@ -241,7 +418,7 @@ Semiconscious, I was going through my phone’s address book looking for at leas
     
     
     <a class="list-group-item " href="/blog/categories/life">
-        <span class="badge">1</span>
+        <span class="badge">2</span>
         Life
       </a>
     

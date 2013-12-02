@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C++ | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T21:38:07-05:00</updated>
+  <updated>2013-12-01T22:07:58-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,569 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[C++ Exceptions, Stack Trace and GDB Automation]]></title>
+    <link href="http://741MHz.com/throw-stacktrace/"/>
+    <updated>2013-04-16T00:00:00-04:00</updated>
+    <id>http://741MHz.com/throw-stacktrace</id>
+    <content type="html"><![CDATA[<p>The tricky part about any exception is that the stack is already unwinded by the time exception is caught and there is no easy way to figure out from which part of the code it was thrown. Have you ever caught an exception that has no information that can be used to find where the problem is? The one that says «this should never happen» or even has no text at all. Hopefully, this doesn’t happen to you very often. But if you work with a large C++ codebase with tons of different components written by different developers then sooner or later it would definitely happen. It can be quite disappointing and take a lot of time going through the pile of somebody else’s code trying to figure out what went wrong. So you must be prepared. I might be a little bit unlucky in this regard – this happened to me a lot, so I decided to share a few ways for overcoming this type of situations.</p>
+
+<h2>Backtrace API</h2>
+
+<p>Quite a few C runtime libraries provide a mechanism to examine the current thread’s call stack. It consists of three functions declared in <code>execinfo.h</code> header:</p>
+
+<p>```c
+int backtrace(void** array, int size);</p>
+
+<p>char<em><em> backtrace_symbols(void</em> const</em> array, int size);</p>
+
+<p>void backtrace_symbols_fd(void<em> const</em> array, int size, int fd);
+```</p>
+
+<p>Using those functions, one can access the stack trace at any given point of program execution. Here is a simple example that prints the stack to standard output:</p>
+
+<p>```c++</p>
+
+<h1>include &lt;execinfo.h></h1>
+
+<h1>include <iostream></h1>
+
+<p>int main()
+{</p>
+
+<pre><code>void *callstack[256];
+int frames = ::backtrace(
+    callstack, sizeof(callstack) / sizeof(callstack[0]));
+char **symbols = ::backtrace_symbols(callstack, frames);
+std::cout &lt;&lt; "Stack Trace:\n";
+for (int i = 0; i &lt; frames; ++i) {
+    std::cout &lt;&lt; '\t' &lt;&lt; symbols[i] &lt;&lt; '\n';
+}
+std::free(symbols);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This method can be used to get the stack trace before the exception is thrown and before the stack is unwinded. In order to do that, one could define a custom exception class that grabs the stack trace in its constructor. For example:</p>
+
+<p>```c++</p>
+
+<h1>include &lt;execinfo.h></h1>
+
+<h1>include <string></h1>
+
+<h1>include <stdexcept></h1>
+
+<h1>include <cstdlib></h1>
+
+<h1>include <iostream></h1>
+
+<p>class Exception : public std::exception {
+  public:</p>
+
+<pre><code>Exception() {
+    grab_backtrace();
+}
+
+explicit Exception(const std::string &amp;reason) : reason_(reason) {
+    reason_.append(1, '\n');
+    grab_backtrace();
+}
+
+virtual ~Exception() throw() { }
+
+virtual const char *what() const throw() {
+    return reason_.c_str();
+}
+</code></pre>
+
+<p>  private:</p>
+
+<pre><code>void grab_backtrace() {
+    void *callstack[256];
+    int frames = ::backtrace(
+        callstack, sizeof(callstack) / sizeof(callstack[0]));
+    char **symbols = backtrace_symbols(callstack, frames);
+    try {
+        reason_.append("Stack Trace:");
+        for (int i = 0; i &lt; frames; ++i) {
+            reason_.append("\n\t").append(symbols[i]);
+        }
+    } catch(const std::exception &amp;) {
+        std::free(symbols);
+        throw;
+    }
+    std::free(symbols);
+}
+
+std::string reason_;
+</code></pre>
+
+<p>};</p>
+
+<p>static void do_something(int n, int i = 0)
+{</p>
+
+<pre><code>if (i &lt; n) {
+    do_something(n, ++i);
+} else {
+    throw Exception("Recursion limit exceeded");
+}
+</code></pre>
+
+<p>}</p>
+
+<p>int main(int argc, char *argv[])
+{</p>
+
+<pre><code>try {
+    do_something(argc &gt; 1 ? std::atoi(argv[1]) : 10, argc);
+} catch(const std::exception &amp;e) {
+    std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
+    return EXIT_FAILURE;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>So far so good! Here is an example of running the above program:</p>
+
+<p>```
+$ clang++ -Wall -pedantic ./test.cpp &amp;&amp; ./a.out 3
+Recursion limit exceeded
+Stack Trace:</p>
+
+<pre><code>0   a.out                0x00000001034fa7af _ZN9Exception14grab_backtraceEv + 63
+1   a.out                0x00000001034fa6f4 _ZN9ExceptionC2ERKSs + 116
+2   a.out                0x00000001034fa56d _ZN9ExceptionC1ERKSs + 29
+3   a.out                0x00000001034fa33c _Z12do_somethingii + 140
+4   a.out                0x00000001034fa2df _Z12do_somethingii + 47
+5   a.out                0x00000001034fa42d main + 93
+6   libdyld.dylib        0x00007fff935e27e1 start + 0
+</code></pre>
+
+<p>```</p>
+
+<p>Unfortunately, there are a few problems with this approach. Firstly, there no file names and no line numbers. Secondly, this approach requires to use the “Exception” class as a base class of all exceptions in the project (well, at least for those you want to get a stack trace for), which indeed can be very problematic if not impossible. But even if all of the above is fine with you, this approach may still not work out for you because frame pointers can be omitted in optimized builds. For example, omitting frame pointers is a default behavior of recent GCC compilers for x86_64 platforms (which can also be turned on/off using <code>-fomit-frame-pointer</code> option). Our call stack becomes useless if frame pointers are omitted:</p>
+
+<p>```
+$ clang++ -Wall -fomit-frame-pointer ./test.cpp &amp;&amp; ./a.out 3
+Recursion limit exceeded
+Stack Trace:</p>
+
+<pre><code>0   a.out                0x0000000105eca82d _ZN9Exception14grab_backtraceEv + 61
+</code></pre>
+
+<p>```</p>
+
+<p>Depending on the system, there could be other requirements in order to make this API work. For example, GNU runtime requires you to specify “-rdynamic” flag to instruct the linker to add all symbols, not only used ones, to the dynamic symbol table. So don’t forget to read a manual page for this API in your system before using this.</p>
+
+<h2>__FILE__ and __LINE__</h2>
+
+<p>C++ has many <a href="http://gcc.gnu.org/onlinedocs/cpp/Standard-Predefined-Macros.html">standard predefined macros</a>. <code>__FILE__</code> and <code>__LINE__</code> macros are those two that come handy in order to identify a point in a program:</p>
+
+<p><code>__FILE__</code>  macros expands to the name of the current input file, in the form of a C string constant. This is the path by which the preprocessor opened the file, not the short name specified in ‘#include’ or as the input file name argument. For example, “/usr/local/include/myheader.h” is a possible expansion of this macros.</p>
+
+<p><code>__LINE__</code> macros expands to the current input line number, in the form of a decimal integer constant. While we call it a predefined macro, it’s a pretty strange macro, since its “definition” changes with each new line of source code.|</p>
+
+<p>Using the above macros, it is possible to include both file and line information along with exception’s text, or maybe as additional member fields of any given exception class. There are multiple choices. Here is an example of one of possible implementations:</p>
+
+<p>```c++</p>
+
+<h1>include <stdexcept></h1>
+
+<h1>include <cstdlib></h1>
+
+<h1>include <iostream></h1>
+
+<p>class Exception : public std::runtime_error {
+  public:</p>
+
+<pre><code>template &lt;unsigned int location_len&gt;
+inline Exception(const char (&amp;location)[location_len],
+                 const std::string &amp;reason)
+    : std::runtime_error(reason + location)
+{ }
+
+virtual ~Exception() throw() { }
+</code></pre>
+
+<p>};</p>
+
+<h1>define MY_THROW_STR_I(Arg) #Arg</h1>
+
+<h1>define MY_THROW_STR(Arg) MY_THROW_STR_I(Arg)</h1>
+
+<h1>define MY_THROW(Type, &hellip;)                                             \</h1>
+
+<pre><code>do {                                                                \
+    throw Type(" @ "; __FILE__ ";:" MY_THROW_STR(__LINE__), ##__VA_ARGS__); \
+} while (0)
+</code></pre>
+
+<p>static void do_something(int n, int i = 0)
+{</p>
+
+<pre><code>if (i &lt; n) {
+    do_something(n, ++i);
+} else {
+    MY_THROW(Exception, "Recursion limit exceeded");
+}
+</code></pre>
+
+<p>}</p>
+
+<p>int main(int argc, char *argv[])
+{</p>
+
+<pre><code>try {
+    do_something(argc &gt; 1 ? std::atoi(argv[1]) : 10, argc);
+} catch(const std::exception &amp;e) {
+    std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
+    return EXIT_FAILURE;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>When the exception is caught and printed, the source file name and a line numbers are included, which makes it easy to trace the origins of such an exception:</p>
+
+<p><code>
+$ ./a.out
+Recursion limit exceeded @ ./test.cpp:26
+</code></p>
+
+<p>Of course, this does not include a stack trace. But it works if frame pointers are omitted, tail recursion optimization is applied, or even if all symbol names are stripped out of the executable. There is one problem though — it may not be useful without a stack trace in certain cases. For example, one may declare a helper function used to throw an exception, like this:</p>
+
+<p>```c++
+<strong>attribute</strong>((noreturn)) void report_error(const std::string &amp;reason) {</p>
+
+<pre><code>MY_THROW(Exception, reason);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>In that case, the file and line of the exception origins will always be the same even if it was called from different places in the program. So this approach is also not a cure for all diseases.</p>
+
+<h2>GDB Scripting: Automatic Backtrace on Exception Catchpoints</h2>
+
+<p>And the last but not least method is to use <a href="http://www.gnu.org/software/gdb/">GDB debugger</a>. If you are not familiar with this debugger, you definitely should spend some time learning it. It is one of the most powerful tools out there. And it comes extremely handy when dealing with exceptions.</p>
+
+<p><a href="http://sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html">GDB provides special catch points</a>, including those to catch exceptions being thrown, caught or even unhandled. We are interested in exceptions that are being thrown and so must use <code>catch throw</code> command. Here is an example of manually using GDB in order to examine a stack trace before the exception is thrown:</p>
+
+<p>```
+$ gdb -args ./a.out 5
+Reading symbols from /tmp/a.out&hellip;done.
+(gdb) catch throw
+Catchpoint 1 (throw)
+(gdb) run
+Starting program: /tmp/a.out 5
+Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</p>
+
+<pre><code>at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
+</code></pre>
+
+<p>70    header->exc.unexpectedHandler = __unexpected_handler;
+(gdb) backtrace</p>
+
+<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</h1>
+
+<pre><code>at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
+</code></pre>
+
+<h1>1  0x0000000000400fee in report_error (reason=&ldquo;Recursion limit exceeded&rdquo;) at ./test.cpp:25</h1>
+
+<h1>2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</h1>
+
+<h1>3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</h1>
+
+<h1>4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</h1>
+
+<h1>5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</h1>
+
+<h1>6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</h1>
+
+<p>(gdb) continue
+Continuing.
+Recursion limit exceeded @ ./test.cpp:25
+[Inferior 1 (process 3865) exited with code 01]
+(gdb) quit
+```</p>
+
+<p>At first, this might sound silly because in the real world a program may encounter a lot of exceptions and manually typing “backtrace” and “continue” every type that happens is nothing but a waste of time. But there is one trick — GDB can be automated. There are two ways of doing this — use a batch mode or a more sophisticated <a href="http://sourceware.org/gdb/wiki/PythonGdbTutorial">Python scripting</a>. For our purpose, a batch script will do just fine. Here is a simple script that turns off verbose output and paging, sets up a <code>throw</code> catch point and executes <code>backtrace</code> + <code>continue</code> commands every time the event is caught:</p>
+
+<p><code>
+set verbose off
+set pagination off
+catch throw
+commands
+backtrace
+continue
+end
+run
+quit
+</code></p>
+
+<p>Save the above script into a file, and then run GDB in batch mode telling it to use that file, which in my case is called “gdb_bt_script”:</p>
+
+<p>```
+$ gdb -n -batch -x ./gdb_bt_script &mdash;args ./a.out 5
+Catchpoint 1 (throw)
+Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
+70    header->exc.unexpectedHandler = __unexpected_handler;</p>
+
+<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</h1>
+
+<h1>1  0x0000000000400fee in report_error (reason=&ldquo;Recursion limit exceeded&rdquo;) at ./test.cpp:25</h1>
+
+<h1>2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</h1>
+
+<h1>3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</h1>
+
+<h1>4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</h1>
+
+<h1>5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</h1>
+
+<h1>6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</h1>
+
+<p>Recursion limit exceeded @ ./test.cpp:25
+[Inferior 1 (process 5849) exited with code 01]
+$
+```</p>
+
+<p>Whoala! Now we get a full stack trace including function parameters, their values, and file and line numbers. If the program is optimized and has no debug symbols, however, we get a little bit less:</p>
+
+<p>```
+$ gdb -n -batch -x ./gdb_bt_script &mdash;args ./a.out 5
+Catchpoint 1 (throw)
+Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
+70    header->exc.unexpectedHandler = __unexpected_handler;</p>
+
+<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</h1>
+
+<h1>1  0x00000000004010a8 in report_error(std::string const&amp;) ()</h1>
+
+<h1>2  0x000000000040121e in do_something(int, int) ()</h1>
+
+<h1>3  0x0000000000400ef6 in main ()</h1>
+
+<p>Recursion limit exceeded @ ./test.cpp:25
+[Inferior 1 (process 1877) exited with code 01]
+```</p>
+
+<p>Yet still a lot more than we get using backtrace API. But the most beautiful part is that this method does not require any code changes and works for pretty much any binary.</p>
+
+<h2>The End</h2>
+
+<p>Those were three fundamental methods that can help to identify a place where exception is thrown from. They are not mutually exclusive. Each has its cons and pros. I personally prefer to use GDB because it doesn’t require a code change, but use other two methods as well, depending on a situation. It is up to you to decide which one to use.</p>
+
+<p>Hope it helps and Good Luck!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Two Different Languages - C and C++]]></title>
+    <link href="http://741MHz.com/c-vs-cxx/"/>
+    <updated>2013-04-15T00:00:00-04:00</updated>
+    <id>http://741MHz.com/c-vs-cxx</id>
+    <content type="html"><![CDATA[<p>Good news everyone, we are looking for a C/C++ developer! Wait, that’s not good news at all!</p>
+
+<p>You see, the term «C/C++» is likely to piss off those who actually know both C and C++. On the other hand, majority of C++ developers mistakenly think they know C. And it would take at least a year or two for a C developer to learn C++. Yet «C/C++» is mentioned in way too many job postings. So who exactly are we looking for?</p>
+
+<p>Let’s start by asking a simple question — what would the main() function return in the below C/C++ program?</p>
+
+<p>```c++
+extern int T;</p>
+
+<p>int main()
+{</p>
+
+<pre><code>struct T { int a; int b; };
+return sizeof(T) + sizeof('T');
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Of course it depends on architecture. But let’s assume that size of int is 4 bytes and structure T has no extra padding. The code is legal in both C and C++. Yet the correct answer depends on whether this is a C or C++ program. If it is a C program then the correct answer is 8. In case of C++ the answer is 9.</p>
+
+<h2>C is not C++</h2>
+
+<p>C++ originated back in 1979 and at that time it was based on C. It wasn’t even called C++ — its first name was «C with Classes». The language was renamed to «C++» only in 1983. At that time, both languages were closely related. However, from that point both C and C++ took a different evolution path and today, some 30+ years later, both languages are as different as Objective-C and C++, Java and C#, Python and Ruby, OCaml and F#. There is only one catch — the basic syntax of both is very similar to such a degree that it is possible to have a program that is both legal C and legal C++, which may or may not behave differently. Generally, everyone knows that C++ has tons of features that are not available in C but any C code can be compiled as C++. Therefore, C++ developers also think that they know C. And in most cases they are dangerously mistaken. Below is a list of the most common features of C language serving as traps for C++ fellows.</p>
+
+<h3>Casting void pointer</h3>
+
+<p>In C, void pointer can be implicitly casted to a pointer of any other type. For example:</p>
+
+<p><code>c
+void *ptr = 0xDEADDEAD;
+int *i = ptr;
+</code></p>
+
+<p>C developers use this convenient feature all the time. However, any C++ compiler would choke on that and die.</p>
+
+<h3>Implicit function declaration</h3>
+
+<p>In C, it is not always necessary to declare a function before using it. Using an undeclared function implicitly declares it. This feature has been declared deprecated since 1999 but is still used here and there. For example:</p>
+
+<p>```c
+int main() {</p>
+
+<pre><code>    return foo();
+</code></pre>
+
+<p>}</p>
+
+<p>int foo() {</p>
+
+<pre><code>    return 0;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>A perfectly legal C program that is illegal C++:</p>
+
+<p><code>
+$ gcc ./test.c
+$ g++ ./test.cpp
+./test.cpp: In function ‘int main()’:
+./test.cpp:3: error: ‘foo’ was not declared in this scope
+</code></p>
+
+<h3>No arguments vs any arguments</h3>
+
+<p>In C, function prototype without parameters imply that function accepts any number of arguments and it is legal to call such a function with one or more arguments. In C++, function prototype without parameters means that function accepts no arguments and it is illegal to call such function with arguments. For example:</p>
+
+<p>```c
+void foo();</p>
+
+<p>int main() {</p>
+
+<pre><code>    foo(1, "hello");
+</code></pre>
+
+<p>}</p>
+
+<p>void foo() {
+}
+```</p>
+
+<p>The above is absolutely legal C code that won’t compile as C++. As a matter of fact, I haven’t seen many C++ developers who can tell the difference between <code>void foo();</code> and <code>void foo(void);</code></p>
+
+<h3>Crossing initialization with goto or switch</h3>
+
+<p>```c
+int main()
+{</p>
+
+<pre><code>goto out;
+int i = 1;
+</code></pre>
+
+<p>  out:</p>
+
+<pre><code>return 0;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above is a perfectly legal C code but is rejected by C++ compiler as C++ does not allow to cross initialization:</p>
+
+<p>```
+$ clang++ ./test.cpp
+./test.cpp:3:5: error: goto into protected scope</p>
+
+<pre><code>goto out;
+^
+</code></pre>
+
+<p>./test.cpp:4:9: note: jump bypasses variable initialization</p>
+
+<pre><code>int i = 1;
+    ^
+</code></pre>
+
+<p>1 error generated.
+```</p>
+
+<h3>Keywords clash</h3>
+
+<p>C++ would fail to compile any legal C code that happen to use C++ keywords:</p>
+
+<p>```c
+struct foo {</p>
+
+<pre><code>int old;
+int new;
+</code></pre>
+
+<p>};
+```</p>
+
+<h2>More! More! More!</h2>
+
+<p>Oh, you knew that? If you knew all of the above and still consider yourself a “C/C++” developer, hold on a second. Name at least 10 more differences. Huh?</p>
+
+<ul>
+<li>In C++, comma operator can yield an l-value. In C it cannot.</li>
+<li>C does not allow duplicate typedefs while C++ does.</li>
+<li>C++ does not allow non-prototype function declarations while C does.</li>
+<li>C allows struct, union and enum to be declared in function prototypes, C++ doesn’t.</li>
+<li>C allows for implicit discard of pointer const qualifiers. This trick won’t work in C++.</li>
+<li>In C++, struct, union and enum declarations automatically imply a typedef with the same name. This is not the case in C.</li>
+<li>Character literals in C are of type int. In C++ they are of type char.</li>
+<li>C++ implicitly treats any const global as file scope unless it is explicitly declared extern, unlike C in which extern is the default.</li>
+<li>Functions market as “inline” in C are of file scope whereas they have external linkage by default in C++.</li>
+<li>C has VLA (Variable Length Arrays) support whereas C++ does not (until C++14).</li>
+</ul>
+
+
+<p>And the list of technical differences/incompatibilities of C and C++ can go on and on. The list is so big that it is impossible to fit it into a blog post. But if you are interested, check out References section in the bottom of this post.</p>
+
+<p>Aside of technical differences, it would also be a mistake not to mention the coding style. Not a formatting style or using tabs versus spaces, but coding style. For example, C++ developers would always cast a result of <code>malloc()</code> whereas C developers would almost never do that.</p>
+
+<h2>Grammar of «C/C++»</h2>
+
+<p>Trying to figure out the meaning behind «C/C++», I dug the usage of slash as a punctuation sign in English text. I have never learn English grammar in school so you may want to check me on this one. Anyhow, according to Wikipedia the slash is most commonly used as the word substitute for “or” which indicates a choice (often mutually-exclusive) is present.</p>
+
+<p>If that is the case, then companies are actually looking for either C or C++ developers, not both. Which doesn’t make any sense at all. Why nobody is looking for “Cobol/Ada” or “Lisp/Verilog” developers? Looking at other industries, there seem to be no companies searching for “Linguist/Plumber”-like people.</p>
+
+<p>So the grammar doesn’t seem to back up the usage of «C/C++» term. This leaves everyone guessing as to what it actually means and the only way to figure out is from the context.</p>
+
+<h2>What it actually means</h2>
+
+<p>The actual meaning of «C/C++» depends. Here are some examples of what this means according to my observations.</p>
+
+<p>In job postings, “We are looking for C/C++ developers” generally means “We are looking for C++ developers, nobody knows C here but why not put that in a title, too?”</p>
+
+<p>When somebody brags about being a “C/C++” developers it means they don’t really know any of those languages but learned to write a “Hello, World!” application using printf() and compile it with C++ compiler.</p>
+
+<p>In forums, «C/C++» section is usually dedicated for C++ crowd that might as well be able to answer some C-related questions if you get lucky.</p>
+
+<h2>Tip: Don’t Use «C/C++»</h2>
+
+<p>If you are looking for a developer, make sure you clearly specify requirements and avoid the use of «C/C++». If it so happens that you are actually looking for someone who knows both, say «C and C++». If you are willing to spend a few years teaching C developer C++ language, say «C++ developer or C developer willing to learn C++». Using «C/C++» will only bring confusion to those reading the job posting.</p>
+
+<p>End of rant.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Slash_(punctuation">Slash in English text.</a></li>
+<li><a href="http://david.tribble.com/text/cdiffs.htm">Incompatibilities Between ISO C and ISO C++</a> by David R. Tribble</li>
+<li><a href="http://en.wikipedia.org/wiki/Compatibility_of_C_and_C%2B%2B">Compatibility of C and C++</a></li>
+<li><a href="http://c-faq.com/malloc/mallocnocast.html">What’s wrong with casting malloc’s return value?</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Use free and delete correctly.]]></title>
@@ -780,339 +1343,6 @@ virtual ~Foo() final { }
 <li><a href="http://gcc.gnu.org/projects/cxx0x.html">GCC C++11 Status Report</a></li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[How Not To Write a Signal Handler]]></title>
-    <link href="http://741MHz.com/signal-handler/"/>
-    <updated>2013-01-15T00:00:00-05:00</updated>
-    <id>http://741MHz.com/signal-handler</id>
-    <content type="html"><![CDATA[<p>Back in the day, I was reading a book about UNIX® programming and have learned how to write a signal handler. It was a long time ago and I don’t remember the book, but to this day the way described in that book is something that shows up in Google’s top results when you search for “How to write a signal handler”. Here it is — a simple, elegant solution to the world’s toughest problem:</p>
-
-<p>```c++ A simple, elegant solution to the world’s toughest problem.</p>
-
-<h1>include &lt;stdlib.h></h1>
-
-<h1>include &lt;signal.h></h1>
-
-<h1>include &lt;stdio.h></h1>
-
-<h1>include &lt;unistd.h></h1>
-
-<p>static void my_sig_handler(int signum) {</p>
-
-<pre><code>printf("Received interrupt signal!\n");
-</code></pre>
-
-<p>}</p>
-
-<p>int main() {</p>
-
-<pre><code>signal(SIGINT, my_sig_handler);
-for (;;) {
-    printf("Doing useful stuff...\n");
-    sleep(1); /* Sleep is not only useful, it is essential! */
-}
-return EXIT_SUCCESS;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Now imagine for a second that instead of a simple invocation of <code>sleep()</code> in the body of the <code>main()</code> function, just after the <code>printf()</code>, there was some very important code running a life support system and someone’s life was really dependent on that. What would have happened? Someone would not have been alive for long — that’s for sure. And the terrible signal handling is to blame and here is why…</p>
-
-<h2>You Have Been Warned</h2>
-
-<p>Let’s take a quick look at Linux® manual page for a <code>signal()</code> call. You can find by typing <code>man 2 signal</code> in the command line, or by checking it out online, here — <a href="http://man7.org/linux/man-pages/man2/signal.2.html">http://man7.org/linux/man-pages/man2/signal.2.html</a>. The first sentence in the manual page introduces you to the <code>signal()</code> call. The second sentence, now in bold, warns you, and I quote:</p>
-
-<blockquote><p>Avoid its use: use sigaction(2) instead.</p></blockquote>
-
-<h2>Your Computer Might Take a Trip to a Grocery Store</h2>
-
-<p>Continuing reading the manual page, the very first note under the NOTES section is this:</p>
-
-<blockquote><p>The effects of signal() in a multithreaded process are unspecified.</p></blockquote>
-
-<p>This is called <a href="http://en.wikipedia.org/wiki/Unspecified_behavior">Unspecified Behavior</a>. What it means is that standard does not say anything as for how the function should behave in a multi-threaded environment. Therefore, it may exhibit a different behavior on different systems including different versions of the same system, at discretion of those who implement it. Your mileage may vary.</p>
-
-<p>Even if your code does not explicitly use multiple threads, you are still in danger — it might be used as part of a bigger program in multi-threaded environment. But even if that’s not that case — hey, tomorrow you might want to do that. Do you really want to screw yourself upfront by using this bad <code>signal()</code> function? Think twice.</p>
-
-<h2>Asynchronicity &amp; Reentrancy</h2>
-
-<p>Signals are asynchronous by their nature. Another signal may be delivered to the process while the previous signal is still being “processed”. Therefore, signal handler must not introduce unwanted side effects, must be fully reentrant and cannot use any non-reentrant code — neither explicitly nor implicitly. Now take a quick look at the famous example mentioned at the beginning — there is a nice <code>printf()</code> right in the signal handler code. This is a life threatening piece of code because <code>printf()</code> is non-reentrant. In other words, it is possible that <code>printf()</code> function will get interrupted before it finishes and get called again as part of another signal handler. If that case the program will simply <a href="http://en.wikipedia.org/wiki/Deadlock">deadlock</a>.</p>
-
-<h2>Async-Signal-Safe Functions</h2>
-
-<p>The section 7 of the manual page about signal (which you can see by typing <code>man 7 signal</code> in your terminal or read online here — <a href="http://man7.org/linux/man-pages/man7/signal.7.html">http://man7.org/linux/man-pages/man7/signal.7.html</a>) states the following:</p>
-
-<blockquote><p><strong>Async-signal-safe functions</strong>
-A signal handler function must be very careful, since processing elsewhere may be interrupted at some arbitrary point in the execution of the program. POSIX has the concept of “safe function”. If a signal interrupts the execution of an unsafe function, and handler calls an unsafe function, then the behavior of the program is undefined.</p></blockquote>
-
-<p>And then it lists all async-signal-safe functions. So if you don’t know what functions are safe to use inside a signal handler and what functions are not — refer to that list and make sure you are not doing anything dangerous.</p>
-
-<h2>Better Safe Than Sorry</h2>
-
-<p>What is the best way not to become a drag addict? Not to take drugs in the first place. What is the best way to write a safe signal handler? Not to write it all. OK, I am just kidding. Seriously though — if you really want your signal handler to be safe and portable, consider not doing anything inside it except modifying a global <a href="http://en.wikipedia.org/wiki/Volatile_variable">volatile</a> variable of <a href="http://en.cppreference.com/w/cpp/utility/program/sig_atomic_t"><code>sig_atomic_t</code></a> type. Taking all of the above into account, below is an example of how a safe signal handler may look like in real life (note the absence of <code>signal()</code> function in the code):</p>
-
-<p>```c++ Simple and safe signal handling</p>
-
-<h1>include &lt;stdlib.h></h1>
-
-<h1>include &lt;signal.h></h1>
-
-<h1>include &lt;stdio.h></h1>
-
-<h1>include &lt;string.h></h1>
-
-<h1>include &lt;unistd.h></h1>
-
-<p>static volatile sig_atomic_t got_signal = 0;</p>
-
-<p>static void my_sig_handler(int signo)
-{</p>
-
-<pre><code>got_signal = 1;
-</code></pre>
-
-<p>}</p>
-
-<p>int main()
-{</p>
-
-<pre><code>struct sigaction sa;
-
-memset(&amp;sa, 0, sizeof(struct sigaction));
-sa.sa_handler = &amp;my_sig_handler;
-if (sigaction(SIGINT, &amp;sa, NULL) == -1) {
-    perror("sigaction");
-    return EXIT_FAILURE;
-}
-
-for (;;) {
-    if (got_signal) {
-        got_signal = 0;
-        printf("Received interrupt signal!\n");
-    }
-    printf("Doing useful stuff...\n");
-    sleep(1); /* Sleep is not only useful, it is essential! */
-}
-return EXIT_SUCCESS;
-</code></pre>
-
-<p>}
-```</p>
-
-<h2>Modern Signal Handling</h2>
-
-<p>It is the 2013th year in the Common Era at the moment of this writing and you might think that people should have came up with something better in terms of signal handling at this time. The truth is that they did. It is just not that well known yet due to a huge momentum of outdated information still overflowing the Internet.</p>
-
-<h3>FreeBSD, NetBSD, OS X, iOS…</h3>
-
-<p>In the above family of operating systems, the modern way of handling signals is to use <a href="http://en.wikipedia.org/wiki/Kqueue">Kqueue</a> — a scalable event notification mechanism. Here is an example:</p>
-
-<p>```c++ Kqueue Signal Handling</p>
-
-<h1>include &lt;sys/types.h></h1>
-
-<h1>include &lt;sys/event.h></h1>
-
-<h1>include &lt;sys/time.h></h1>
-
-<h1>include &lt;signal.h></h1>
-
-<h1>include &lt;string.h></h1>
-
-<h1>include &lt;errno.h></h1>
-
-<h1>include &lt;stdlib.h></h1>
-
-<h1>include &lt;stdio.h></h1>
-
-<p>int main()
-{</p>
-
-<pre><code>int kq;
-int i;
-struct kevent ke;
-struct timespec timeout;
-struct sigaction sa;
-
-/* Block the signal we want to process with kevent first.
-   This is needed because kevent has lower precedence. */
-memset(&amp;sa, 0, sizeof(struct sigaction));
-sa.sa_handler = SIG_IGN;
-sigaction(SIGINT, &amp;sa, NULL);
-
-/* Create kqueue... */
-kq = kqueue();
-if (kq == -1) {
-    return EXIT_FAILURE;
-}
-/* Add a signal event */
-EV_SET(&amp;ke, SIGINT, EVFILT_SIGNAL, EV_ADD, 0, 0, NULL);
-i = kevent(kq, &amp;ke, 1, NULL, 0, NULL);
-if (i == -1)
-    return EXIT_FAILURE;
-/* Set a timeout (we no longer need to use a blocking sleep(1),
-   and this is great! */
-timeout.tv_sec = 1; /* To sleep for one second */
-timeout.tv_nsec = 0;
-
-/* Dispatch events */
-for (;;) {
-    i = kevent(kq, NULL, 0, &amp;ke, 1, &amp;timeout);
-    if (i &gt; 0) {
-        /* Got event(s) to dispatch. Note that we can do whatever the hell
-           we want here because we are __not__ in the signal handler. */
-        if (ke.ident == SIGINT) {
-            printf("Received interrupt signal!\n");
-        }
-    } else if (i == 0) {
-        /* Timeout elapsed */
-        printf("Doing useful stuff...\n");
-    } else if (i == -1) {
-        if (errno == EINTR)
-            continue; /* System call interrupted - just restart */
-        return EXIT_FAILURE; /* Something went wrong. */
-    }
-}
-return EXIT_SUCCESS;
-</code></pre>
-
-<p>}
-```</p>
-
-<h3>Linux</h3>
-
-<p>Linux provides <code>signalfd()</code> for handling signals. The beauty of it is that it may be used by itself, or may be combined with event notification mechanisms such as <code>epoll()</code> and friends. The manual page for <code>signalfd()</code> comes with a good example, so I don’t even have to write one. Here it is:</p>
-
-<p>```c++ Signalfd &amp; Epoll Signal Handling</p>
-
-<h1>include &lt;sys/signalfd.h></h1>
-
-<h1>include &lt;signal.h></h1>
-
-<h1>include &lt;unistd.h></h1>
-
-<h1>include &lt;stdlib.h></h1>
-
-<h1>include &lt;stdio.h></h1>
-
-<h1>define handle_error(msg)                               \</h1>
-
-<pre><code>do { perror(msg); exit(EXIT_FAILURE); } while (0)
-</code></pre>
-
-<p>int
-main(int argc, char *argv[])
-{</p>
-
-<pre><code>sigset_t mask;
-int sfd;
-struct signalfd_siginfo fdsi;
-ssize_t s;
-
-sigemptyset(&amp;mask);
-sigaddset(&amp;mask, SIGINT);
-sigaddset(&amp;mask, SIGQUIT);
-
-/* Block signals so that they aren't handled
-   according to their default dispositions */
-
-if (sigprocmask(SIG_BLOCK, &amp;mask, NULL) == -1)
-    handle_error("sigprocmask");
-
-sfd = signalfd(-1, &amp;mask, 0);
-if (sfd == -1)
-    handle_error("signalfd");
-
-for (;;) {
-    s = read(sfd, &amp;fdsi, sizeof(struct signalfd_siginfo));
-    if (s != sizeof(struct signalfd_siginfo))
-        handle_error("read");
-
-    if (fdsi.ssi_signo == SIGINT) {
-        printf("Got SIGINT\n");
-    } else if (fdsi.ssi_signo == SIGQUIT) {
-        printf("Got SIGQUIT\n");
-        exit(EXIT_SUCCESS);
-    } else {
-        printf("Read unexpected signal\n");
-    }
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<h2>Make the world a better place!</h2>
-
-<p>Please make the world a better place by writing correct and safe signal handling code.</p>
-
-<p>Thank you very much for reading!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Erasing Vector The Smart Way]]></title>
-    <link href="http://741MHz.com/vector-erase/"/>
-    <updated>2013-01-14T00:00:00-05:00</updated>
-    <id>http://741MHz.com/vector-erase</id>
-    <content type="html"><![CDATA[<p>In the C++ world, <a href="http://en.cppreference.com/w/cpp/container/vector"><code>std::vector</code></a> is a <a href="http://en.wikipedia.org/wiki/Sequence_container_(C%2B%2B">sequence container</a>) that encapsulates <a href="http://en.wikipedia.org/wiki/Dynamic_array">dynamic size arrays</a>. One of the main perks of the vector is the fact that elements are stored <strong>contiguously</strong>. In other words, a pointer to an element of a vector may be passed to any function that expects a pointer to an element of array. Or simply put — <code>std::vector</code> is very close to a <a href="http://www.cplusplus.com/doc/tutorial/arrays/">plain old-school C-style array</a>, yet it provides developers with a lot of C++ perks like automatic memory management, bounds checking and more. Unfortunately, <code>std::vector</code> is so great that many developers are using it without really thinking too much about the underlying implementation and its downsides.</p>
-
-<h2>Erase Trap</h2>
-
-<p>A common programming task is to remove one or more elements from the vector. Luckily, <code>std::vector</code> provides a wonderful method called <code>erase()</code> that does exactly that. So what’s the big deal? It’s a trap!</p>
-
-<p>C++ is just like medicine — it is both a cure and a disease. Vector is no exception. Its contiguous memory layout may heal, or it may kill. In this case it is a serial killer. Let’s see why.</p>
-
-<h2>The Innocent Piece of Code</h2>
-
-<p>Let’s take a look at the real-world example that I ran into a few days ago. The goal was to remove all even numbers from a vector, leaving only odd ones. Here is how it was implemented:</p>
-
-<p>```c++
-std::vector<int>::iterator it = array.begin();
-while (it != array.end()) {</p>
-
-<pre><code>if (*it % 2 == 0)
-    it = array.erase(it);
-else
-    ++it;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Logically thinking, the code is very sound — every element is being checked and removed only if it matches a given criteria. Developer even took extra care not to access invalidated iterator. Sounds like a great job. Nice, simple, and it works. Or does it?</p>
-
-<h2>The Problem</h2>
-
-<p>No, it does not. There is one big problem with that code that makes it totally useless. It takes about 55 seconds to run on just one million random elements. Why does that happen, you may ask? The developer  fell into a common trap! That happened because the elements of the vector are stored contiguously, in a contiguous memory and the whole vector is shifted left every time an element is erased. In other words — one does not simply erase an element that is not at the end of the vector.</p>
-
-<h2>The Solution</h2>
-
-<p>Here is the right way of doing this:</p>
-
-<p>```c++
-array.erase(</p>
-
-<pre><code>std::remove_if(
-    array.begin(), array.end(), [](int v) {
-        return v % 2 == 0;
-    }
-),
-array.end()
-</code></pre>
-
-<p>);
-```</p>
-
-<p>The above code does the job in only 5 milliseconds. That is about eleven thousand times faster. What kind of sorcery is that? Very simple — <a href="http://en.cppreference.com/w/cpp/algorithm/remove"><code>std::remove_if()</code></a> does not erase elements from the vector. It does’t remove anything either. Just a good naming joke. So what the hell it does? It re-arranges elements in such a way that elements to be erased are moved towards the end of a vector. Once the job is done, all elements are erased from the vector with a single invocation of <code>erase()</code>. As a result, the whole vector is not shifted tens of thousands of times and runs a lot faster.</p>
-
-<h2>The Conclusion</h2>
-
-<p>There ain’t no such thing as a free lunch.</p>
 ]]></content>
   </entry>
   

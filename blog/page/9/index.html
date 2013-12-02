@@ -114,94 +114,64 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-15T00:00:00-05:00" pubdate data-updated="true">Jan 15<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-04T00:00:00-05:00" pubdate data-updated="true">Mar 4<span>th</span>, 2013</time>
         
-           | <a href="/signal-handler/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/signal-handler/">Comments</a>
+           | <a href="/pyusb/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/pyusb/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/signal-handler/">How Not to Write a Signal Handler</a></h1>
+      <h1 class="entry-title"><a href="/pyusb/">Linux, HID and PyUSB</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Back in the day, I was reading a book about UNIX® programming and have learned how to write a signal handler. It was a long time ago and I don’t remember the book, but to this day the way described in that book is something that shows up in Google’s top results when you search for “How to write a signal handler”. Here it is — a simple, elegant solution to the world’s toughest problem:</p>
+  <div class="entry-content clearfix"><p>Today I was going through some stuff in my desk’s locker and ran into this nice toy — a big red electronic panic button. It has been there for years but I never had a chance to use it because a company making those does not have a driver for OS X, and of course I couldn’t find one for Linux either. But pushing a big red button is always fun and this time I have decided to try and make it work. So I brought it home with me into my “lab” to see what I can do.</p>
 
-<figure class='code'><figcaption><span>A simple, elegant solution to the world’s toughest problem.</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<p>After plugging it into a USB port, it immediately showed up in a list of USB devices (which you can see with lsusb tool). My Linux box has identified it as a Dream Cheeky Stress/Panic Button:</p>
+
+<pre><code>Bus 007 Device 010: ID 04f3:04a0 Elan Microelectronics Corp. Dream Cheeky Stress/Panic Button
+</code></pre>
+
+<p>Meanwhile, the kernel has also logged a message saying that it has found a new USB device. So the magic button seemed somewhat operational and I already knew two important things about it — a vendor and a product IDs. They were <code>0x04f3</code> and <code>0x04a0</code> respectively.</p>
+
+<h2>Writing a USB driver</h2>
+
+<p>The only little detail missing was actually a driver. I tried to <a href="https://duckduckgo.com/">Duck Duck Go</a> it real quick but nothing showed up, and I decided to write it myself. How hard can it be, after all?</p>
+
+<h2>Reverse Engineering</h2>
+
+<p>In order to write a device driver, one must know what the device is doing. Obviously, I didn’t have any specification, neither I wanted to deal with Elan Microelectronics support department. So the only way to figure it out was reverse engineering. Luckily, Linux has <a href="https://www.kernel.org/doc/Documentation/usb/usbmon.txt"><em>usbmon</em></a> — a facility in the kernel that is used to collect traces of I/O on the USB bus. After a quick pick at its documentation, I loaded the module using <code>modprobe usbmon</code> command and the device showed up in <code>/sys/kernel/debug/usb/devices</code>. Since it was attached to bus #7, I traced the I/O by reading the <code>/sys/kernel/debug/usb/usbmon/7u</code> file and pushing my panic button a few times to see if anything shows up. And every time I hit the button, the device was sending the following data to the host:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;signal.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">my_sig_handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">signum</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Received interrupt signal!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">signal</span><span class="p">(</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">my_sig_handler</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Doing useful stuff...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="cm">/* Sleep is not only useful, it is essential! */</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>ffff8801b2efc9c0 1873321198 C Ii:7:010:1 0:8 8 = 02000000 00000000
+</span><span class='line'>ffff8801b2efc9c0 1873457204 C Ii:7:010:1 0:8 8 = 06000000 00000000
+</span><span class='line'>ffff8801b2efc9c0 1873633203 C Ii:7:010:1 0:8 8 = 06001300 00000000
+</span><span class='line'>ffff8801b2efc9c0 1873801206 C Ii:7:010:1 0:8 8 = 06000000 00000000
+</span><span class='line'>ffff8801b2efc9c0 1873977211 C Ii:7:010:1 0:8 8 = 02000000 00000000</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Now imagine for a second that instead of a simple invocation of <code>sleep()</code> in the body of the <code>main()</code> function, just after the <code>printf()</code>, there was some very important code running a life support system and someone’s life was really dependent on that. What would have happened? Someone would not have been alive for long — that’s for sure. And the terrible signal handling is to blame and here is why…</p>
+<p>Not only this proved that button itself works, it also uncovered a pattern — the device was sending <code>02000000</code> and <code>06000000</code> twice with <code>06001300</code> in between. So <code>06001300</code> seemed like a good indication of the button being pressed.</p>
 
-<h2>You Have Been Warned</h2>
+<h2>Linux Kernel USB Driver</h2>
 
-<p>Let’s take a quick look at Linux® manual page for a <code>signal()</code> call. You can find by typing <code>man 2 signal</code> in the command line, or by checking it out online, here — <a href="http://man7.org/linux/man-pages/man2/signal.2.html">http://man7.org/linux/man-pages/man2/signal.2.html</a>. The first sentence in the manual page introduces you to the <code>signal()</code> call. The second sentence, now in bold, warns you, and I quote:</p>
+<p>The next step was to write a USB Device Driver for Linux. I dealt with PCI Express, DMA and Ethernet network drivers, but never wrote a single USB driver before. So I pulled my copy of the Linux Device Drivers book off the shelf and opened it on Chapter 13 “USB Drivers”. I have to say I got surprised — that rant is about 100 pages long. I would of course suck it up, enjoy the reading and proceed to hacking. If only it was something serious. And what I had was a simple USB button that did nothing but sending two 32-bit integers, 0x06 and 0x13, every time it gets hit. Going through the hundred pages just to read 64-bit of data off the USB cable, on Monday night, after a hard 10 hours working day… Ain’t nobody got time for that?</p>
 
-<blockquote><p>Avoid its use: use sigaction(2) instead.</p></blockquote>
+<h2>PyUSB</h2>
 
-<h2>Your Computer Might Take a Trip to a Grocery Store</h2>
+<p>A bit disappointed, I tried to find an easier way and once against ducked for a few keywords like “USB”, “driver”, “read”, “HID” and so on…</p>
 
-<p>Continuing reading the manual page, the very first note under the NOTES section is this:</p>
+<blockquote><p>Ask and it will be given to you; seek and you will find; knock and the door will be opened to you.
+— Matthew 7:7</p></blockquote>
 
-<blockquote><p>The effects of signal() in a multithreaded process are unspecified.</p></blockquote>
+<p>Turned out, it is possible to write a USB driver in just a few lines of Python. Sir <a href="http://www.micahcarrick.com/">Micah Carrick</a> have managed to make a driver for his credit card reader and wrote about his experience in <a href="http://www.micahcarrick.com/credit-card-reader-pyusb.html">this nice article</a>. Following in his footsteps, I quickly glanced at <a href="http://sourceforge.net/apps/trac/pyusb/">PyUSB</a> that he was using in his work, read a few other examples, and came up with a driver for my magic button. This is truly the shortest and simplest device driver that I have made in my life:</p>
 
-<p>This is called <a href="http://en.wikipedia.org/wiki/Unspecified_behavior">Unspecified Behavior</a>. What it means is that standard does not say anything as for how the function should behave in a multi-threaded environment. Therefore, it may exhibit a different behavior on different systems including different versions of the same system, at discretion of those who implement it. Your mileage may vary.</p>
-
-<p>Even if your code does not explicitly use multiple threads, you are still in danger — it might be used as part of a bigger program in multi-threaded environment. But even if that’s not that case — hey, tomorrow you might want to do that. Do you really want to screw yourself upfront by using this bad <code>signal()</code> function? Think twice.</p>
-
-<h2>Asynchronicity &amp; Reentrancy</h2>
-
-<p>Signals are asynchronous by their nature. Another signal may be delivered to the process while the previous signal is still being “processed”. Therefore, signal handler must not introduce unwanted side effects, must be fully reentrant and cannot use any non-reentrant code — neither explicitly nor implicitly. Now take a quick look at the famous example mentioned at the beginning — there is a nice <code>printf()</code> right in the signal handler code. This is a life threatening piece of code because <code>printf()</code> is non-reentrant. In other words, it is possible that <code>printf()</code> function will get interrupted before it finishes and get called again as part of another signal handler. If that case the program will simply <a href="http://en.wikipedia.org/wiki/Deadlock">deadlock</a>.</p>
-
-<h2>Async-Signal-Safe Functions</h2>
-
-<p>The section 7 of the manual page about signal (which you can see by typing <code>man 7 signal</code> in your terminal or read online here — <a href="http://man7.org/linux/man-pages/man7/signal.7.html">http://man7.org/linux/man-pages/man7/signal.7.html</a>) states the following:</p>
-
-<blockquote><p><strong>Async-signal-safe functions</strong>
-A signal handler function must be very careful, since processing elsewhere may be interrupted at some arbitrary point in the execution of the program. POSIX has the concept of “safe function”. If a signal interrupts the execution of an unsafe function, and handler calls an unsafe function, then the behavior of the program is undefined.</p></blockquote>
-
-<p>And then it lists all async-signal-safe functions. So if you don’t know what functions are safe to use inside a signal handler and what functions are not — refer to that list and make sure you are not doing anything dangerous.</p>
-
-<h2>Better Safe Than Sorry</h2>
-
-<p>What is the best way not to become a drag addict? Not to take drugs in the first place. What is the best way to write a safe signal handler? Not to write it all. OK, I am just kidding. Seriously though — if you really want your signal handler to be safe and portable, consider not doing anything inside it except modifying a global <a href="http://en.wikipedia.org/wiki/Volatile_variable">volatile</a> variable of <a href="http://en.cppreference.com/w/cpp/utility/program/sig_atomic_t"><code>sig_atomic_t</code></a> type. Taking all of the above into account, below is an example of how a safe signal handler may look like in real life (note the absence of <code>signal()</code> function in the code):</p>
-
-<figure class='code'><figcaption><span>Simple and safe signal handling</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -233,276 +203,49 @@ A signal handler function must be very careful, since processing elsewhere may b
 <span class='line-number'>30</span>
 <span class='line-number'>31</span>
 <span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;signal.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;string.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="k">volatile</span> <span class="n">sig_atomic_t</span> <span class="n">got_signal</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">usb.core</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">my_sig_handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">got_signal</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">dev</span> <span class="o">=</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">idVendor</span><span class="o">=</span><span class="mh">0x04f3</span><span class="p">,</span> <span class="n">idProduct</span><span class="o">=</span><span class="mh">0x04a0</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="n">dev</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;No Panic button found in the system&quot;</span><span class="p">);</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">sigaction</span> <span class="n">sa</span><span class="p">;</span>
+</span><span class='line'><span class="k">try</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">dev</span><span class="o">.</span><span class="n">is_kernel_driver_active</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">dev</span><span class="o">.</span><span class="n">detach_kernel_driver</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Kernel driver won&#39;t give up control over device: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sa</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">sigaction</span><span class="p">));</span>
-</span><span class='line'>    <span class="n">sa</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">my_sig_handler</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">sigaction</span><span class="p">(</span><span class="n">SIGINT</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sa</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">perror</span><span class="p">(</span><span class="s">&quot;sigaction&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="k">try</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">dev</span><span class="o">.</span><span class="n">set_configuration</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">dev</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+</span><span class='line'><span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Cannot set configuration the device: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">got_signal</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">got_signal</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Received interrupt signal!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Doing useful stuff...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="cm">/* Sleep is not only useful, it is essential! */</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">endpoint</span> <span class="o">=</span> <span class="n">dev</span><span class="p">[</span><span class="mi">0</span><span class="p">][(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'><span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">data</span> <span class="o">=</span> <span class="n">dev</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">endpoint</span><span class="o">.</span><span class="n">bEndpointAddress</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">wMaxPacketSize</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">19</span><span class="p">:</span>
+</span><span class='line'>                <span class="c"># Panic button was pressed!</span>
+</span><span class='line'>                <span class="k">print</span> <span class="s">&quot;OH MY GOD! OH MY GOD! DOUBLE RAINBOW!!!&quot;</span>
+</span><span class='line'>    <span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="mi">110</span><span class="p">:</span> <span class="c"># 110 is a timeout.</span>
+</span><span class='line'>            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Error readin data: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h2>Modern Signal Handling</h2>
+<p>So now I have my beautiful toy working!</p>
 
-<p>It is the 2013th year in the Common Era at the moment of this writing and you might think that people should have came up with something better in terms of signal handling at this time. The truth is that they did. It is just not that well known yet due to a huge momentum of outdated information still overflowing the Internet.</p>
+<h2>UPDATE</h2>
 
-<h3>FreeBSD, NetBSD, OS X, iOS…</h3>
+<p><a href="https://twitter.com/pdp7">Drew Fustini</a> have hooked this up to the BeagleBone Next-Gen and made this video:</p>
 
-<p>In the above family of operating systems, the modern way of handling signals is to use <a href="http://en.wikipedia.org/wiki/Kqueue">Kqueue</a> — a scalable event notification mechanism. Here is an example:</p>
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/52b5RGd4yrE "></iframe></div>
 
-<figure class='code'><figcaption><span>Kqueue Signal Handling</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;sys/types.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;sys/event.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;sys/time.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;signal.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;string.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;errno.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">kq</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">kevent</span> <span class="n">ke</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">timespec</span> <span class="n">timeout</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">sigaction</span> <span class="n">sa</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Block the signal we want to process with kevent first.</span>
-</span><span class='line'><span class="cm">       This is needed because kevent has lower precedence. */</span>
-</span><span class='line'>    <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sa</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">sigaction</span><span class="p">));</span>
-</span><span class='line'>    <span class="n">sa</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="n">SIG_IGN</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">sigaction</span><span class="p">(</span><span class="n">SIGINT</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sa</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Create kqueue... */</span>
-</span><span class='line'>    <span class="n">kq</span> <span class="o">=</span> <span class="n">kqueue</span><span class="p">();</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">kq</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="cm">/* Add a signal event */</span>
-</span><span class='line'>    <span class="n">EV_SET</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ke</span><span class="p">,</span> <span class="n">SIGINT</span><span class="p">,</span> <span class="n">EVFILT_SIGNAL</span><span class="p">,</span> <span class="n">EV_ADD</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">i</span> <span class="o">=</span> <span class="n">kevent</span><span class="p">(</span><span class="n">kq</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ke</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
-</span><span class='line'>    <span class="cm">/* Set a timeout (we no longer need to use a blocking sleep(1),</span>
-</span><span class='line'><span class="cm">       and this is great! */</span>
-</span><span class='line'>    <span class="n">timeout</span><span class="p">.</span><span class="n">tv_sec</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="cm">/* To sleep for one second */</span>
-</span><span class='line'>    <span class="n">timeout</span><span class="p">.</span><span class="n">tv_nsec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Dispatch events */</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">i</span> <span class="o">=</span> <span class="n">kevent</span><span class="p">(</span><span class="n">kq</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ke</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="cm">/* Got event(s) to dispatch. Note that we can do whatever the hell</span>
-</span><span class='line'><span class="cm">               we want here because we are __not__ in the signal handler. */</span>
-</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="n">ke</span><span class="p">.</span><span class="n">ident</span> <span class="o">==</span> <span class="n">SIGINT</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Received interrupt signal!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>            <span class="p">}</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="cm">/* Timeout elapsed */</span>
-</span><span class='line'>            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Doing useful stuff...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="n">errno</span> <span class="o">==</span> <span class="n">EINTR</span><span class="p">)</span>
-</span><span class='line'>                <span class="k">continue</span><span class="p">;</span> <span class="cm">/* System call interrupted - just restart */</span>
-</span><span class='line'>            <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span> <span class="cm">/* Something went wrong. */</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Linux</h3>
-
-<p>Linux provides <code>signalfd()</code> for handling signals. The beauty of it is that it may be used by itself, or may be combined with event notification mechanisms such as <code>epoll()</code> and friends. The manual page for <code>signalfd()</code> comes with a good example, so I don’t even have to write one. Here it is:</p>
-
-<figure class='code'><figcaption><span>Signalfd & Epoll Signal Handling</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;sys/signalfd.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;signal.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#define handle_error(msg)                               \</span>
-</span><span class='line'><span class="cp">    do { perror(msg); exit(EXIT_FAILURE); } while (0)</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span>
-</span><span class='line'><span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">sigset_t</span> <span class="n">mask</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">sfd</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">signalfd_siginfo</span> <span class="n">fdsi</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">ssize_t</span> <span class="n">s</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">sigemptyset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mask</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">sigaddset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mask</span><span class="p">,</span> <span class="n">SIGINT</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">sigaddset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mask</span><span class="p">,</span> <span class="n">SIGQUIT</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Block signals so that they aren&#39;t handled</span>
-</span><span class='line'><span class="cm">       according to their default dispositions */</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">sigprocmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">mask</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">handle_error</span><span class="p">(</span><span class="s">&quot;sigprocmask&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">sfd</span> <span class="o">=</span> <span class="n">signalfd</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">mask</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">sfd</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">handle_error</span><span class="p">(</span><span class="s">&quot;signalfd&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">s</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">sfd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">fdsi</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">signalfd_siginfo</span><span class="p">));</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="o">!=</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">signalfd_siginfo</span><span class="p">))</span>
-</span><span class='line'>            <span class="n">handle_error</span><span class="p">(</span><span class="s">&quot;read&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">fdsi</span><span class="p">.</span><span class="n">ssi_signo</span> <span class="o">==</span> <span class="n">SIGINT</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Got SIGINT</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">fdsi</span><span class="p">.</span><span class="n">ssi_signo</span> <span class="o">==</span> <span class="n">SIGQUIT</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Got SIGQUIT</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>            <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_SUCCESS</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Read unexpected signal</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Make the world a better place!</h2>
-
-<p>Please make the world a better place by writing correct and safe signal handling code.</p>
-
-<p>Thank you very much for reading!</p>
 </div>
   
   
@@ -533,15 +276,15 @@ A signal handler function must be very careful, since processing elsewhere may b
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a>
+    
+    <a class="list-group-item " href="/c-vs-cxx/">Two Different Languages - C and C++</a>
+    
+    <a class="list-group-item " href="/ask-smart/">Ask Smart Questions and You Will Succeed</a>
+    
     <a class="list-group-item " href="/network-evolution/">The Evolution of Computer Networking</a>
     
     <a class="list-group-item " href="/stranded/">Stranded</a>
-    
-    <a class="list-group-item " href="/c-oop/">OOP With ANSI C</a>
-    
-    <a class="list-group-item " href="/fix-checksum/">Calculating FIX Message Checksum</a>
-    
-    <a class="list-group-item " href="/free-delete/">Use Free and Delete Correctly.</a>
     
   </div>
 </section>
@@ -553,7 +296,7 @@ A signal handler function must be very careful, since processing elsewhere may b
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">10</span>
+        <span class="badge">12</span>
         C++
       </a>
     
@@ -565,7 +308,7 @@ A signal handler function must be very careful, since processing elsewhere may b
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">16</span>
+        <span class="badge">18</span>
         Tech
       </a>
     
@@ -583,7 +326,7 @@ A signal handler function must be very careful, since processing elsewhere may b
     
     
     <a class="list-group-item " href="/blog/categories/life">
-        <span class="badge">1</span>
+        <span class="badge">2</span>
         Life
       </a>
     

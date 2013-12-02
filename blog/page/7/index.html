@@ -114,62 +114,32 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-16T00:00:00-04:00" pubdate data-updated="true">Mar 16<span>th</span>, 2013</time>
         
-           | <a href="/raii/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/raii/">Comments</a>
+           | <a href="/fix-checksum/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/fix-checksum/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/raii/">Automatic Resource Management in Programming Languages</a></h1>
+      <h1 class="entry-title"><a href="/fix-checksum/">Calculating FIX Message Checksum</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Many high-level programming languages provide software developers with the ability to automatically cleanup resources — automatically closing an open file when it is no longer used, freeing dynamically allocated memory, or anything else for that matter. This article touches on automatic resource management features available in modern programming languages. It shows some examples demonstrating why having this feature make it easier to write code, or how not using this feature may lead to potentially critical failures of the program. The primary focus is on C++ and C (surprise!) languages.</p>
+  <div class="entry-content clearfix"><p>A FIX message is a stream of bytes that consists of data represented by <a href="http://en.wikipedia.org/wiki/Attribute%E2%80%93value_pair">field-value (aka key-value) pairs</a>. Those field-value pairs are delimited by <a href="http://en.wikipedia.org/wiki/Start-of-Header#SOH">SOH character</a> — a special non-printable ASCII character with hex code <code>0x01</code>. For convenience, it is usually replaced with a vertical bar (<code>|</code>) for displaying purposes. Each field-value pair consists of the field number and its value delimited by equals sign (<code>=</code>). In the code, it is represented as an escape sequence — <code>'\1'</code> or <code>"\001"</code>. Here is an example of a FIX message:</p>
 
-<h2>C</h2>
-
-<p>There are a few ways to automatically clean up resources in C# — a <code>finally</code> block and a <code>using</code> statement.</p>
-
-<p>A <code>finally</code> block is a bit lower level than a using. It guarantees that all statements inside a <code>finally</code> block will be executed when the try block exists, even if unexpected exception occurs. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="n">ResourceType</span> <span class="n">resource</span> <span class="p">=</span> <span class="n">expression</span><span class="p">;</span> <span class="c1">// Allocate, initialize or acquire some resource.</span>
-</span><span class='line'><span class="k">try</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// Do something with it.</span>
-</span><span class='line'>    <span class="n">statement</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span> <span class="k">finally</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// Free, destroy or release a resource.</span>
-</span><span class='line'>    <span class="c1">// This is guaranteed to happen.</span>
-</span><span class='line'>    <span class="p">((</span><span class="n">IDisposable</span><span class="p">)</span><span class="n">resource</span><span class="p">).</span><span class="n">Dispose</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>8=FIX.4.2|9=178|35=8|49=PHLX|56=PERS|52=20071123-05:30:00.000|11=ATOMNOCCC9990900|20=3|150=E|39=E|55=MSFT|167=CS|54=1|38=15|40=2|44=15|58=PHLX EQUITY TESTING|59=0|47=C|32=0|31=0|151=15|14=0|6=0|10=128|</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Another and more convenient way of doing the same is to employ a <code>using</code> statement which guarantees that <code>Dispose()</code> method is called automatically upon leaving the scope of using block:</p>
+<p>Every FIX message must always end with a checksum field followed by SOH symbol. The field number for a checksum is 10. Therefore, the checksum part in the above message is <code>10=128|</code>.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="k">using</span> <span class="p">(</span><span class="n">ResourceType</span> <span class="n">resource</span> <span class="p">=</span> <span class="n">expression</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">statement</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>There is one special requirement for the checksum field — it must always be three characters long. Not more and not less. It must be left-padded with <code>0</code> characters if needed. For example, if the checksum value is <code>13</code>, then it should appear as <code>013</code>. If it is only <code>1</code>, then it should read <code>001</code>. It can also be just <code>000</code>.</p>
 
+<p>The checksum of a FIX message is calculated by adding every byte of the message, excluding the checksum field-value pair, as unsigned binary number, discarding any overflow bits. Therefore, the range of possible values is [0-255], the same range of values that can be represented by unsigned 8-bit integer (<code>uint8_t</code>).</p>
 
-<h2>Java</h2>
-
-<p>Java also provides a finally block similar to that seen in C#:</p>
+<p>The code for calculating FIX checksum is very simple — all it needs to do is add every byte of the input and store a result in <code>uint8_t</code>. Remember, the checksum field itself should not be used to calculate checksum. Here is an example in C:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -179,179 +149,35 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">FileReader</span> <span class="n">reader</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class='line'><span class="k">try</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">reader</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FileReader</span><span class="o">(</span><span class="s">&quot;/dev/null&quot;</span><span class="o">);</span>
-</span><span class='line'>    <span class="c1">// Do something with a file...</span>
-</span><span class='line'><span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">reader</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
-</span><span class='line'>    <span class="n">reader</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Starting from version 7 Java introduces an AutoCloseable concept along with automatic resource cleanup, which are basically the same things as IDisposable and a using statement in C#:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="k">try</span> <span class="o">(</span><span class="n">FileReader</span> <span class="n">reader</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FileReader</span><span class="o">(</span><span class="s">&quot;/dev/null&quot;</span><span class="o">))</span>
-</span><span class='line'><span class="o">{</span>
-</span><span class='line'>    <span class="c1">// Do something with a file...</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Other Languages</h2>
-
-<p>Since the concept of something being done automatically is quite popular, it is present in many other languages. Python has both a <a href="http://docs.python.org/2/reference/compound_stmts.html#finally"><code>finally</code> statement</a> and a <a href="http://docs.python.org/release/2.5.3/ref/with.html"><code>with</code> statement</a>. The same goes for Ruby. Of course, this is also available in derivative languages like Visual Basic that is built on top of .NET technology, Groovy that is built on Java, etc.</p>
-
-<h2>C++ — The King of RAII</h2>
-
-<p>As we have seen, many languages provide different syntax to do essentially the same thing. It is a great concept indeed. It changed the way programmers write code, significantly improved productivity. And behind every invention that we cannot imagine our lives without there is an author. So who is behind the automatic resource management?</p>
-
-<p>The real name of this concept is <strong>Resource Acquisition Is Initialization</strong>, or simply <strong>RAII</strong>. It was invented by Bjarne Stroustrup, the original author of C++ programming language. And of course this concept first appeared in C++, way before C# or Java were created.</p>
-
-<p>C++ is the king of RAII. Many concepts are built upon it. RAII is the reason why object destructors are called automatically. It is the reason why C++ developers don’t need to care much about freeing dynamically allocated memory or close a file descriptor that is no longer used. It is why, when handling an error, it is enough to simply throw an exception, or return an error code from a function, without writing tons of “cleanup” code or even thinking about the order in which resources must be cleaned up (which is usually done in opposite order of allocation). In fact, RAII should be used whenever possible to avoid serious errors or even cause a denial of service. For example, consider the following code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;mutex&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;vector&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Data structure that is supposed to be accessed by multiple threads.</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">shared_resource</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">mutex</span>       <span class="n">mutex</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">shared_resource</span> <span class="o">&amp;</span> <span class="n">res</span><span class="p">)</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">uint8_t</span> <span class="n">fix_checksum</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">)</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="c1">// Acquire an exclusive lock to protect access to</span>
-</span><span class='line'>    <span class="c1">// the object in multi-threaded environment.</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Modify the contents of the vector by adding 10 integers into it.</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">res</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Once done changing the object, release the lock so that other threads</span>
-</span><span class='line'>    <span class="c1">// can work with it. If we forget to unlock it, the process will basically</span>
-</span><span class='line'>    <span class="c1">// hang trying to lock the mutex again, rendering our program useless.</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">uint8_t</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">uint8_t</span><span class="p">)(</span><span class="n">sum</span> <span class="o">+</span> <span class="p">(</span><span class="n">uint8_t</span><span class="p">)</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The above code is a classic example of an error that could lead to serious consequences. The problem is that anything could happen in between of <code>mutex.lock()</code> and <code>mutex.unlock()</code> statements, and the <code>mutex.unlock()</code> statement may not be executed shall <code>data.emplace_back()</code> throw an exception, leaving the program in the locked-up state.</p>
+<p>If writing in C++, <a href="http://en.cppreference.com/w/cpp/algorithm/accumulate"><code>std::accumulate()</code></a> can be used to achieve the same. Here is an example:</p>
 
-<p>Taking a good care of exceptions is a concept called <strong>exception safety</strong>. The above code is indeed not exception safe. However, this is not only about exceptions. For instance, if <code>emplace_back()</code> method was not throwing an exception and return code was used to signal an error, the erroneous code could have looked like this:</p>
+<p>Once the checksum value is calculated, it must be added to the end of the message as an ASCII-encoded field-value pair with field number <code>10</code>, followed by SOH. As a remainder, the checksum value must always be three characters long, left padded with <code>0</code> if needed. The easiest way to convert the binary checksum value is this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">int</span> <span class="n">foo</span><span class="p">(</span><span class="n">shared_resource</span> <span class="o">&amp;</span> <span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Exception safety is out of the equation, yet the code is buggy. This is why RAII should (almost) always be used. The correct code should look like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">shared_resource</span> <span class="o">&amp;</span> <span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">res</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In the above example, <a href="http://en.cppreference.com/w/cpp/thread/lock_guard"><code>std::lock_guard</code></a> object is locking a mutex in its constructor and unlocks it in its destructor. Thanks to RAII, the destructor is guaranteed to be called when the object goes out of scope no matter what. C++ is full of such “guard” objects. Many of them are part of the standard library, but developers can always create their own.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cctype&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;fstream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">file</span><span class="p">(</span><span class="s">&quot;test.txt&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">((</span><span class="n">file</span> <span class="o">&gt;&gt;</span> <span class="n">c</span><span class="p">))</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">isalpha</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">?</span> <span class="n">c</span> <span class="o">:</span> <span class="sc">&#39;*&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>In the above example, the file object will automatically close the file. In other words, C++ clearly wins this battle over RAII with all other languages since there is no need for any finally blocks, using statements or event Java’s new <code>try()</code> blocks.</p>
-
-<p>What is interesting is that C#, Java, Python and other similar languages did not even have “using”-like statements for a long time. There was only <em>try-catch-finally</em> construct and programmers had no choice but to write a lot of boilerplate code. Albeit some programmers have consciously suffered from the lack of proper RAII support, many didn’t know that C++ not only supports RAII but also is the only language that does it properly. One day those guys wanted to write something in C++ and of course started to look for similar self-torture methods. Not able to find it, they asked Bjarne Stroustrup why doesn’t C++ provide a <code>finally</code> construct, and <a href="http://www.stroustrup.com/bs_faq2.html#finally">here is what he had to say</a>:</p>
-
-<blockquote><p>Because C++ supports an alternative that is almost always better: The “resource acquisition is initialization” technique (TC++PL3 section 14.4). The basic idea is to represent a resource by a local object, so that the local object’s destructor will release the resource. That way, the programmer cannot forget to release the resource.
-…
-In a system, we need a “resource handle” class for each resource. However, we don’t have to have an “finally” clause for each acquisition of a resource. In realistic systems, there are far more resource acquisitions than kinds of resources, so the “resource acquisition is initialization” technique leads to less code than use of a “finally” construct.</p></blockquote>
-
-<p>Boy was he right. Most today’s languages are now trying to resemble the same.</p>
-
-<h2>RAII in C</h2>
-
-<p>Everyone knows that C neither support exceptions nor it has a concept of RAII. That is not entirely true, but for the most part it is. You will not find anything about those features in C89, C99 or even C11 language standard specifications. Therefore, C developers have to be careful, disciplined, and clean up after themselves. Oftentimes, especially in somewhat low-level code like device driver, we can run into the code like this:</p>
+<p>To sum things up, here is a C++ example program that calculates the checksum and appends it to the end, forming a complete FIX message:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -393,263 +219,74 @@ In a system, we need a “resource handle” class for each resource. However, w
 <span class='line-number'>38</span>
 <span class='line-number'>39</span>
 <span class='line-number'>40</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="nf">pci_probe</span><span class="p">(</span><span class="k">struct</span> <span class="n">pci_dev</span> <span class="o">*</span><span class="n">pci_dev</span><span class="p">,</span>
-</span><span class='line'>                     <span class="k">const</span> <span class="k">struct</span> <span class="n">pci_device_id</span> <span class="o">*</span><span class="n">dev_id</span><span class="p">)</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// --*-- C++11 --*--</span>
+</span><span class='line'><span class="c1">// Compile: clang++ -std=c++11 -stdlib=libc++ -Wall ./test.cpp</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#include &lt;cstdint&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;numeric&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">my_dev</span> <span class="o">*</span><span class="n">dev</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+</span><span class='line'>    <span class="c1">// Initial message. The SOH is an escape sequence &#39;\001&#39;.</span>
+</span><span class='line'>    <span class="c1">// It does not include checksum field — the checksum must</span>
+</span><span class='line'>    <span class="c1">// be calculated.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">msg</span> <span class="o">=</span>
+</span><span class='line'>        <span class="s">&quot;8=FIX.4.2</span><span class="se">\001</span><span class="s">9=178</span><span class="se">\001</span><span class="s">35=8</span><span class="se">\001</span><span class="s">49=PHLX</span><span class="se">\001</span><span class="s">56=PERS</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;52=20071123-05:30:00.000</span><span class="se">\001</span><span class="s">11=ATOMNOCCC9990900</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;20=3</span><span class="se">\001</span><span class="s">150=E</span><span class="se">\001</span><span class="s">39=E</span><span class="se">\001</span><span class="s">55=MSFT</span><span class="se">\001</span><span class="s">167=CS</span><span class="se">\001</span><span class="s">54=1</span><span class="se">\001</span><span class="s">38=15&quot;</span>
+</span><span class='line'>        <span class="s">&quot;</span><span class="se">\001</span><span class="s">40=2</span><span class="se">\001</span><span class="s">44=15</span><span class="se">\001</span><span class="s">58=PHLX EQUITY TESTING</span><span class="se">\001</span><span class="s">59=0</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;47=C</span><span class="se">\001</span><span class="s">32=0</span><span class="se">\001</span><span class="s">31=0</span><span class="se">\001</span><span class="s">151=15</span><span class="se">\001</span><span class="s">14=0</span><span class="se">\001</span><span class="s">6=0</span><span class="se">\001</span><span class="s">&quot;</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="n">dev</span> <span class="o">=</span> <span class="n">kzalloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">my_dev</span><span class="p">),</span> <span class="n">GFP_KERNEL</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">unlikely</span><span class="p">(</span><span class="o">!</span><span class="n">dev</span><span class="p">))</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">pci_set_drvdata</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="n">dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">dev</span><span class="o">-&gt;</span><span class="n">pci_dev</span> <span class="o">=</span> <span class="n">pci_dev</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">r</span> <span class="o">=</span> <span class="n">pci_enable_device</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">unlikely</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_enable_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">pci_set_master</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">pci_try_set_mwi</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar0</span> <span class="o">=</span> <span class="n">ioremap_nocache</span><span class="p">(</span><span class="n">pci_resource_start</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-</span><span class='line'>                                <span class="n">pci_resource_len</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="mi">0</span><span class="p">));</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">unlikely</span><span class="p">(</span><span class="o">!</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar0</span><span class="p">))</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_bar0_map_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar2</span> <span class="o">=</span> <span class="n">ioremap_nocache</span><span class="p">(</span><span class="n">pci_resource_start</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-</span><span class='line'>                                <span class="n">pci_resource_len</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">unlikely</span><span class="p">(</span><span class="o">!</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar2</span><span class="p">))</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_bar2_map_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">r</span> <span class="o">=</span> <span class="n">a2gx_add_cdev</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_cdev_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="c1">// Calculate the checksum.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">uint8_t</span> <span class="n">csum</span> <span class="o">=</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">accumulate</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">msg</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+</span><span class='line'>                        <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">uint8_t</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="nl">on_cdev_err:</span>
-</span><span class='line'>    <span class="n">iounmap</span><span class="p">(</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar2</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">on_bar2_map_err:</span>
-</span><span class='line'>    <span class="n">iounmap</span><span class="p">(</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar0</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">on_bar0_map_err:</span>
-</span><span class='line'>    <span class="n">pci_disable_device</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">on_enable_err:</span>
-</span><span class='line'>    <span class="n">kfree</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">on_err:</span>
-</span><span class='line'>    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>    <span class="c1">// Append the checksum field-value to the message.</span>
+</span><span class='line'>    <span class="c1">// First, add field number and field delimiter:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;10=&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Then add checksum converted to ASCII characters,</span>
+</span><span class='line'>    <span class="c1">// left-padded with zeroes:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// And finally, complete the message by adding a final</span>
+</span><span class='line'>    <span class="c1">// SOH character:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="sc">&#39;\1&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Print the message to standard output.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">msg</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Many will find the above code difficult to read, hard to write, or both. Some would love to punch the author in the face for using goto. Others may not understand what is going on in there at all. But C is not just a programming language. C is a religion. For some, C code is a lot cleaner than anything else — nothing is hiding behind the scenes, what you see is what you get. The C code is usually thought trough — you have to think twice before you write it. In fact, some wouldn’t substitute it for anything else. At any rate, C developers usually cleanup after themselves.</p>
-
-<p>On the other hand, the benefits or RAII are also obvious and there are people who would love to see a concept of RAII in C. But it is not a part of the language specification. However, imagine a world when programmers were not using things that are not standard. That world would have been terrible. Just imagine for a second that C++ developers wouldn’t have multi-threaded programs until C++11 standard was ratified with all of its quirks and perks like <code>std::thread</code>, <code>std::mutex</code>, <em>thread local storage</em> and so on.</p>
-
-<p>Or how about not being able to specify symbol’s visibility or use other attributes? Luckily, being a non-standard feature doesn’t restrain people from using it. And as more people use some feature, more chances it has to be standardized. That said, C++11 now allows for generalized yet compiler-specific attributes, threading, static assertions, and tons of other stuff that was available before, was used before, too, but wasn’t a part of the standard. Well, now it is.</p>
-
-<p>That being said, C also supports RAII. However, it is not part of the standard, at least not yet. Here is how it works — it is possible to specify a cleanup function for any auto function scope variable. In order to do that, a non-standard cleanup attribute must be specified. If you remember the example of a buggy non-exception-safe C++ function that uses a <em>mutex</em>, that code would look something like this in C:</p>
+<p>Note that some terminals may not be able to display SOH characters. It is possible that it would get displayed as <code>^A</code>, some other sequence, or not displayed at all. In OS X «Terminal», the above program would display the following:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">struct</span> <span class="n">shared_resource</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">pthread_mutex_t</span>   <span class="n">mutex</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">int_vector</span> <span class="n">data</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">shared_resource</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">pthread_mutex_t</span>   <span class="n">mutex</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">int_vector</span> <span class="n">data</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">int_vector_push_back</span><span class="p">(</span><span class="k">struct</span> <span class="n">int_vector</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">int</span> <span class="n">value</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">(</span><span class="k">struct</span> <span class="n">shared_resource</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="cm">/* Oops, cannot lock the mutex. */</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">int_vector_push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="cm">/* Oops, cannot add data into the vector! */</span>
-</span><span class='line'>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="cm">/* All is good */</span>
-</span><span class='line'><span class="p">}</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">std</span><span class="o">=</span><span class="n">c</span><span class="o">++</span><span class="mi">11</span> <span class="o">-</span><span class="n">stdlib</span><span class="o">=</span><span class="n">libc</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">pedantic</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span>
+</span><span class='line'><span class="mi">8</span><span class="o">=</span><span class="n">FIX</span><span class="mf">.4.29</span><span class="o">=</span><span class="mi">17835</span><span class="o">=</span><span class="mi">849</span><span class="o">=</span><span class="n">PHLX56</span><span class="o">=</span><span class="n">PERS52</span><span class="o">=</span><span class="mi">20071123</span><span class="o">-</span><span class="mo">05</span><span class="o">:</span><span class="mi">30</span><span class="o">:</span><span class="mf">00.00011</span><span class="o">=</span><span class="n">ATOMNOCCC999090020</span><span class="o">=</span><span class="mi">3150</span><span class="o">=</span><span class="n">E39</span><span class="o">=</span><span class="n">E55</span><span class="o">=</span><span class="n">MSFT167</span><span class="o">=</span><span class="n">CS54</span><span class="o">=</span><span class="mi">138</span><span class="o">=</span><span class="mi">1540</span><span class="o">=</span><span class="mi">244</span><span class="o">=</span><span class="mi">1558</span><span class="o">=</span><span class="n">PHLX</span> <span class="n">EQUITY</span> <span class="n">TESTING59</span><span class="o">=</span><span class="mo">047</span><span class="o">=</span><span class="n">C32</span><span class="o">=</span><span class="mo">031</span><span class="o">=</span><span class="mo">0151</span><span class="o">=</span><span class="mi">1514</span><span class="o">=</span><span class="mo">06</span><span class="o">=</span><span class="mo">010</span><span class="o">=</span><span class="mi">128</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Though it is a little bit hard to imagine that C programmer could write code like that. The code would probably look more like this (which is also functionally correct this time):</p>
+<p>So when printing a FIX message, it might be useful to replace all occurrences of <code>01</code> with something else, for example a vertical bar. It is also possible to do it with command line utility called <code>tr</code>. This does not require a code change:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">test</span><span class="p">(</span><span class="k">struct</span> <span class="n">shared_resource</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">r</span> <span class="o">=</span> <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">r</span> <span class="o">=</span> <span class="n">int_vector_push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">out:</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">r</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="o">|</span> <span class="n">tr</span> <span class="sc">&#39;\1&#39;</span> <span class="sc">&#39;|&#39;</span>
+</span><span class='line'><span class="mi">8</span><span class="o">=</span><span class="n">FIX</span><span class="mf">.4.2</span><span class="o">|</span><span class="mi">9</span><span class="o">=</span><span class="mi">178</span><span class="o">|</span><span class="mi">35</span><span class="o">=</span><span class="mi">8</span><span class="o">|</span><span class="mi">49</span><span class="o">=</span><span class="n">PHLX</span><span class="o">|</span><span class="mi">56</span><span class="o">=</span><span class="n">PERS</span><span class="o">|</span><span class="mi">52</span><span class="o">=</span><span class="mi">20071123</span><span class="o">-</span><span class="mo">05</span><span class="o">:</span><span class="mi">30</span><span class="o">:</span><span class="mf">00.000</span><span class="o">|</span><span class="mi">11</span><span class="o">=</span><span class="n">ATOMNOCCC9990900</span><span class="o">|</span><span class="mi">20</span><span class="o">=</span><span class="mi">3</span><span class="o">|</span><span class="mi">150</span><span class="o">=</span><span class="n">E</span><span class="o">|</span><span class="mi">39</span><span class="o">=</span><span class="n">E</span><span class="o">|</span><span class="mi">55</span><span class="o">=</span><span class="n">MSFT</span><span class="o">|</span><span class="mi">167</span><span class="o">=</span><span class="n">CS</span><span class="o">|</span><span class="mi">54</span><span class="o">=</span><span class="mi">1</span><span class="o">|</span><span class="mi">38</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">40</span><span class="o">=</span><span class="mi">2</span><span class="o">|</span><span class="mi">44</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">58</span><span class="o">=</span><span class="n">PHLX</span> <span class="n">EQUITY</span> <span class="n">TESTING</span><span class="o">|</span><span class="mi">59</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">47</span><span class="o">=</span><span class="n">C</span><span class="o">|</span><span class="mi">32</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">31</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">151</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">14</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">6</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">10</span><span class="o">=</span><span class="mi">128</span><span class="o">|</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Below is a RAII-like version of the code where mutex is guaranteed to be unlocked automatically, so it is possible to simply return from the function at any given point without worrying about it. This code closely resembles the behavior of a C++ example using <code>std::lock_guard</code> where <code>lock_guard_ctor</code> mimics <code>std::lock_guard::lock_guard</code> constructor that locks a <em>mutex</em>, and the <code>lock_guard_dtor</code> function is like <code>std::lock_guard::~lock_guard</code> destructor that unlocks the <em>mutex</em> (if it was locked) and is guaranteed to be called automatically:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="nf">lock_guard_ctor</span><span class="p">(</span><span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="n">mutex</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="n">mutex</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">mutex</span> <span class="o">:</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">lock_guard_dtor</span><span class="p">(</span><span class="n">pthread_mutex_t</span> <span class="o">**</span><span class="n">mutex_ptr</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="n">mutex</span> <span class="o">=</span> <span class="o">*</span><span class="n">mutex_ptr</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">mutex</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">(</span><span class="k">struct</span> <span class="n">shared_resource</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="n">lock_guard</span>
-</span><span class='line'>        <span class="n">__attribute__</span><span class="p">((</span><span class="n">cleanup</span><span class="p">(</span><span class="n">lock_guard_dtor</span><span class="p">)))</span>
-</span><span class='line'>        <span class="o">=</span> <span class="n">lock_guard_ctor</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">lock_guard</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">int_vector_push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above code can also be simplified a bit with two simple steps. Step one is to have <code>lock_guard_ctor</code> and <code>lock_guard_dtor</code> functions defined somewhere else and be reusable. Because nobody writes custom constructors and destructor for a class every time they use it. Step number two is to get rid of a lot of typing by having a macro. For example, the common code that is written once could be:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;pthread.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">extern</span> <span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="nf">lock_guard_ctor</span><span class="p">(</span><span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'><span class="k">extern</span> <span class="kt">void</span> <span class="nf">lock_guard_dtor</span><span class="p">(</span><span class="n">pthread_mutex_t</span> <span class="o">**</span><span class="n">mutex_ptr</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#define LOCK_GUARD(name, mutex)                   \</span>
-</span><span class='line'><span class="cp">    pthread_mutex_t * name                        \</span>
-</span><span class='line'><span class="cp">        __attribute__((cleanup(lock_guard_dtor))) \</span>
-</span><span class='line'><span class="cp">        = lock_guard_ctor((mutex))</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>And the code using this feature becomes a lot simpler:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">(</span><span class="k">struct</span> <span class="n">shared_resource</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">LOCK_GUARD</span><span class="p">(</span><span class="n">lock</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">lock</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">int_vector_push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>There are two possible ways for a compiler to implement a cleanup attribute. If exceptions are not enabled, it would generate the boilerplate code similar to that otherwise written by the programmer manually. If exceptions are enabled then compiler would generate the code that executes a cleanup function during the stack unwinding (yes, there are exceptions in C, too).</p>
-
-<p>Note that cleanup attribute cannot be used for global variables. constructor and destructor attributes should be used instead. The constructor attribute causes the function to be called automatically before execution enters <code>main()</code>. Similarly, the destructor attribute causes the function to be called automatically after <code>main()</code> completes or <code>exit()</code> is called. Functions with these attributes are useful for initializing data that is used implicitly during the execution of the program. It is also possible to manually control the order of execution by specifying priority number (optional).</p>
-
-<p>The techniques described above are available at least in today’s leading C compilers — GCC and Clang. Remember, the future of the language is in hands of its users. If you really like the feature and it is not standard — use it, spread the world, write a feedback to compiler developers and language standard committee. It will definitely help to make it into the next standard revision.</p>
-
-<p>Let the force be with you!</p>
+<p>That is pretty much all you need to know to successfully calculate a FIX checksum. There is also one little detail that might come handy — checksums are meant to help verify data integrity and make sure that no part of the message got corrupted during transmission from one application to another. These days, FIX messages are transmitted using TCP/IP or UDP. Both TCP/IP and UDP protocols guarantee data integrity out of the box and therefore a FIX checksum doesn’t make a lot of sense. Given that calculating FIX checksums requires a lot of CPU resources and is even likely to be the bottleneck, make sure that exchange or broker, with which you intend to communicate using FIX Protocol, require a checksum. There are a number of technically wise brokers and exchanges out there that do not require you to provide the correct checksum. If that is the case, simply put <code>10=000|</code> at the end of every message.</p>
 </div>
   
   
@@ -680,15 +317,15 @@ In a system, we need a “resource handle” class for each resource. However, w
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a>
+    
+    <a class="list-group-item " href="/c-vs-cxx/">Two Different Languages - C and C++</a>
+    
+    <a class="list-group-item " href="/ask-smart/">Ask Smart Questions and You Will Succeed</a>
+    
     <a class="list-group-item " href="/network-evolution/">The Evolution of Computer Networking</a>
     
     <a class="list-group-item " href="/stranded/">Stranded</a>
-    
-    <a class="list-group-item " href="/c-oop/">OOP With ANSI C</a>
-    
-    <a class="list-group-item " href="/fix-checksum/">Calculating FIX Message Checksum</a>
-    
-    <a class="list-group-item " href="/free-delete/">Use Free and Delete Correctly.</a>
     
   </div>
 </section>
@@ -700,7 +337,7 @@ In a system, we need a “resource handle” class for each resource. However, w
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">10</span>
+        <span class="badge">12</span>
         C++
       </a>
     
@@ -712,7 +349,7 @@ In a system, we need a “resource handle” class for each resource. However, w
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">16</span>
+        <span class="badge">18</span>
         Tech
       </a>
     
@@ -730,7 +367,7 @@ In a system, we need a “resource handle” class for each resource. However, w
     
     
     <a class="list-group-item " href="/blog/categories/life">
-        <span class="badge">1</span>
+        <span class="badge">2</span>
         Life
       </a>
     
