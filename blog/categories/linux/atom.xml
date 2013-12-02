@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linux | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T19:17:51-05:00</updated>
+  <updated>2013-12-01T19:56:40-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,42 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[System Program Problem Detected]]></title>
+    <link href="http://741MHz.com/system-program-problem-detected/"/>
+    <updated>2012-12-10T00:00:00-05:00</updated>
+    <id>http://741MHz.com/system-program-problem-detected</id>
+    <content type="html"><![CDATA[<p>I have just installed Ubuntu 12.10 and the first thing I ran into is tons of annoying popup windows telling me about system program problems and asking to report them:</p>
+
+<p><img src="/images/ubuntu_system_problem/popup.png"></p>
+
+<p>Apparently, this is a common problem that drives crazy a lot of people. What happens is some of the programs crash, and those cases are being reported by the Apport application. I highly doubt that anyone at Ubuntu is actually reading these reports. Firstly, millions of Ubuntu installations constantly have programs crashing and it must take an army of developers to investigate and fix them. Secondly, these crashes are happening for many years and they don’t seem to go away. So why bother? Here is how you disable this annoying reporting facility.</p>
+
+<h3>Launch a terminal</h3>
+
+<p>First, you need to open a terminal. You can do that by clicking on “Dash Home” button (on the top left of your screen), typing “Terminal”, and clicking on a Terminal application icon in order to launch it:</p>
+
+<p><img src="/images/ubuntu_system_problem/open_terminal.png"></p>
+
+<h3>Disable Apport</h3>
+
+<p>In the terminal, type the following commands:</p>
+
+<pre><code>sudo sed -i 's;^enabled=1$;enabled=0;g' /etc/default/apport
+sudo service apport restart
+sudo rm /var/crash/*
+</code></pre>
+
+<p>The above commands will replace “enabled=1″ with “enabled=0″ in the “/etc/default/apport” configuration file, restart the Apport application and remove old reports to save you a valuable disk space. The problem should now go away.</p>
+
+<h3>Still having annoying popups?</h3>
+
+<p>Be aware that in earlier versions of Ubuntu there was a bug when restarting Apport didn’t really restart it (see <a href="https://bugs.launchpad.net/ubuntu/+source/apport/+bug/292402">Bug #292402</a>). So as the last resort, simply reboot your computer.</p>
+
+<p>Hope it helps! Good Luck!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Wait For File With Inotify]]></title>

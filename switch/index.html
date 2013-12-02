@@ -4,7 +4,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Ranting @ 741 MHz</title>
+  <title>From Switch Statement Down to Machine Code - Ranting @ 741 MHz</title>
   <meta name="author" content="741MHz.com">
 
   
@@ -16,7 +16,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://741MHz.com">
+  <link rel="canonical" href="http://741MHz.com/switch">
   <link href="/favicon.png" type="image/png" rel="icon">
   <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
 
@@ -92,12 +92,8 @@
         <div id="content">
           <div class="row">
   <div class="page-content col-md-9">
-    <div class="blog-index">
+    <article class="hentry" role="article">
       
-      
-      
-        <article class="post">
-          
   <header class="page-header">
     
       <p class="meta text-muted text-uppercase">
@@ -116,18 +112,21 @@
 
 <span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-13T00:00:00-05:00" pubdate data-updated="true">Jan 13<span>th</span>, 2013</time>
         
-           | <a href="/switch/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/switch/">Comments</a>
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://741MHz.com">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/switch/">From Switch Statement Down to Machine Code</a></h1>
+    <h1 class="entry-title">
+        From Switch Statement Down to Machine Code
+        
+    </h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><h2>Introduction</h2>
+<div class="entry-content clearfix"><h2>Introduction</h2>
 
 <p>Most of us know what a <a href="http://en.wikipedia.org/wiki/Switch_statement"><em>switch</em> statement</a> is and have probably been using it very often. No wonder why — switch statement is simple yet extremely expressive. It allows keeping the code compact while describing complex <a href="http://en.wikipedia.org/wiki/Control_flow">control flow</a>. Putting the <a href="http://en.wikipedia.org/wiki/Syntactic_sugar">syntactic sugar</a> aside, most developers also believe that using a switch statement results in a lot better, faster code. Not many knows if that is really true and why. The most common speculations supporting superior switch statement performance are:</p>
 
@@ -1251,36 +1250,82 @@ Changing the order of case labels in the switch did not affect the generated cod
 
 <p>I hope that it would helps us, developers, to better understand what switch statements are, what they can be used for and how they work, as well as adding some practical backup to some very common speculative talks about switch statement optimizations.</p>
 </div>
+
+
+      <footer>
+        <p class="meta text-muted">
+          
+  
+
+<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-13T00:00:00-05:00" pubdate data-updated="true">Jan 13<span>th</span>, 2013</time>
+          
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/switch/" data-via="" data-counturl="http://741MHz.com/switch/" >Tweet</a>
   
   
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
 
-
-        </article>
-      
-    </div>
-
-    <ul class="pager">
-      
-        <li class="previous"><a href="/blog/page/2/">&larr;&nbsp;Older</a></li>
-      
-      <li><a href="/blog/archives">Blog Archives</a></li>
-      
-        <li class="next disabled"><a href="#">Newer&nbsp;&rarr;</a></li>
-      
-    </ul>
+        
+        
+          <ul class="meta text-muted pager">
+            
+            <li class="previous"><a href="/unreasonable-effectiveness-of-c/" title="Previous Post: Unreasonable Effectiveness of C">&laquo; Unreasonable Effectiveness of C</a></li>
+            
+            
+          </ul>
+        
+      </footer>
+    </article>
+    
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+      </section>
+    
   </div>
 
   
-    <aside class="sidebar col-md-3">
-      
-        <section class="panel panel-default">
+  <aside class="sidebar col-md-3">
+    
+      <section class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title">Recent Posts</h3>
   </div>
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/switch/">From Switch Statement Down to Machine Code</a>
+    <a class="list-group-item active" href="/switch/">From Switch Statement Down to Machine Code</a>
     
     <a class="list-group-item " href="/unreasonable-effectiveness-of-c/">Unreasonable Effectiveness of C</a>
     
@@ -1323,8 +1368,8 @@ Changing the order of case labels in the switch did not affect the generated cod
 
 
 
-      
-    </aside>
+    
+  </aside>
   
 </div>
 
@@ -1346,7 +1391,10 @@ Changing the order of case labels in the switch did not affect the generated cod
       var disqus_shortname = '741mhz';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://741MHz.com/switch/';
+        var disqus_url = 'http://741MHz.com/switch/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

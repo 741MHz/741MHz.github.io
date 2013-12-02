@@ -4,10 +4,10 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Category: Tech - Ranting @ 741 MHz</title>
+  <title>System Program Problem Detected - Ranting @ 741 MHz</title>
   <meta name="author" content="741MHz.com">
 
-  <meta name="description" content="Category: Tech">
+  
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -16,7 +16,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://741MHz.comblog/categories/tech">
+  <link rel="canonical" href="http://741MHz.com/system-program-problem-detected">
   <link href="/favicon.png" type="image/png" rel="icon">
   <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
 
@@ -58,10 +58,10 @@
 
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li >
+                <li class="active">
                     <a href="/">Blog</a>
                 </li>
-                <li class="active">
+                <li >
                     <a href="/blog/archives">Archives</a>
                 </li>
             </ul>
@@ -92,102 +92,12 @@
         <div id="content">
           <div class="row">
   <div class="page-content col-md-9">
-    <article role="article">
+    <article class="hentry" role="article">
       
-        <header class="page-header">
-          
-          
-            <h1 class="entry-title">
-              Category: Tech
-              
-            </h1>
-          
-        </header>
-      
-      <div class="entry-content">
-        <div id="blog-archives" class="category">
-
-
-
-  
-  <h2>2013</h2>
-
-<article class="page-header">
-  
-<h1><a href="/switch/">From Switch Statement Down to Machine Code</a></h1>
-<p class="meta text-muted">
-  
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-13T00:00:00-05:00" pubdate data-updated="true">Jan 13<span>th</span>, 2013</time>
-  
-
-<span class="glyphicon glyphicon-tags"></span>&nbsp;
-<span class="categories">
-  
-    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
-  
-</span>
-
-
-</p>
-
-</article>
-
-
-
-<article class="page-header">
-  
-<h1><a href="/unreasonable-effectiveness-of-c/">Unreasonable Effectiveness of C</a></h1>
-<p class="meta text-muted">
-  
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-10T00:00:00-05:00" pubdate data-updated="true">Jan 10<span>th</span>, 2013</time>
-  
-
-<span class="glyphicon glyphicon-tags"></span>&nbsp;
-<span class="categories">
-  
-    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
-  
-</span>
-
-
-</p>
-
-</article>
-
-
-
-  
-  <h2>2012</h2>
-
-<article class="page-header">
-  
-<h1><a href="/system-program-problem-detected/">System Program Problem Detected</a></h1>
-<p class="meta text-muted">
-  
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
 
 
 
@@ -201,7 +111,74 @@
 
 
 <span class="glyphicon glyphicon-calendar"></span> <time datetime="2012-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2012</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://741MHz.com">Comments</a>
+        
+      </p>
+    
+    
+    <h1 class="entry-title">
+        System Program Problem Detected
+        
+    </h1>
+    
+  </header>
+
+
+<div class="entry-content clearfix"><p>I have just installed Ubuntu 12.10 and the first thing I ran into is tons of annoying popup windows telling me about system program problems and asking to report them:</p>
+
+<p><img src="/images/ubuntu_system_problem/popup.png"></p>
+
+<p>Apparently, this is a common problem that drives crazy a lot of people. What happens is some of the programs crash, and those cases are being reported by the Apport application. I highly doubt that anyone at Ubuntu is actually reading these reports. Firstly, millions of Ubuntu installations constantly have programs crashing and it must take an army of developers to investigate and fix them. Secondly, these crashes are happening for many years and they don’t seem to go away. So why bother? Here is how you disable this annoying reporting facility.</p>
+
+<h3>Launch a terminal</h3>
+
+<p>First, you need to open a terminal. You can do that by clicking on “Dash Home” button (on the top left of your screen), typing “Terminal”, and clicking on a Terminal application icon in order to launch it:</p>
+
+<p><img src="/images/ubuntu_system_problem/open_terminal.png"></p>
+
+<h3>Disable Apport</h3>
+
+<p>In the terminal, type the following commands:</p>
+
+<pre><code>sudo sed -i 's;^enabled=1$;enabled=0;g' /etc/default/apport
+sudo service apport restart
+sudo rm /var/crash/*
+</code></pre>
+
+<p>The above commands will replace “enabled=1″ with “enabled=0″ in the “/etc/default/apport” configuration file, restart the Apport application and remove old reports to save you a valuable disk space. The problem should now go away.</p>
+
+<h3>Still having annoying popups?</h3>
+
+<p>Be aware that in earlier versions of Ubuntu there was a bug when restarting Apport didn’t really restart it (see <a href="https://bugs.launchpad.net/ubuntu/+source/apport/+bug/292402">Bug #292402</a>). So as the last resort, simply reboot your computer.</p>
+
+<p>Hope it helps! Good Luck!</p>
+</div>
+
+
+      <footer>
+        <p class="meta text-muted">
+          
   
+
+<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2012-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2012</time>
+          
 
 <span class="glyphicon glyphicon-tags"></span>&nbsp;
 <span class="categories">
@@ -211,164 +188,44 @@
 </span>
 
 
-</p>
-
-</article>
-
-
-
+        </p>
+        
+          <div class="sharing">
   
-  <h2>2011</h2>
-
-<article class="page-header">
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/system-program-problem-detected/" data-via="" data-counturl="http://741MHz.com/system-program-problem-detected/" >Tweet</a>
   
-<h1><a href="/exceptions-performance/">C++ Exceptions Performance</a></h1>
-<p class="meta text-muted">
   
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2011-07-22T00:00:00-04:00" pubdate data-updated="true">Jul 22<span>nd</span>, 2011</time>
+  <div class="g-plusone" data-size="medium"></div>
   
-
-<span class="glyphicon glyphicon-tags"></span>&nbsp;
-<span class="categories">
   
-    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
-  
-</span>
-
-
-</p>
-
-</article>
-
-
-
-  
-  <h2>2010</h2>
-
-<article class="page-header">
-  
-<h1><a href="/awk-uniq/">Unique Lines Without Sorting</a></h1>
-<p class="meta text-muted">
-  
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-23T00:00:00-04:00" pubdate data-updated="true">Oct 23<span>rd</span>, 2010</time>
-  
-
-<span class="glyphicon glyphicon-tags"></span>&nbsp;
-<span class="categories">
-  
-    <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
-  
-</span>
-
-
-</p>
-
-</article>
-
-
-
-<article class="page-header">
-  
-<h1><a href="/predefined-macros/">Predefined Macros</a></h1>
-<p class="meta text-muted">
-  
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-17T00:00:00-04:00" pubdate data-updated="true">Oct 17<span>th</span>, 2010</time>
-  
-
-<span class="glyphicon glyphicon-tags"></span>&nbsp;
-<span class="categories">
-  
-    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
-  
-</span>
-
-
-</p>
-
-</article>
-
-
-
-<article class="page-header">
-  
-<h1><a href="/inotify-wait/">Wait For File With Inotify</a></h1>
-<p class="meta text-muted">
-  
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-09-29T00:00:00-04:00" pubdate data-updated="true">Sep 29<span>th</span>, 2010</time>
-  
-
-<span class="glyphicon glyphicon-tags"></span>&nbsp;
-<span class="categories">
-  
-    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/linux/'>Linux</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
-  
-</span>
-
-
-</p>
-
-</article>
-
 </div>
 
-      </div>
-      
+        
+        
+          <ul class="meta text-muted pager">
+            
+            <li class="previous"><a href="/exceptions-performance/" title="Previous Post: C++ Exceptions Performance">&laquo; C++ Exceptions Performance</a></li>
+            
+            
+            <li class="next"><a href="/unreasonable-effectiveness-of-c/" title="Next Post: Unreasonable Effectiveness of C">Unreasonable Effectiveness of C &raquo;</a></li>
+            
+          </ul>
+        
+      </footer>
     </article>
+    
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+      </section>
     
   </div>
 
   
-    <aside class="sidebar col-md-3">
-      
-        <section class="panel panel-default">
+  <aside class="sidebar col-md-3">
+    
+      <section class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title">Recent Posts</h3>
   </div>
@@ -379,7 +236,7 @@
     
     <a class="list-group-item " href="/unreasonable-effectiveness-of-c/">Unreasonable Effectiveness of C</a>
     
-    <a class="list-group-item " href="/system-program-problem-detected/">System Program Problem Detected</a>
+    <a class="list-group-item active" href="/system-program-problem-detected/">System Program Problem Detected</a>
     
     <a class="list-group-item " href="/exceptions-performance/">C++ Exceptions Performance</a>
     
@@ -418,8 +275,8 @@
 
 
 
-      
-    </aside>
+    
+  </aside>
   
 </div>
 
@@ -441,7 +298,10 @@
       var disqus_shortname = '741mhz';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://741MHz.com/system-program-problem-detected/';
+        var disqus_url = 'http://741MHz.com/system-program-problem-detected/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
