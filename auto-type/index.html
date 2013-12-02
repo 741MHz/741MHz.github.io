@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Automatic Type Deduction With 'auto' Keyword - Ranting @ 741 MHz</title>
+  <meta name="author" content="741MHz.com">
+
+  
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://741MHz.com/auto-type">
+  <link href="/favicon.png" type="image/png" rel="icon">
+  <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
+
+  <link href="/assets/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+
+  <script src="/javascripts/libs/jquery/jquery-2.0.3.min.js"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-45575473-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+  <body   >
+    <div id="wrap">
+      <header role="banner">
+        <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ranting @ 741 MHz</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href="/">Blog</a>
+                </li>
+                <li >
+                    <a href="/blog/archives">Archives</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="subscribe-rss" href="/atom.xml" title="subscribe via RSS">
+                        <span class="visible-xs">RSS</span>
+                        <img class="hidden-xs" src="/images/rss.png" alt="RSS">
+                    </a>
+                </li>
+                
+            </ul>
+            
+                <form class="search navbar-form navbar-right" action="http://google.com/search" method="GET">
+                    <input type="hidden" name="q" value="site:741MHz.com">
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="q" placeholder="Search">
+                    </div>
+                </form>
+            
+        </div>
+    </div>
+</nav>
+
+
+      </header>
+      <div id="main" class="container">
+        <div id="content">
+          <div class="row">
+  <div class="page-content col-md-9">
+    <article class="hentry" role="article">
+      
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-13T23:20:00-05:00" pubdate data-updated="true">Nov 13<span>th</span>, 2013</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://741MHz.com">Comments</a>
+        
+      </p>
+    
+    
+    <h1 class="entry-title">
+        Automatic Type Deduction With 'Auto' Keyword
+        
+    </h1>
+    
+  </header>
+
+
+<div class="entry-content clearfix"><p>Programming languages matter. Type theory matters, too. Some say that C++ programming language is a type-safe language. But is that really so?</p>
+
+<p>There is an alternative opinion on type safety where type safety is considered to be a property of a computer program rather than the language in which that program is written. That is, type-safety features of the language can be worked around to write a type unsafe program.</p>
+
+<p>C++ does not make it impossible to cast types (i.e. convert a void pointer to a pointer of other type), so writing extremely unsafe programs is still possible. However, as a language it tries its best to help programmers write type safe programs. Yet it is still easy to make a mistake. Consider the following example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">float</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">z</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above program will print &ldquo;1&rdquo;. But why? An alternative scenario could have been <code>1.333...</code> Is this a bug? Or is this behavior intended?</p>
+
+<p>We do not know what was the programmer&rsquo;s intention here and therefore we cannot know. According to the language specification, however, the <code>x / y</code> expression in the above example yields a result of type <code>float</code>. This is described in §5/9 of the C++ standard and may also be referred to as &ldquo;implicit type conversion&rdquo;.</p>
+
+<blockquote><p>Many binary operators that expect operands of arithmetic or enumeration type cause conversions and yield result types in a similar way. The purpose is to yield a common type, which is also the type of the result.</p>
+
+<p>This pattern is called the usual arithmetic conversions, which are defined as follows:</p>
+
+<p>If either operand is of type long double, the other shall be converted to long double.</p>
+
+<p>— Otherwise, if either operand is double, the other shall be converted to double.</p>
+
+<p>— Otherwise, if either operand is float, the other shall be converted to float.</p>
+
+<p>— Otherwise, the integral promotions (4.5) shall be performed on both operands.54)</p>
+
+<p>— Then, if either operand is unsigned long the other shall be converted to unsigned long.</p>
+
+<p>— Otherwise, if one operand is a long int and the other unsigned int, then if a long int can represent all the values of an unsigned int, the unsigned int shall be converted to a long int; otherwise both operands shall be converted to unsigned long int.</p>
+
+<p>— Otherwise, if either operand is long, the other shall be converted to long.</p>
+
+<p>— Otherwise, if either operand is unsigned, the other shall be converted to unsigned.</p>
+
+<p>[Note: otherwise, the only remaining case is that both operands are int ]</p></blockquote>
+
+<p>So what actually happened is an explicit type casting where a <code>float</code> was casted back to to <code>int</code> when programmer wrote <code>int z = x / y</code>. If he or she wrote <code>float z = x / y</code> instead, then output of the program would have been <code>1.333</code>.</p>
+
+<p>But how many programmers remember all of the type conversion rules for binary operators? How to figure out whether a type cast was intentional or not?</p>
+
+<p>But more importantly, what type to choose when writing a generic code, such as a template function? Like in this case, for example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span> <span class="cm">/* or B? or something else? */</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In other words, every time programmers specify a type explicitly, they oftentimes may accidentally introduce violate type safety theory. And this is a problem.</p>
+
+<p>Fortunately, C++11 provides a way to solve it in a uniform way though the introduction of a &ldquo;old&rdquo; new <code>auto</code> keyword.</p>
+
+<h3>The &ldquo;auto&rdquo; keyword. Reloaded.</h3>
+
+<p>The reason &ldquo;old&rdquo; is in a previous sentence is because C++ always had an <code>auto</code> keyword. It basically meant that a variable has automatic storage duration. However, because a special keyword for type-safety was needed and the old <code>auto</code> keyword was not that useful (and the research has shown that it was almost never used), it was decided to give <code>auto</code> keyword a new meaning not to introduce any new keywords.</p>
+
+<p>Since the introduction of C++11, the <code>auto</code> keyword is used to indicate that the type of a variable is to be deduced from its initializer expression. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span> <span class="n">x</span> <span class="o">=</span> <span class="mf">3.14</span><span class="p">;</span> <span class="c1">// x has type double</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In other words, <code>auto</code> let&rsquo;s the compiler figure out / deduce the type automatically. Getting back to our old template problem, it can be now solved by using <code>auto</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">//  ^^^^ we now let compiler worry about the type here.</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Jumping a little bit upfront, a major concern in discussions of <code>auto</code> features prior to proposing it into a standard was the potential difficulty in figuring out whether the declared variable will be of a reference type or not. And it was decided that the rules of type deduction in case with <code>auto</code> should be the exactly the same as the rules of template argument deduction. Examples (the notation x : T in the comments is read as &ldquo;x has type T&rdquo;):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">A</span> <span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">bar</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// &quot;x1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// &quot;x1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span>  <span class="c1">// error, we cannot bind a non−lvalue to a non-const reference</span>
+</span><span class='line'><span class="k">auto</span><span class="o">&amp;</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span>  <span class="c1">// error</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y2&quot; is of type &quot;A&amp;&quot;</span>
+</span><span class='line'><span class="k">auto</span><span class="o">&amp;</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y2&quot; is of type &quot;A&amp;&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>auto</code> keyword can also be used to declare more than one variable. The requirement in this case is that both deductions must lead to the same type. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">b</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">d</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">;</span> <span class="c1">// OK: &quot;c&quot; is of type &quot;int&quot;, &quot;d&quot; is &quot;int*&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">e</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">f</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">b</span><span class="p">;</span> <span class="c1">// ERROR: &quot;e&quot; is of type &quot;int&quot;, &quot;f&quot; is &quot;float*&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Auto in function declarations</h4>
+
+<p>For a moment, let&rsquo;s get back to our template example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Using auto has solved a problem of determining a type of &ldquo;c&rdquo;. However, there is potentially another problem. Let&rsquo;s say that we now want to return a result of addition from <code>foo()</code>, what should we specify as its return type?</p>
+
+<p>Luckily, folks designing C++ language has thought about this problem and put a special provision into the language that allows <code>auto</code> to be used with functions as part of the trailing notation syntax. The basic idea is to allow &ldquo;auto&rdquo; be specified in place of a return type, and then specify the actual type later. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">void</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This alone does not solve the problem. However, a <code>decltype</code> keyword that we have talked about in the <a href="/decltype">previous article</a>, can now be used to perform type deduction. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">decltype</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note that <code>decltype</code> alone can be used in some cases, for example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">decltype</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>However, if used without <code>auto</code> and is not placed into &ldquo;trailing&rdquo; part, function arguments cannot be used in inside <code>decltype()</code> as they have not even been declared yet (at the time of parsing).</p>
+
+<h3>Summary</h3>
+
+<p>All in all, <code>auto</code> is very similar to <code>decltype</code> but is &ldquo;prettier&rdquo; in terms of syntax,  allows for special case with return type deduction, and has reference-dropping semantics (similar to that of <a href="http://en.wikipedia.org/wiki/Typeof"><code>typeof</code> GCC extension</a>).</p>
+
+<p>Programmers are encouraged to use auto where possible unless explicit type conversion/cast is required &ndash; this would make the program even more type safe which in turn will help eliminate bugs related to type errors.</p>
+
+<h3>See Also</h3>
+
+<ul>
+<li><a href="/decltype/">Determining Type of Expression in C++</a></li>
+</ul>
+
+
+<h3>References</h3>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1984.pdf">N1984 &ndash; Deducing the type of variable from its initializer expression</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/6k3ybftz.aspx">&ldquo;auto&rdquo; keyword</a> @ MSDN</li>
+<li><a href="http://en.wikipedia.org/wiki/Type_safety#C.2B.2B">C++ type safety</a> @ Wikipedia</li>
+<li><a href="http://jameso.be/2012/02/11/language-matters.html">Why programming languages matter</a> by James O&#8217;Beirne</li>
+<li><a href="http://en.cppreference.com/w/cpp/language/auto">&ldquo;auto&rdquo; specifier</a> @ cppreference.com</li>
+<li><a href="http://stackoverflow.com/questions/5563000/implicit-type-conversion-rules-in-c-operators">Implicit type conversion rules in C++ operators</a> via Stack Overflow</li>
+<li><a href="http://en.wikipedia.org/wiki/Typeof">Typeof keyword</a> @ Wikipedia</li>
+</ul>
+
+</div>
+
+
+      <footer>
+        <p class="meta text-muted">
+          
+  
+
+<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-13T23:20:00-05:00" pubdate data-updated="true">Nov 13<span>th</span>, 2013</time>
+          
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/c-plus-plus-11/'>C++11</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/auto-type/" data-via="" data-counturl="http://741MHz.com/auto-type/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+        
+        
+          <ul class="meta text-muted pager">
+            
+            <li class="previous"><a href="/decltype/" title="Previous Post: Type of Expression in C++">&laquo; Type of Expression in C++</a></li>
+            
+            
+            <li class="next"><a href="/default-function-template-arguments/" title="Next Post: Default Template Arguments For Functions">Default Template Arguments For Functions &raquo;</a></li>
+            
+          </ul>
+        
+      </footer>
+    </article>
+    
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+      </section>
+    
+  </div>
+
+  
+  <aside class="sidebar col-md-3">
+    
+      <section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Recent Posts</h3>
+  </div>
+  
+  <div id="recent_posts" class="list-group">
+    
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
+    
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
+    
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
+    
+    <a class="list-group-item active" href="/auto-type/">Automatic Type Deduction With 'Auto' Keyword</a>
+    
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
+    
+  </div>
+</section>
+<section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Categories</h3>
+  </div>
+  <div class="list-group">
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus">
+        <span class="badge">25</span>
+        C++
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/linux">
+        <span class="badge">3</span>
+        Linux
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/tech">
+        <span class="badge">33</span>
+        Tech
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
+        <span class="badge">10</span>
+        C++11
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/life">
+        <span class="badge">2</span>
+        Life
+      </a>
+    
+  </div>
+</section>
+
+
+
+
+
+    
+  </aside>
+  
+</div>
+
+        </div>
+      </div>
+    </div>
+    <footer role="contentinfo"><div class="container">
+    <p class="text-muted credits">
+  Copyright &copy; 2010-2013 <a href="/">741MHz.com</a>
+</p>
+
+</div>
+</footer>
+    <script src="/assets/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/javascripts/modernizr-2.0.js"></script>
+
+
+<script type="text/javascript">
+      var disqus_shortname = '741mhz';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://741MHz.com/auto-type/';
+        var disqus_url = 'http://741MHz.com/auto-type/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  </body>
+</html>

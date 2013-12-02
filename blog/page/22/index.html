@@ -114,31 +114,137 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-10T00:00:00-05:00" pubdate data-updated="true">Jan 10<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-04T00:00:00-05:00" pubdate data-updated="true">Mar 4<span>th</span>, 2013</time>
         
-           | <a href="/unreasonable-effectiveness-of-c/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/unreasonable-effectiveness-of-c/">Comments</a>
+           | <a href="/pyusb/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/pyusb/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/unreasonable-effectiveness-of-c/">Unreasonable Effectiveness of C</a></h1>
+      <h1 class="entry-title"><a href="/pyusb/">Linux, HID and PyUSB</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>It is always nice to run into like-minded people. Today I ran into <a href="http://damienkatz.net/">Damien Katz</a>, CTO at <a href="http://www.couchbase.com/">Couchbase</a>,  and his brilliant story about why C is a beautiful high-level language. For a big fan of C like me it would have been a crime not to share this story. If you agree that OOP is a hype and a disease or if you think that C++ is a horrible language then you will definitely enjoy it:</p>
+  <div class="entry-content clearfix"><p>Today I was going through some stuff in my desk’s locker and ran into this nice toy — a big red electronic panic button. It has been there for years but I never had a chance to use it because a company making those does not have a driver for OS X, and of course I couldn’t find one for Linux either. But pushing a big red button is always fun and this time I have decided to try and make it work. So I brought it home with me into my “lab” to see what I can do.</p>
 
-<blockquote><p>For years I’ve tried my damnedest to get away from C. Too simple, too many details to manage, too old and crufty, too low level. I’ve had intense and torrid love affairs with Java, C++, and Erlang. I’ve built things I’m proud of with all of them, and yet each has broken my heart. They’ve made promises they couldn’t keep, created cultures that focus on the wrong things, and made devastating tradeoffs that eventually make you suffer painfully. And I keep crawling back to C.</p></blockquote>
+<p>After plugging it into a USB port, it immediately showed up in a list of USB devices (which you can see with lsusb tool). My Linux box has identified it as a Dream Cheeky Stress/Panic Button:</p>
 
-<p><a href="http://damienkatz.net/2013/01/the_unreasonable_effectiveness_of_c.html">[Read the full story&hellip;]</a></p>
+<pre><code>Bus 007 Device 010: ID 04f3:04a0 Elan Microelectronics Corp. Dream Cheeky Stress/Panic Button
+</code></pre>
 
-<p>While we are at it, you may also enjoy:</p>
+<p>Meanwhile, the kernel has also logged a message saying that it has found a new USB device. So the magic button seemed somewhat operational and I already knew two important things about it — a vendor and a product IDs. They were <code>0x04f3</code> and <code>0x04a0</code> respectively.</p>
 
-<ul>
-<li><a href="http://en.wikipedia.org/wiki/Object-oriented_programming#Criticism">Object Oriented Programming Criticism</a></li>
-<li><a href="http://article.gmane.org/gmane.comp.version-control.git/57918">Linus Torvalds opinion on C++</a> — you are full of bullshit!</li>
-</ul>
+<h2>Writing a USB driver</h2>
+
+<p>The only little detail missing was actually a driver. I tried to <a href="https://duckduckgo.com/">Duck Duck Go</a> it real quick but nothing showed up, and I decided to write it myself. How hard can it be, after all?</p>
+
+<h2>Reverse Engineering</h2>
+
+<p>In order to write a device driver, one must know what the device is doing. Obviously, I didn’t have any specification, neither I wanted to deal with Elan Microelectronics support department. So the only way to figure it out was reverse engineering. Luckily, Linux has <a href="https://www.kernel.org/doc/Documentation/usb/usbmon.txt"><em>usbmon</em></a> — a facility in the kernel that is used to collect traces of I/O on the USB bus. After a quick pick at its documentation, I loaded the module using <code>modprobe usbmon</code> command and the device showed up in <code>/sys/kernel/debug/usb/devices</code>. Since it was attached to bus #7, I traced the I/O by reading the <code>/sys/kernel/debug/usb/usbmon/7u</code> file and pushing my panic button a few times to see if anything shows up. And every time I hit the button, the device was sending the following data to the host:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>ffff8801b2efc9c0 1873321198 C Ii:7:010:1 0:8 8 = 02000000 00000000
+</span><span class='line'>ffff8801b2efc9c0 1873457204 C Ii:7:010:1 0:8 8 = 06000000 00000000
+</span><span class='line'>ffff8801b2efc9c0 1873633203 C Ii:7:010:1 0:8 8 = 06001300 00000000
+</span><span class='line'>ffff8801b2efc9c0 1873801206 C Ii:7:010:1 0:8 8 = 06000000 00000000
+</span><span class='line'>ffff8801b2efc9c0 1873977211 C Ii:7:010:1 0:8 8 = 02000000 00000000</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Not only this proved that button itself works, it also uncovered a pattern — the device was sending <code>02000000</code> and <code>06000000</code> twice with <code>06001300</code> in between. So <code>06001300</code> seemed like a good indication of the button being pressed.</p>
+
+<h2>Linux Kernel USB Driver</h2>
+
+<p>The next step was to write a USB Device Driver for Linux. I dealt with PCI Express, DMA and Ethernet network drivers, but never wrote a single USB driver before. So I pulled my copy of the Linux Device Drivers book off the shelf and opened it on Chapter 13 “USB Drivers”. I have to say I got surprised — that rant is about 100 pages long. I would of course suck it up, enjoy the reading and proceed to hacking. If only it was something serious. And what I had was a simple USB button that did nothing but sending two 32-bit integers, 0x06 and 0x13, every time it gets hit. Going through the hundred pages just to read 64-bit of data off the USB cable, on Monday night, after a hard 10 hours working day… Ain’t nobody got time for that?</p>
+
+<h2>PyUSB</h2>
+
+<p>A bit disappointed, I tried to find an easier way and once against ducked for a few keywords like “USB”, “driver”, “read”, “HID” and so on…</p>
+
+<blockquote><p>Ask and it will be given to you; seek and you will find; knock and the door will be opened to you.
+— Matthew 7:7</p></blockquote>
+
+<p>Turned out, it is possible to write a USB driver in just a few lines of Python. Sir <a href="http://www.micahcarrick.com/">Micah Carrick</a> have managed to make a driver for his credit card reader and wrote about his experience in <a href="http://www.micahcarrick.com/credit-card-reader-pyusb.html">this nice article</a>. Following in his footsteps, I quickly glanced at <a href="http://sourceforge.net/apps/trac/pyusb/">PyUSB</a> that he was using in his work, read a few other examples, and came up with a driver for my magic button. This is truly the shortest and simplest device driver that I have made in my life:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">usb.core</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">dev</span> <span class="o">=</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">idVendor</span><span class="o">=</span><span class="mh">0x04f3</span><span class="p">,</span> <span class="n">idProduct</span><span class="o">=</span><span class="mh">0x04a0</span><span class="p">)</span>
+</span><span class='line'><span class="k">if</span> <span class="n">dev</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;No Panic button found in the system&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">try</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">dev</span><span class="o">.</span><span class="n">is_kernel_driver_active</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">dev</span><span class="o">.</span><span class="n">detach_kernel_driver</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Kernel driver won&#39;t give up control over device: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">try</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">dev</span><span class="o">.</span><span class="n">set_configuration</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">dev</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+</span><span class='line'><span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Cannot set configuration the device: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">endpoint</span> <span class="o">=</span> <span class="n">dev</span><span class="p">[</span><span class="mi">0</span><span class="p">][(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'><span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">data</span> <span class="o">=</span> <span class="n">dev</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">endpoint</span><span class="o">.</span><span class="n">bEndpointAddress</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">wMaxPacketSize</span><span class="p">,</span>
+</span><span class='line'>                        <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">19</span><span class="p">:</span>
+</span><span class='line'>                <span class="c"># Panic button was pressed!</span>
+</span><span class='line'>                <span class="k">print</span> <span class="s">&quot;OH MY GOD! OH MY GOD! DOUBLE RAINBOW!!!&quot;</span>
+</span><span class='line'>    <span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="mi">110</span><span class="p">:</span> <span class="c"># 110 is a timeout.</span>
+</span><span class='line'>            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Error readin data: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So now I have my beautiful toy working!</p>
+
+<h2>UPDATE</h2>
+
+<p><a href="https://twitter.com/pdp7">Drew Fustini</a> have hooked this up to the BeagleBone Next-Gen and made this video:</p>
+
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/52b5RGd4yrE "></iframe></div>
 
 </div>
   
@@ -170,15 +276,15 @@
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
     
-    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
   </div>
 </section>
@@ -190,7 +296,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">18</span>
+        <span class="badge">25</span>
         C++
       </a>
     
@@ -202,13 +308,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">26</span>
+        <span class="badge">33</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">3</span>
+        <span class="badge">10</span>
         C++11
       </a>
     

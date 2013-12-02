@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Default Template Arguments For Functions - Ranting @ 741 MHz</title>
+  <meta name="author" content="741MHz.com">
+
+  
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://741MHz.com/default-function-template-arguments">
+  <link href="/favicon.png" type="image/png" rel="icon">
+  <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
+
+  <link href="/assets/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+
+  <script src="/javascripts/libs/jquery/jquery-2.0.3.min.js"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-45575473-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+  <body   >
+    <div id="wrap">
+      <header role="banner">
+        <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ranting @ 741 MHz</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href="/">Blog</a>
+                </li>
+                <li >
+                    <a href="/blog/archives">Archives</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="subscribe-rss" href="/atom.xml" title="subscribe via RSS">
+                        <span class="visible-xs">RSS</span>
+                        <img class="hidden-xs" src="/images/rss.png" alt="RSS">
+                    </a>
+                </li>
+                
+            </ul>
+            
+                <form class="search navbar-form navbar-right" action="http://google.com/search" method="GET">
+                    <input type="hidden" name="q" value="site:741MHz.com">
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="q" placeholder="Search">
+                    </div>
+                </form>
+            
+        </div>
+    </div>
+</nav>
+
+
+      </header>
+      <div id="main" class="container">
+        <div id="content">
+          <div class="row">
+  <div class="page-content col-md-9">
+    <article class="hentry" role="article">
+      
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-14T20:35:00-05:00" pubdate data-updated="true">Nov 14<span>th</span>, 2013</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://741MHz.com">Comments</a>
+        
+      </p>
+    
+    
+    <h1 class="entry-title">
+        Default Template Arguments for Functions
+        
+    </h1>
+    
+  </header>
+
+
+<div class="entry-content clearfix"><p>One of the features that C++ provides to its users is the ability to write code in an object-oriented manner. The first object-oriented system was created in 1960 by <a href="http://en.wikipedia.org/wiki/Ivan_Sutherland">Ivan Sutherland</a>. 32 years later, when C++ first appeared back in 1983, object-oriented paradigm was so popular that everything that was not a class or a method was treated as a defective entity.</p>
+
+<p>The beauty of C++ compared to many other languages like Java, where there can be no freestanding methods or global variables, is the fact that C++ neither tries to limit its users in terms of ideas they can have, nor does it force any specific ideas or ideals upon its users. It always allowed programmers to make their creations follow object-oriented, procedural, data-oriented designs, or have no design whatsoever.</p>
+
+<p>In practice, however, there will always be limits. But C++ honestly tries not to stand in a way and help us, the programmers, to code anything that we could possibly have in our heads. And C++11 have proved this one more time with a lot of changes over the previous revision effectively improving the language to allow us to achieve more with less labor, focus on our current ideas rather than overcoming limitations of our tools and programming language, and come up with even more ideas, because ideas are most important.</p>
+
+<blockquote><p>It is not labor, not capital, not land, that has created modern wealth or is creating it today. It is <em>ideas</em> that create wealth, and what is wanted is more ideas&hellip;</p>
+
+<p>— <a href="http://en.wikipedia.org/wiki/Emerson_Harrington">Harrington Emerson</a></p></blockquote>
+
+<p>Back in a day, freestanding functions, as well as freestanding function templates, did not get a lot of attention because people fell for the hype of object-oriented design. As a consequence, it was never possible to have seemingly simple and intuitive things such as a default template argument for a function template. It was allowed for classes, but not for functions. To give an example, the following would work:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">X</span><span class="p">,</span> <span class="k">typename</span> <span class="n">Y</span> <span class="o">=</span> <span class="kt">int</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">static</span> <span class="kt">void</span> <span class="n">func</span><span class="p">(</span><span class="n">X</span> <span class="n">x</span><span class="p">,</span> <span class="n">Y</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="c1">// ...</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>But the function template like this would not compile:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">X</span><span class="p">,</span> <span class="k">typename</span> <span class="n">Y</span> <span class="o">=</span> <span class="kt">int</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">func</span><span class="p">(</span><span class="n">X</span> <span class="n">x</span><span class="p">,</span> <span class="n">Y</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Seems a little bit odd. Bjarne Stroustrup answered why this was happening in April 2000 when <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226">he wrote</a>:</p>
+
+<blockquote><p>The prohibition of default template arguments for function templates is a misbegotten remnant of the time where freestanding functions were treated as second-class citizens and required all template arguments to be deduced from the function arguments rather than specified.</p>
+
+<p>The restriction seriously cramps programming style by unnecessarily making freestanding functions different from member functions, thus making it harder to write STL-style code.</p>
+
+<p>— <a href="http://www.stroustrup.com">Bjarne Stroustrup</a></p></blockquote>
+
+<p>Luckily, this was written along with a proposal on how to fix it, and after a couple of meetings with the core language working group, all of the small details were thought through and the final resolution was proposed in October 2002. It consisted of seven changes to different sections and paragraphs to the C++ standard.</p>
+
+<p>If you are interested in details, you can check them out at <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226">http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226</a>.</p>
+
+<p>What&rsquo;s important is that today we need to waste our time no more working around this limitation as all of the production quality C++ compilers and tools support default template arguments for function templates, and we we can write our code like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span> <span class="o">=</span> <span class="kt">double</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="n">T</span> <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">U</span> <span class="n">u</span> <span class="o">=</span> <span class="mi">0</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Long live C++!</p>
+</div>
+
+
+      <footer>
+        <p class="meta text-muted">
+          
+  
+
+<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-14T20:35:00-05:00" pubdate data-updated="true">Nov 14<span>th</span>, 2013</time>
+          
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/c-plus-plus-11/'>C++11</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/default-function-template-arguments/" data-via="" data-counturl="http://741MHz.com/default-function-template-arguments/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+        
+        
+          <ul class="meta text-muted pager">
+            
+            <li class="previous"><a href="/auto-type/" title="Previous Post: Automatic Type Deduction With 'auto' Keyword">&laquo; Automatic Type Deduction With 'auto' Keyword</a></li>
+            
+            
+            <li class="next"><a href="/inheriting-constructors/" title="Next Post: Inheriting constructors in C++11">Inheriting constructors in C++11 &raquo;</a></li>
+            
+          </ul>
+        
+      </footer>
+    </article>
+    
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+      </section>
+    
+  </div>
+
+  
+  <aside class="sidebar col-md-3">
+    
+      <section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Recent Posts</h3>
+  </div>
+  
+  <div id="recent_posts" class="list-group">
+    
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
+    
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
+    
+    <a class="list-group-item active" href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
+    
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With 'Auto' Keyword</a>
+    
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
+    
+  </div>
+</section>
+<section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Categories</h3>
+  </div>
+  <div class="list-group">
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus">
+        <span class="badge">25</span>
+        C++
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/linux">
+        <span class="badge">3</span>
+        Linux
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/tech">
+        <span class="badge">33</span>
+        Tech
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
+        <span class="badge">10</span>
+        C++11
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/life">
+        <span class="badge">2</span>
+        Life
+      </a>
+    
+  </div>
+</section>
+
+
+
+
+
+    
+  </aside>
+  
+</div>
+
+        </div>
+      </div>
+    </div>
+    <footer role="contentinfo"><div class="container">
+    <p class="text-muted credits">
+  Copyright &copy; 2010-2013 <a href="/">741MHz.com</a>
+</p>
+
+</div>
+</footer>
+    <script src="/assets/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/javascripts/modernizr-2.0.js"></script>
+
+
+<script type="text/javascript">
+      var disqus_shortname = '741mhz';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://741MHz.com/default-function-template-arguments/';
+        var disqus_url = 'http://741MHz.com/default-function-template-arguments/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  </body>
+</html>

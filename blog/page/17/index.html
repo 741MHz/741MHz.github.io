@@ -114,205 +114,131 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-29T21:00:00-04:00" pubdate data-updated="true">Mar 29<span>th</span>, 2013</time>
         
-           | <a href="/marvell-reset/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/marvell-reset/">Comments</a>
+           | <a href="/network-evolution/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/network-evolution/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/marvell-reset/">Marvell 88E1111 Reset Sequence</a></h1>
+      <h1 class="entry-title"><a href="/network-evolution/">The Evolution of Computer Networking</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>If you are one of the lucky owners of one of the Altera’s development kits with Marvell’s software-programmable 88E1111 Ethernet PHY then you know it’s a bitch. The problem is not really in a PHY itself — it’s not a bad piece of hardware at all. The problem is that Altera provides literally zero support or documentation with it. Go figure.</p>
+  <div class="entry-content clearfix"><p>Do you remember 56k modems? Me too. The sound it used to produce when connecting still gives me a warm fuzzy feeling and a bit of excitement. The last time I have used that modem was in 2003. Fifty six thousand bits per seconds — that was a lot back then. For the sake of comparison, I went to speedtest.net to check the speed of my phone that uses 4G LTE from Verizon, and my Verizon Fios home network. Here are my results:</p>
 
-<p>As it turns out, the PHY’s default settings after the hardware reset is to work in center-aligned mode, whereas the default mode for FPGA data-transfers is edge-aligned. On top of that, some kits have a bug and the PHY must be reset two or three times in order to become operational.</p>
+<p><img src="/images/network-evolution/home_speed_test.jpg"></p>
 
-<p>The quick fix to get the I/O between FPGA and the PHY working without software-programming the PHY is to shift the clock 90°. That can be done with PLL. There are two problems with this approach however —it makes it a lot harder to time-constrain the design and it introduces an extra clock while the PHY is fully capable of working in edge-aligned mode. If only you knew how to set it up&hellip;</p>
+<p>The phone’s Internet connection is roughly 263 faster; the home network is 821 times faster. This is just mind-blowing. But that is a simple home networking — a standard phone and a standard gigabit Ethernet adapter. The industrial networking is a lot more complicated, a lot faster, and is far ahead of technologies commonly used in our homes. In order to achieve lower latency characteristics and better bandwidth, the industry took a few large steps to get where we are now. Let’s take a quick look at what is going on there!</p>
 
-<p>As it turned out, the only way to get the documentation for the PHY is to sign an NDA with Marvell. It sounds as ridiculous as the need to sign a NDA in order to get an owner’s manual for the car you have just bought. I didn’t want to do it and &ldquo;picked the red pill.&rdquo; ¡No pasarán!</p>
+<h2>Direct Memory Access</h2>
 
-<p>After a few hours of searching through the darkest corners of the forum archives and reading a somewhat messy Altera’s Triple-Speed Ethernet drivers code, I finally came up with a piece of magic that properly resets the PHY and makes it use edge-aligned clock. It assumes that “base” is a memory address of the MAC’s MDIO space (see Table 6-1 of the TSE User Guides for details), a user-space Linux running on x86_64 (though can be easily ported to kernel mode):</p>
+<p>One of the first steps was an introduction of <a href="http://en.wikipedia.org/wiki/Direct_memory_access">Direct Memory Access</a>, or <em>DMA</em>. Basically, it allowed peripheral devices to access computer’s memory without having CPU being involved in this process. I was trying to find some information about the history of DMA and found <a href="http://www.ganssle.com/articles/adma.htm">this interesting article</a> dated back to 1994. At that time, DMA was gaining popularity in embedded systems. Today, it can be found in any computer, and is used in all systems and not only embedded.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#define PHY_CTRL_REG 0x00</span>
-</span><span class='line'><span class="cp">#define PHY_AUTO_NEG 0x04</span>
-</span><span class='line'><span class="cp">#define PHY_AUTO_NEG 0x04</span>
-</span><span class='line'><span class="cp">#define PHY_1000BASE_T_CONTROL 0x09</span>
-</span><span class='line'><span class="cp">#define PHY_SPEC_CONTROL 0x10</span>
-</span><span class='line'><span class="cp">#define PHY_SPEC_STATUS 0x11</span>
-</span><span class='line'><span class="cp">#define PHY_SPEC_CONTROL_EXT 0x14</span>
-</span><span class='line'><span class="cp">#define PHY_SPEC_STATUS_EXT 0x1B</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#define mb() asm volatile (&quot;&quot;: : :&quot;memory&quot;)</span>
-</span><span class='line'><span class="cp">#define rmb() mb()</span>
-</span><span class='line'><span class="cp">#define wmb() mb()</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="nf">phy_sw_reset</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="o">*</span><span class="n">base</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">uint32_t</span> <span class="n">ctrl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">ctrl</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">];</span>
-</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
-</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctrl</span> <span class="o">|</span> <span class="mh">0x8000</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">marvell_reset</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="o">*</span><span class="n">base</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">uint32_t</span> <span class="n">v</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Initialize Control (REG 0) */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">];</span>
-</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">v</span> <span class="o">&amp;=</span> <span class="mh">0x8EBF</span><span class="p">;</span> <span class="cm">/* Reset */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0040</span><span class="p">;</span> <span class="cm">/* Enable Speed 1000 */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0100</span><span class="p">;</span> <span class="cm">/* Enable Full Duplex Mode */</span>
-</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* AN Advertisement Register (REG 4) */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_AUTO_NEG</span><span class="p">];</span>
-</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_AUTO_NEG</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&amp;</span> <span class="mh">0xFE1F</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
-</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* 1000BASE-T Control Register (REG 9) */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_1000BASE_T_CONTROL</span><span class="p">];</span>
-</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
-</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_1000BASE_T_CONTROL</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&amp;</span> <span class="mh">0xFCFF</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
-</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* PHYSpecific Control Register (REG 16).</span>
-</span><span class='line'><span class="cm">       Set PHY Synchronizing FIFO to maximum */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL</span><span class="p">];</span>
-</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">|</span> <span class="mh">0xC000</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
-</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Extended PHYSpecific Status Register (REG 27).</span>
-</span><span class='line'><span class="cm">       Set PHY HWCFG_MODE for RGMII to Copper. */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_STATUS_EXT</span><span class="p">];</span>
-</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
-</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_STATUS_EXT</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">|</span> <span class="mh">0x000B</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
-</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Extended PHYSpecific Control Register (REG 20).</span>
-</span><span class='line'><span class="cm">       Enable RGMII TX and RX Timing Control. */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL_EXT</span><span class="p">];</span>
-</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Bring it up */</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">&amp;=</span> <span class="mh">0xFF7D</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0082</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL_EXT</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
-</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<h2>Network Interface Controllers</h2>
+
+<p>Before, computers used to access the network by communicating with the <a href="http://en.wikipedia.org/wiki/PHY_(chip">Ethernet PHY</a>) directly. Its only task is to send and receive data over a physical medium, such as famous <a href="http://en.wikipedia.org/wiki/Registered_jack">RJ-45 cable</a>.</p>
+
+<p><img src="/images/network-evolution/phy_and_cat6.jpg"></p>
+
+<p>The problem was in having CPU perform a lot of simple yet time-consuming operations in order to communicate over the network using just a PHY device. With the ever growing demand for better performance, engineers came up with special hardware called <a href="http://en.wikipedia.org/wiki/Network_interface_controller">Network Interface Controller</a> (NIC). Initially, it was handling tasks related to the <a href="http://en.wikipedia.org/wiki/Data_link_layer">Data Link Layer</a>, such as <a href="http://en.wikipedia.org/wiki/Media_access_control">Media Access Control</a>. This made it possible to perform many tasks on the card and not waste CPU resources. For example, NIC could filter data that was not intended for this computer (based on MAC address or IP address, for example).</p>
+
+<h2>PCI Express 3.0</h2>
+
+<p>The first NICs used to communicate with PC over <a href="http://en.wikipedia.org/wiki/Industry_Standard_Architecture">ISA bus</a>. ISA was later replaced with PCI and then <a href="http://en.wikipedia.org/wiki/PCI_Express#PCI_Express_3.0">PCI Express</a> (aka PCIe). The PCIe has evolved significantly since its first release. The currently used version 3 of the PCIe can handle up to 8 gigatransfers per second and provides a tremendous advantage not only to Network Interface Controllers, but general purpose computing with technologies like <a href="http://en.wikipedia.org/wiki/CUDA">CUDA</a>, <a href="http://en.wikipedia.org/wiki/OpenCL">OpenCL</a>, <a href="http://en.wikipedia.org/wiki/C%2B%2B_AMP">C++ AMP</a> etc. The version 4 of the PCIe standard is already on its way.</p>
+
+<p><img src="/images/network-evolution/nic_in_90s.jpg"></p>
+
+<h2>Optical Fiber, 100 Gigabit Ethernet and Special Hardware</h2>
+
+<p>The old good copper cables got replaced with <a href="http://en.wikipedia.org/wiki/Optical_fiber">optical fiber</a> which are effectively transferring data with a speed of light. The speed at which network cards can transfer data has also increased. It jumped from 10 to 100 Mbps, then from 100 Mbps to 1 Gigabit per second – a common speed our PCs are operating at home these days. <a href="https://en.wikipedia.org/wiki/10-gigabit_Ethernet">10 Gigabit Ethernet</a> started to evolve around 2002 and over six million ports were shipped by 2010. This is the most common Ethernet speed currently used by the industry. In 2010, there were two new Ethernet standards supporting <a href="https://en.wikipedia.org/wiki/100_Gigabit_Ethernet">40 and 100 Gigabit per second</a> line rates. This technology is already being used today, powering our “Clouds” and having people ranting about “Big Data”.</p>
+
+<p>One interesting thing about these new and crazy bandwidth capabilities is that computers cannot really handle it, so you cannot just plug a 100 GbE controller into your PCIe slot and download the whole Internet. Not at all. Simply because no general-purpose CPU can handle that amount of data, at least not yet. So far these loads can only be handled by special hardware – Ethernet ICs which are commonly implemented as <a href="http://en.wikipedia.org/wiki/Application-specific_integrated_circuit">ASICs</a>, but there are also <a href="http://en.wikipedia.org/wiki/Field-programmable_gate_array">FPGA</a> based solutions. One of the great examples of such devices are network switches. For example, Arista makes a few switches capable of handling 1.28 terabytes per second.</p>
+
+<p>If you are a big electronics enthusiast and know how to program FPGAs, then you can make your own 100 GbE device at home. There are plenty of kits available on the market already. For example, the following Altera board looks very interesting:</p>
+
+<p><img src="/images/network-evolution/100g_dk_stratix_v_gx.jpg"></p>
+
+<p>Though I can think of better ways to spend $25,000. But that’s just me. Let’s get back to the software and general-purpose CPUs. Engineers from all around the world have been trying to solve a problem of having a software that can handle large amount of traffic with lowest possible latency, and there is indeed some progress.</p>
+
+<h2>Software, Berkeley Sockets and C10K</h2>
+
+<p><img class="right" src="/images/network-evolution/code_monkey_by_gloriouskyle.jpg"></p>
+
+<p>The software hasn’t really changed much in the last two decades, unfortunately. Developers are still using a classic <a href="http://en.wikipedia.org/wiki/Berkeley_sockets">Berkeley Socket API</a> for network programming, as they used two decades ago. This has been a big problem because sticking to the same old programming model does not allow for a lot of great optimizations.</p>
+
+<p>In early 2000s, Alexey Kuznetsov, Jamal Hadi Salim and Robert Olsson have developed a new technique for network packet processing called «<a href="http://en.wikipedia.org/wiki/New_API">New API</a>». It was not affecting the socket API used by the application developers. Instead, it was a modification to the device driver packet processing framework that was designed to improve the performance of high-speed networking.</p>
+
+<p>There were also a few improvements for which programmers should be grateful and thank to NIC designers. Modern NICs provide something called «offloading» where some tasks that were done by software are now handled by the NICs. This at least includes a <a href="http://en.wikipedia.org/wiki/Large_segment_offload">Large Segment Offload</a>, <a href="http://en.wikipedia.org/wiki/Large_receive_offload">Large Receive Offload</a>, and TCP/IP, UDP and Ethernet checksum calculation. These “tricks” are very common these days and won’t surprise anyone.</p>
+
+<p>The above improvements helped a lot but it soon turned out to be not enough. In 2003, Dan Kegel described <a href="http://www.kegel.com/c10k.html">the C10K problem</a>. It highlights that hardware is no longer a bottleneck – the software is, or at least the way it is written. And that affects everything and not only the Web. Here is a real world example from a financial industry. I remember when I first joined the company I am currently with, we had an application designed to process <a href="http://opradata.com/">OPRA data</a> – an information aggregated from participating <a href="http://en.wikipedia.org/wiki/Option_(finance">option</a>) exchanges (currently 11). The data was distributed over some 30+ multicast channels at that time, and the application was creating a <a href="http://en.wikipedia.org/wiki/Thread_(computing">thread</a>) per UDP socket/channel to handle all of that data. That was truly embarrassing, and as the amount of data increased over time, the application would just lose half of the data or even crash. Luckily, we quickly threw that crappy app away and wrote a new one that handles everything with ease even during the peak loads.</p>
+
+<p>I was laughing out loud when a few days ago, <a href="http://www.ft.com/intl/cms/s/0/5771ec7a-90ce-11e2-862b-00144feabdc0.html">according to Mr. O’Malia</a>, the government reportedly had similar problems after deciding to regulate a swap market. After market participants started to report their activity, the government simply failed to handle the amount of data:</p>
+
+<blockquote><p>The commission now receives data on thousands of swaps each day. So far, however, none of our computer programs loads this data without crashing.</p></blockquote>
+
+<p>As a result of a higher awareness of this problem among <a href="https://www.youtube.com/watch?v=v4Wy7gRGgeA">code monkeys</a>, an asynchronous network I/O approach quickly gained popularity and more applications started to use it. Generally speaking, a well written application using asynchronous approach can handle a reasonable amount of traffic on a powerful multi-core server – at least enough for most of generic applications like web servers, bit torrents etc. Yet handling a constant load of anything close to 10 GbE is still beyond the imaginable. And even if CPUs could handle that, that would leave no resources to actually do something meaningful with that data. This slowly but surely becomes a problem. Luckily, there are a number of solutions aiming at solving this problem by taking the whole new approach to computer networking.</p>
+
+<h2>What’s Trending</h2>
+
+<p>A lot of work towards a better networking has been emerging since 2005 with a number of companies already providing industrial grade solutions today. There is not yet an official name for it, no standard, and no solutions are exactly the same. Yet they all share the same philosophy and similar implementations. There are few main points shared by all of them:</p>
+
+<ul>
+<li>Operating system kernel is a bottleneck and its use must be avoided.</li>
+<li>Applications must access the NIC directly and perform DMA transactions.</li>
+<li>As much work as possible must be done by the NIC hardware.</li>
+</ul>
 
 
-<p>Some of the logic and magic masks I dug out of the TCL script written for JTAG System Console that I stumbled upon in a <em>N647_TSE_Single_Port_RGMI_Dev_AIIGX_ACDS</em> reference design.</p>
+<p><img class="right" src="/images/network-evolution/modern_nic.png" title="'Modern NIC with full kernel-bypass, offload and zero-copy support as well as on-board FPGA for custom hardware logic.'" >
+There are three buzz words for the above points – Kernel-Bypass, Zero-Copy and Offload respectively. Here are just a few popular solution provides that implement all of the above and provide extremely high-performance networking solutions (in no particular order):</p>
 
-<p>Hope it helps!</p>
+<ul>
+<li><a href="http://www.6wind.com/">6WIND</a></li>
+<li><a href="http://www.plda.com/index.php">PLDA</a></li>
+<li><a href="http://www.napatech.com/">Napatech</a></li>
+<li><a href="http://www.mellanox.com/">Mellanox</a></li>
+<li><a href="http://www.myricom.com/">Myricom</a></li>
+<li><a href="http://www.solarflare.com/">SolarFlare</a></li>
+<li><a href="http://www.velocytech.com/">VelociTech</a></li>
+<li><a href="http://www.intilop.com/">Intilop</a></li>
+<li><a href="http://www.ntop.org/products/pf_ring/dna/">NTOP.ORG DNA</a></li>
+</ul>
+
+
+<p>Some of the technologies provided by the above companies can speed up network processing anywhere from 20 to 100 times. In order to achieve the best performance, however, a different programming model (as well as API) must be used. It is simply impossible to have a Berkeley Socket API anymore — it is way too old and does not account for many things, making it impossible to write the efficient (from hardware point of view) program.</p>
+
+<h2>What To Expect Next</h2>
+
+<p>Given the current trends, it would be logical to expect a few things to happen.</p>
+
+<h3>Standard API</h3>
+
+<p>The first thing is a consolidation of APIs. Having 10+ different ways to do the same thing just does not sound good. Sooner or later we should get a standard API that would provide developers with a stable, thought-through and efficient way to program network applications using these cutting edge technologies. This would probably be something like <a href="http://en.wikipedia.org/wiki/OpenCL">OpenCL</a> but for networking.</p>
+
+<h3>Lower Cost</h3>
+
+<p>To get one of those programmable network adapters of the new era today, one should pay through the nose. The price can vary anywhere from $5000 to $50000, depending on the functionality provided. We should (hopefully) see the price go down as technology gets stabilized and the sales increase in quantities. After all, creating such a device is no harder than an iPhone. Yet we don’t pay 50K for an iPhone, right?</p>
+
+<h3>Integration</h3>
+
+<p>Recently, the Xilinx has released the <a href="http://www.xilinx.com/publications/prod_mktg/quickpath-interconnect-ip-product-brief.pdf">worlds first FPGA running QPI</a> at full width — 21 lanes at 6.4 GHz per lane. So we can now have a motherboard that has a cutting edge Intel CPU for general-purpose processing in one socket, and a special purpose FPGA in another socket, both sharing the host memory at maximum speed and the lowest possible latency. In other words, Intel CPU will communicate with FPGA just like it communicates with other CPUs on the same board. This will indeed help to get rid of PCI Express that has always been a bottleneck when it comes to both throughput and latency. Amazing, isn’t it? Below is the video from Xilinx explaining this in more details:</p>
+
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/NHkpMlL0bZ8 "></iframe></div>
+
+
+<p>At the same time Altera, another leading FPGA vendor, has released <a href="http://www.altera.com/corporate/news_room/releases/2012/products/nr-optical-fpga-demo.html">the worlds first optical FPGA technology</a> that was developed in conjunction with Avago Technologies, breaking through the barriers of traditional copper interconnect. To put it simple, we can now plug the optical fiber directly into the FPGA’s transceiver and achieve a bandwidth of approximately 120 gigabits per second:</p>
+
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/cC5g3rE9DZ8 "></iframe></div>
+
+
+<p>Now, here is what I think is going to happen. In the next few years we would have an FPGA chip sitting in a CPU socket right next to the high-end Intel CPU, interconnected by QPI with the highest possible bandwidth, and lowest possible latency. The FPGA would have an optical fiber cable attached to it and beaming the data straight into the fabrics. The FPGA would then handle all of the network processing, including high-level protocols such as TCP/IP or even higher ones like <a href="https://bitcoin.it/wiki/Protocol_specification">BitCoin</a>, <a href="http://fixprotocol.org/">FIX</a>, etc.</p>
+
+<p>Once that is done, we could take all of that and integrate it with a human’s brain :)</p>
+
+<p>Hope it was interesting. Thanks for reading!</p>
 </div>
   
   
@@ -343,15 +269,15 @@
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
     
-    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
   </div>
 </section>
@@ -363,7 +289,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">18</span>
+        <span class="badge">25</span>
         C++
       </a>
     
@@ -375,13 +301,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">26</span>
+        <span class="badge">33</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">3</span>
+        <span class="badge">10</span>
         C++11
       </a>
     

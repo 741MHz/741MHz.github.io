@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Ranting @ 741 MHz</title>
+  <meta name="author" content="741MHz.com">
+
+  
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://741MHz.com/blog/page/30">
+  <link href="/favicon.png" type="image/png" rel="icon">
+  <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
+
+  <link href="/assets/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+
+  <script src="/javascripts/libs/jquery/jquery-2.0.3.min.js"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-45575473-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+  <body   >
+    <div id="wrap">
+      <header role="banner">
+        <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ranting @ 741 MHz</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href="/">Blog</a>
+                </li>
+                <li >
+                    <a href="/blog/archives">Archives</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="subscribe-rss" href="/atom.xml" title="subscribe via RSS">
+                        <span class="visible-xs">RSS</span>
+                        <img class="hidden-xs" src="/images/rss.png" alt="RSS">
+                    </a>
+                </li>
+                
+            </ul>
+            
+                <form class="search navbar-form navbar-right" action="http://google.com/search" method="GET">
+                    <input type="hidden" name="q" value="site:741MHz.com">
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="q" placeholder="Search">
+                    </div>
+                </form>
+            
+        </div>
+    </div>
+</nav>
+
+
+      </header>
+      <div id="main" class="container">
+        <div id="content">
+          <div class="row">
+  <div class="page-content col-md-9">
+    <div class="blog-index">
+      
+      
+      
+        <article class="post">
+          
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2012-12-31T00:00:00-05:00" pubdate data-updated="true">Dec 31<span>st</span>, 2012</time>
+        
+           | <a href="/fpga-where-to-begin/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/fpga-where-to-begin/">Comments</a>
+        
+      </p>
+    
+    
+      <h1 class="entry-title"><a href="/fpga-where-to-begin/">FPGA Programming. Where to Begin?</a></h1>
+    
+  </header>
+
+
+  <div class="entry-content clearfix"><p>Before you start reading, please note that this post is for software developers and software developers only. In particular, it is for those who want to start programming their logic on FPGAs.</p>
+
+<p>The reason behind this post is simple. I have been asked a few times about what is the best way to become a digital logic designer (or FPGA programmer, though technically an FPGA programmer is a combination of hardware and software that is used to physically burn the logic into FPGA chip, but anyway).</p>
+
+<h2>What people usually do.</h2>
+
+<p>The classic way of getting a needed skill set is to go to a college, study an electrical engineering, get a job in a relevant field and go from there. This pretty much applies for every field be that a computer science, medicine, truck driving — you name it.</p>
+
+<h2>How software developers do it?</h2>
+
+<p>However, things can be a lot different for those who are professional developers already. There are many reasons for that. Below are a few scenarios of how it usually happens that a software developer wants (or needs) to become a hardware logic designer.</p>
+
+<h2>How people end up in this situation?</h2>
+
+<p>Why? Reusing existing resources.</p>
+
+<p>It starts with a popular belief that programmers are all around computer professionals that, given a handful of sand, can build a computer from scratch. Well, maybe that’s a bold statement but the point is that pretty much every programmer got a call from a friend or a relative asking for help because something in some program didn’t work or they didn’t know how to do something. It is usually pretty hard to explain that you have no idea what they are talking about just because you are a computer guy, thus, supposed to know everything. The situation is improving over time but is far from going away. Anyhow, the point is that this is a common belief and this belief is wrong. Programmers are like writers in some ways — a writer does not necessarily know about all types of paper our there or in depth details of paper making process. Yet they know how to use it. Some writers, though, may have written a book or a manual on paper making process or are way too curious and they actually know it. So you cannot just get a writer and ask him to run a paper making business. Nevertheless, the belief is right there in people minds and it is not uncommon for a company that develops its own software and decides to go into hardware design to try and use existing inside resources. This is especially true when talking about programmable logic technologies like FPGAs — the line between software programming and logic design in Verilog seems too thin for those not familiar with this matter. And so there we have a software developer trying to become a digital logic designer.</p>
+
+<h2>Curiosity and going down the abstraction levels.</h2>
+
+<p>Another common thing that happens is when developers decide to do low level stuff such as designing their own hardware. It may start from a nature of the work that is being done by a software developer. For example, curious embedded programmers writing drivers for some hardware may try to go and figure out how exactly that hardware is made, and try to create their own, similar hardware. It also may start from a nice hobby like building toys based on Arduino platform and getting deeper in details with time. In my case, it was curiosity combined with an attempt to achieve the lowest possible latency for the high-frequency trading applications.</p>
+
+<h2>What comes to mind next?</h2>
+
+<p>There could be endless number of reasons to want to get into this field. If you have recognized yourself in one of the above examples or if you are just interested in starting FPGA development, please continue reading. What usually happens next is very interesting.</p>
+
+<p>If a baker wants to become a doctor, he or she would probably start by going to a medical college and study for that. The similar thing would probably happen to a pilot who wants to become a bodyguard — he or she would probably attempt to get some military background, take necessary courses etc. However, this is not the case for software guys. Since all of the software engineering has evolved from a hardware engineering in a first place, programmers tend to think that it is like switching from programming in PHP to programming in C — one does not need to go to a college and start from scratch in that case, right? So why do that to start programming for FPGAs? It seems like there is no need to do that — it is easier to just go down a few levels of abstractions, learn whatever you didn’t know before and that’s it. After all, this happens a lot with software developers when switching from one programming language to another, or porting code from one operating system to another, or converting between processor architectures. The bitter truth is that it does not work like that with FPGAs at all. This path is very thorny and oftentimes software engineering skills and an approach from developer’s perspective make it only harder.</p>
+
+<h2>A piece of advice.</h2>
+
+<p>So you are a software developer. You want to become a digital logic designer. You don’t have a spare 5 years to go to a college and learn electronic engineering just to employ FPGAs in your work. Where do you begin? It is indeed a very good question.</p>
+
+<p>Digital design does not have a lot in common with software development. Maybe except that Verilog syntax looks a bit like C language but it just looks. All in all, it is very hard to answer this type of question adequately in a first place. But as a guy who walked down the path from software development to hardware design I am giving it a shot. Bear in mind that this is just an advice based on a (successful) personal experience. Looking back at myself, here is how I would have advised myself back then if I knew what I know right now.</p>
+
+<h2>Start from scratch.</h2>
+
+<p>Forget everything about software development. Especially programming languages. Those principles do not apply in digital design. It probably would be easy for a guy who designed a CPU to program it in assembler or even C, but an assembler programmer won&rsquo;t be able to design a CPU.</p>
+
+<p>On your learning path do not tend to solve what seem to be an easy problem with your existing knowledge from software. One of the classic examples is a &ldquo;for loop&rdquo;. Even though you can write a “for loop” in, say, Verilog — it serves a very different purpose. It is mainly used for code generation. It may also be a “for loop” as software developers see it but it won&rsquo;t be good for anything but simulation (i.e. you won&rsquo;t be able to program FPGA like that).</p>
+
+<p>So for every task you want to tackle, don&rsquo;t think you know how to do it, do a research instead — check books, examples, ask more experienced people etc.</p>
+
+<h2>Learn hardware. Learn HDL language.</h2>
+
+<p>The most popular HDL languages are Verilog and VHDL. There are also vendor-specific ones like AHDL (Altera HDL). Since those languages are used to describe hardware components, they are all pretty much used to express the same thing in a similar fashion but with a different syntax.</p>
+
+<p>Some people recommend learning Verilog because it looks like C. Yes, its syntax is a mix of C and Ada but it doesn&rsquo;t make it easy for a software developer to lean. In fact, I think it may even make it worse because there will be a temptation to write C in Verilog. That&rsquo;s a good recipe for having a very bad time.</p>
+
+<p>Having that in mind, I&rsquo;d recommend staring from the VHDL. Though Verilog is also OK as long as the above is taken into account.</p>
+
+<p>Another important thing to keep in mind is that you must understand what you are expressing with that language. What kind of hardware is being &ldquo;described&rdquo;, how it actually works?</p>
+
+<p>For that reason, I&rsquo;d recommend you get yourself some book on electronics in general and a good book like this one — HDL Chip Design (aka as a blue book).</p>
+
+<h2>Get a simulator.</h2>
+
+<p>Before you start doing anything in hardware and use any Vendor-specific features etc., get yourself a simulator. I was starting with a Verilog, and used Icarus Verilog along with GTK Wave. Those are free open-source projects. Run examples you see in books, practice by designing your own circuits to get some taste of it.</p>
+
+<h2>Get a development board.</h2>
+
+<p>When you feel like going forward, get a development board. If you know that your employer wants to go with Lattice, then get Lattice board.</p>
+
+<p>The programming methods are very similar, but there are details that are different. There are different tools, options and/or interfaces. Usually, if you have experience with one vendor, it is not hard to switch. But you probably want to avoid this extra learning curve at the beginning, if possible.</p>
+
+<p>I&rsquo;d also make sure that the board comes with components that you are planning to use or is extendable. For example, if you want to do design a network device like a router, make sure the board has Ethernet PHY or it can be extended through, say, HSMC connector, etc.</p>
+
+<p>Boards usually come with a good reference, user guide and design examples. Study them.</p>
+
+<h2>Read books.</h2>
+
+<p>You will need to read books. In my case, I had no friends who knew digital design, and this site wasn&rsquo;t very helpful either because of one simple thing — I didn&rsquo;t even know how to phrase my question. All I could come up with was like — &ldquo;Uhm, guys, there is a thing dcfifo and I heard something about clock domain crossing challenges, what is it and why my design doesn&rsquo;t work&rdquo;?</p>
+
+<p>I personally started with these:</p>
+
+<ul>
+<li>Advanced Digital Design with the Verilog HDL.</li>
+<li>100 Power Tips for FPGA Developers</li>
+<li>Advanced FPGA Design &ndash; Architecture, Implementation and Optimization.</li>
+<li>FPGA vendors have a lot of cookbooks with best practices. Study them along with reference designs. Here is one from Altera, for example.</li>
+</ul>
+
+
+<h2>Ask specific questions.</h2>
+
+<p>While you go through your books, simulate a design, blink some LEDs on your development board, you would, most likely, have a lot of questions. Make sure you don&rsquo;t see an answer to those on the next page of the book or online (i.e. in the Lattice-specific forum) before asking them. Once you feel like you cannot find an answer yourself, try asking it in one of the user forums or Q/A web sites like <a href="http://electronics.stackexchange.com/">Electrical Engineering Stack Exchange</a>.</p>
+
+<p>Hope it helps. Good Luck!</p>
+</div>
+  
+  
+
+
+        </article>
+      
+    </div>
+
+    <ul class="pager">
+      
+        <li class="previous"><a href="/blog/page/31/">&larr;&nbsp;Older</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+        <li class="next"><a href="/blog/page/29/">Newer&nbsp;&rarr;</a></li>
+      
+    </ul>
+  </div>
+
+  
+    <aside class="sidebar col-md-3">
+      
+        <section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Recent Posts</h3>
+  </div>
+  
+  <div id="recent_posts" class="list-group">
+    
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
+    
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
+    
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
+    
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
+    
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
+    
+  </div>
+</section>
+<section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Categories</h3>
+  </div>
+  <div class="list-group">
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus">
+        <span class="badge">25</span>
+        C++
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/linux">
+        <span class="badge">3</span>
+        Linux
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/tech">
+        <span class="badge">33</span>
+        Tech
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
+        <span class="badge">10</span>
+        C++11
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/life">
+        <span class="badge">2</span>
+        Life
+      </a>
+    
+  </div>
+</section>
+
+
+
+
+
+      
+    </aside>
+  
+</div>
+
+        </div>
+      </div>
+    </div>
+    <footer role="contentinfo"><div class="container">
+    <p class="text-muted credits">
+  Copyright &copy; 2010-2013 <a href="/">741MHz.com</a>
+</p>
+
+</div>
+</footer>
+    <script src="/assets/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/javascripts/modernizr-2.0.js"></script>
+
+
+<script type="text/javascript">
+      var disqus_shortname = '741mhz';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  </body>
+</html>

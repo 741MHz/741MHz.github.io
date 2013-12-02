@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C++11 | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/c-plus-plus-11/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T22:59:28-05:00</updated>
+  <updated>2013-12-01T23:38:56-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -14,401 +14,227 @@
 
   
   <entry>
-    <title type="html"><![CDATA[C++ and Right Angle Brackets]]></title>
-    <link href="http://741MHz.com/right-angle-brackets/"/>
-    <updated>2013-11-10T00:00:00-05:00</updated>
-    <id>http://741MHz.com/right-angle-brackets</id>
-    <content type="html"><![CDATA[<p>When it comes to computers, both programming and science have a &ldquo;longest match&rdquo; principe also known as &ldquo;maximal munch&rdquo;. This principle states that when creating some construct, as much of the available input as possible should be consumed. Which in turn leads to the fact that lexical syntax of many programming languages requires that tokens be built from the maximum possible number of characters from the input stream.</p>
+    <title type="html"><![CDATA[Range-Based For Loop]]></title>
+    <link href="http://741MHz.com/range-for/"/>
+    <updated>2013-11-23T09:23:00-05:00</updated>
+    <id>http://741MHz.com/range-for</id>
+    <content type="html"><![CDATA[<p>How do you write a &ldquo;for&rdquo; loop in C++? This could be done in many different ways. One could write it like this:</p>
 
-<p>As a result of this, C++ has been suffering a minor, but persisting, annoying, and somewhat embarrassing problem that required programmers to avoid having two consecutive right angle brackets when writing templates. For example, the following code has been incorrect in C++ for decades:</p>
+<p>```c++
+for (int i = 0; i &lt; N; ++i) {</p>
 
-<p>```c++</p>
-
-<pre><code>std::vector&lt;std::vector&lt;int&gt;&gt; matrix;
-</code></pre>
-
-<p>```</p>
-
-<p>This is because the longest token in this expression is <code>&gt;&gt;</code>, which is a token for <a href="http://en.wikipedia.org/wiki/Logical_shift">right logical shift</a>, and it has nothing to do with templates. So the compiler would give an error. For example:</p>
-
-<p>```</p>
-
-<h1>g++ ./matrix.cc</h1>
-
-<p>./matrix.cc:21:32: error: a space is required between consecutive right angle brackets (use &lsquo;> >&rsquo;)</p>
-
-<pre><code>std::vector&lt;std::vector&lt;int&gt;&gt; matrix;
-                           ^~
-                           &gt; &gt;
-</code></pre>
-
-<p>```</p>
-
-<p>And the programmers had to put a space between <code>&gt;</code> to fix it, like this: <code>std::vector&lt;std::vector&lt;int&gt; &gt; matrix;</code></p>
-
-<p>This is not the only example of maximal munch drawbacks. Another notable case is unintended beginning of multi-line comment as in this program:</p>
-
-<p>```c</p>
-
-<h1>include &lt;stdio.h></h1>
-
-<p>int main() {</p>
-
-<pre><code>int a;
-int *z;
-int x;
-int y;
-
-a = 2;
-z = &amp;a;
-y = 10;
-x = y/*z;
-
-printf("%d\n", x);
+<pre><code>// ...
 </code></pre>
 
 <p>}
 ```</p>
 
-<p>For both humans and even a syntax highlighter it is clear that the intention of <code>x = y/*z</code> statement is to assigne <code>x</code> a result of dividing <code>y</code> by the value obtained through dereferencing <code>z</code> pointer. Yet <code>/*</code> is the longest match which corresponds to the beginning of the multiline comment, so the compiler would most likely fail:</p>
+<p>&hellip; or like this:</p>
 
-<p>```</p>
+<p>```c++
+for (iterator_type it = data.begin(); it != data.end(); ++it) {</p>
 
-<blockquote><p>g++ ./example.cc
-./example.cc:25:10: error: unterminated /* comment</p>
-
-<pre><code>x = y/*z;
-</code></pre>
-
-<p>```</p></blockquote>
-
-<p>For the good of all C++ developers, Daveed Vandevoorde from Edison Design Group has proposed three possible ways to fix C++ grammar to eliminate the problem of two consecutive right angle brackets in templates. One of them was chosen over other two and starting with C++11, programmers can now use <code>&gt;&gt;</code> in templates like this &ndash;  <code>std::vector&lt;std::vector&lt;std::vector&lt;int&gt;&gt;&gt;</code></p>
-
-<p>It is important that this change also breaks backwards compatibility which could affect some programs. Consider the following program:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<p>template<int I> struct X {</p>
-
-<pre><code>static int const c = 2;
-</code></pre>
-
-<p>};</p>
-
-<p>template&lt;> struct X<0> {</p>
-
-<pre><code>typedef int c;
-</code></pre>
-
-<p>};</p>
-
-<p>template<typename T> struct Y {</p>
-
-<pre><code>static int const c = 3;
-</code></pre>
-
-<p>};</p>
-
-<p>static int const c = 4;</p>
-
-<p>int main() {</p>
-
-<pre><code>std::cout &lt;&lt; (Y&lt;X&lt;1&gt; &gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
-std::cout &lt;&lt; (Y&lt;X&lt; 1&gt;&gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+<pre><code>// ...
 </code></pre>
 
 <p>}
 ```</p>
 
-<p>It is valid in both old and new C++. However, it would produce different results.</p>
+<p>The most hand-crafted loops though usually looks like this:</p>
 
-<p>This is because in the old C++ <code>&gt;&gt;</code> was treated as the right shift operator that shifted 1 by the value of global <code>c</code> as part of <code>1&gt;&gt;::c</code> expression. But with a new grammar introduced in C++ this is no longer the case and so the same program would print <code>0</code> and <code>3</code> in pre-C++11, and two zeroes in C++11.</p>
+<p>```c++
+for (iterator_type it = data.begin(), eit = data.end(); it != eit; ++it) {</p>
 
-<p>Some compiler developers, when started working on implementing new C++ standard, have put a special feature their compilers that would warn users about such cases. For example, clang compiler would issue a warning in case it runs into this code:</p>
+<pre><code>reference_type&amp; value = *it;
+// ...
+</code></pre>
 
-<p>```
-$ clang++ ./right_angle_brackets.cc &amp;&amp; ./test
-./right_angle_brackets.cc:19:25: warning: use of right-shift operator (&lsquo;>>&rsquo;) in template argument will require</p>
+<p>}
+```</p>
 
-<pre><code>  parentheses in C++11 [-Wc++11-compat]
-std::cout &lt;&lt; (Y&lt;X&lt; 1&gt;&gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
-                    ^
-                   (     )
+<p>And although professional C++ developers, after years of training their left cerebral hemisphere, quickly grasp any of the above variations of the loop, one cannot not agree that a syntax is a bit inefficient and hard to read, especially for novice developers. So why such a simple thing should be that complicated? Can we do this simpler?</p>
+
+<h2>Range-Based For Loop (Since C++11)</h2>
+
+<p>C++11 provides a new, more readable syntax for iterating over a range of values, which is called a &ldquo;range-based for&rdquo;. Its syntax is very simple:</p>
+
+<p>```c++
+for (range_declaration : range_expression)</p>
+
+<pre><code>loop_statement;
 </code></pre>
 
 <p>```</p>
 
-<p>Hopefully, not many developers have intentionally used logical shifts as part of template parameters, and the amount of those cases are far less from those when an annoying extra space was required for no good reason.</p>
+<p>For the above syntax, the compiler will produce code similar to the following:</p>
 
-<p>As for the problem with comments &ndash; it still exists in both C and C++. But how much of a problem is it, really?</p>
+<p>```c++
+auto&amp;&amp; <strong>range = range_expression ;
+for (auto </strong>begin = begin_expr, <strong>end = end_expr;  </strong>begin != <strong>end; ++</strong>begin) {</p>
 
-<h2>References</h2>
+<pre><code>range_declaration = *__begin; 
+loop_statement;
+</code></pre>
 
-<ul>
-<li><a href="http://en.wikipedia.org/wiki/Maximal_munch">Maximal much principle</a></li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html">N1757 &ndash; Right Angle Brackets</a></li>
-</ul>
+<p>}
+```</p>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Static Assert]]></title>
-    <link href="http://741MHz.com/static-assert/"/>
-    <updated>2013-05-07T00:00:00-04:00</updated>
-    <id>http://741MHz.com/static-assert</id>
-    <content type="html"><![CDATA[<h2>Introduction</h2>
+<p>The generated code looks very similar to that of professionally hand-crafted for-loops. But it is a lot easier to both read and write. Let&rsquo;s go over a few code snippets demonstrating how to use this new for loop syntax.</p>
 
-<p>Assertions is one of they key features of almost every programming language that help programmers verify their assumptions made when writing the code.
-In C, assertion mechanism is provided by <a href="http://man7.org/linux/man-pages/man3/assert.3.html">assert()</a> preprocessor macro defined by <a href="http://en.wikipedia.org/wiki/Assert.h">assert.h</a> header file. C++ programs can also use it by including &ldquo;<a href="http://en.cppreference.com/w/cpp/header/cassert">cassert</a>&rdquo; header file. As an added benefit, assertions also serve as documentation of the internal details of the program enhancing the code maintainability. Here is a simple C++11 example:</p>
+<h2>Examples</h2>
+
+<p>A very simple iteration over a vector:</p>
+
+<p>```c++
+std::vector<int> vec { 1, 2, 3, 4, 5 };
+for (int v : vec) {</p>
+
+<pre><code>std::cout &lt;&lt; v &lt;&lt; std::endl;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>For more generic programming, using <a href="/c/auto">&ldquo;auto&rdquo; keyword</a> to let compiler automatically deduce the type is also possible:</p>
 
 <p>```c++</p>
 
 <h1>include <iostream></h1>
 
-<h1>include <cassert></h1>
+<h1>include <vector></h1>
 
-<p>int main(int argc, char* argv[]) {</p>
+<p>template <typename Range>
+void print(const Range&amp; range) {</p>
 
-<pre><code>for (int i = 0; i &lt; argc; ++i) {
-    assert(argv[i] != nullptr);
-    std::cout &lt;&lt; argv[i] &lt;&lt; std::endl;
+<pre><code>for (auto&amp; element : range) { // Using "auto" with range-based for loop.
+    std::cout &lt;&lt; element &lt;&lt; std::endl;
 }
 </code></pre>
 
-<p>}
-```
-GNU C library also provides a convenient function to check for error numbers called &ldquo;<a href="http://man7.org/linux/man-pages/man3/assert_perror.3.html">assert_perror()</a>&rdquo;.</p>
+<p>}</p>
 
-<p>There are at least 71 more programming language that provide assertion mechanism. You can check them out along with examples at <a href="http://rosettacode.org/wiki/Assertions">http://rosettacode.org/wiki/Assertions</a></p>
+<p>int main() {</p>
 
-<h2>The Problem</h2>
-
-<p>The <code>assert()</code> macro in both C and C++ would only check for errors at <a href="http://en.wikipedia.org/wiki/Run_time_(program_lifecycle_phase">execution time</a>) when the program is actually running. By definition that implies that:</p>
-
-<ul>
-<li>It adds some overhead to the program execution (time, size or both).</li>
-<li>The assertion may not be exercised leaving a program undetected for a while (in the worse case, the program may pass a testing stage only to be discover by the end user later).</li>
-</ul>
-
-
-<p>The above two points sound like are necessary evil. But what if we could get rid of those tradeoffs?</p>
-
-<p>There are cases when there is enough information during <a href="http://en.wikipedia.org/wiki/Compile_time">compile-time</a> to detect a possible error. For example, macro definitions and <a href="http://msdn.microsoft.com/en-us/library/tby3xex3(v=vs.110">constant expressions</a>.aspx) are things that do not exist in compile-time.</p>
-
-<p>If only there was a way to check constant expressions in compile-time it would have been always preferred over runtime checking.</p>
-
-<p>Luckily, programmers have figured out a few different ways to do this.</p>
-
-<h2>Workarounds</h2>
-
-<h3>Preprocessor Assertions</h3>
-
-<p>Both C and C++ preprocessors have <code>#error</code> directive that can be used to abort compilation with an error. It can be used to perform compile-time assertions.</p>
-
-<p>For example, consider a simple C program that reads data from into a buffer whose size is specified using a standard <a href="http://www.gnu.org/software/libc/manual/html_node/Controlling-Buffering.html"><code>BUFSIZ</code> macro</a> and the programmer wants to make sure that buffer is at least 1024 bytes large. The code using assertions might look like this:</p>
-
-<p>```c++</p>
-
-<h1>include <cstdio></h1>
-
-<h1>include <cassert></h1>
-
-<p>int main(int argc, char* argv[]) {</p>
-
-<pre><code>// Allocate buffer on stack:
-char mybuffer[BUFSIZ];
-
-// Make sure we have at least 1024 bytes:
-assert(sizeof(mybuffer) &gt;= 1024);
-
-// Read data into "mybuffer"...
+<pre><code>std::vector&lt;int&gt; vec { 1, 2, 3, 4, 5 };
+print(vec);
 </code></pre>
 
 <p>}
 ```</p>
 
-<p>Given that <code>BUFSIZ</code> is a macro, a better solution would be to use preprocessor and its <code>#error</code> directive to check for this at compile-time instead:</p>
+<p>The range-based for loop also works with plain arrays:</p>
 
-<p>```c++</p>
+<p>```c++
+const int data[] = { 1, 2, 3, 4, 5 };
+for (auto&amp; v : data)</p>
 
-<h1>include <cstdio></h1>
-
-<h1>if BUFSIZ &lt; 1024</h1>
-
-<h1>error Buffer size is too small</h1>
-
-<h1>endif</h1>
-
-<p>int main(int argc, char* argv[]) {</p>
-
-<pre><code>// Allocate buffer on stack:
-char mybuffer[BUFSIZ];
-
-// Read data into "mybuffer"...
+<pre><code>std::cout &lt;&lt; v &lt;&lt; std::endl;
 </code></pre>
-
-<p>}
-```</p>
-
-<p>When the buffer size defined by <code>BUFSIZ</code> is large enough, the program would compile as normal. But when it isn&rsquo;t, the compile would refuse to compile the program spitting out an error that might look like this:</p>
-
-<p><code>
-$ g++ -Wall -pedantic ./assert_example.cc
-./assert_example.cc:4:3: error: Buffer size is too small
-</code></p>
-
-<p>Unfortunately, this mechanism can be used with binary operands only. In other words, something like this would not work by definition:</p>
-
-<p>```c
-char mybuffer[BUFSIZ];</p>
-
-<h1>if sizeof(mybuffer) &lt; 1024</h1>
-
-<h1>error Buffer size is too small</h1>
-
-<h1>endif</h1>
 
 <p>```</p>
 
-<p>This is because preprocessor knows nothing about <code>sizeof</code> operator and cannot use the result of this expression to compare it against 1024.</p>
+<h3>Range-Based For With Custom Types</h3>
 
-<p>Of course, being limited to macros usage only is a big problem. And so people accepted the challenge and came up with another way to overcome this limitation&hellip;</p>
+<p>One of the questions that is often raised is how to use this new syntax with custom types. There are two possible ways to do this.</p>
 
-<h3>Negative Buffer Size</h3>
+<p>The first is to make your custom class provide two member functions: <code>begin()</code> and <code>end()</code>. They should return beginning of the iterate-able range as well as its end, respectively (both should be of the same type). For example:</p>
 
-<p>C and C++ developers have been relying on the fact that it is impossible to have a buffer of negative size in order to implement compile time assertions. The mechanism is very simple &ndash; evaluate a constant expression and yield <code>1</code> if it evaluates as <code>true</code>, or <code>-1</code> otherwise, and use the result as size of the buffer. For example, let&rsquo;s say we want to make sure that size of the integer is exactly 4 bytes, we could write code like this:</p>
+<p>```c++</p>
 
-<p><code>c
-typedef char assert_int_size[sizeof(int) == 4 ? 1 : -1];
-</code></p>
+<h1>include <iostream></h1>
 
-<p>This approach, however, has its own limitations.</p>
+<h1>include <string></h1>
 
-<p>In C, it can be used in both function and non-function scopes, but cannot be used inside structs and unions.</p>
+<p>class custom_container {
+public:</p>
 
-<p>Unlike C, C++ allows to have typedef statements, but there is another problem &ndash; if the static assertion is not dependent upon one or more template parameters, then the compiler is permitted to evaluate the static assertion at the point it is first seen, irrespective of whether the template is ever instantiated. In other words &ndash; it is hard to use with templates as programmers should always remember to use a template type in a condition.</p>
+<pre><code>const char* begin() const {
+    return data_.c_str();
+}
 
-<h2>Core Language Support</h2>
+const char* end() const {
+    return data_.c_str() + data_.size();
+}
+</code></pre>
 
-<p>Over the years people have been working around issues associated with different workarounds to implement static assertions and realized that there is no way to implement them without a proper core language support.</p>
+<p>private:</p>
 
-<h3>C++</h3>
-
-<p>In 2004, Robert Klarer, Dr. John Maddock, Beman Dawes and Howard Hinnant wrote a proposal for adding a static assertion mechanism to the Core Language, known as <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a>.</p>
-
-<p>The proposal was accepted into the C++11 language specification and is implemented by the majority of C++ compilers today as &ldquo;<a href="http://en.cppreference.com/w/cpp/language/static_assert">static_assert()</a>&rdquo; keyword/function.</p>
-
-<p>It comes with no strings attached and accepts two parameters &ndash; a compile-time expressions that is evaluates to either <code>true</code> or <code>false</code> and a message. If the expression evaluates to <code>false</code>, the compilation is aborted and specified message is shown as an error message. <code>static_assert()</code> can be used in any scope, including templates. For example:</p>
-
-<p>```c++ Static Assert Example</p>
-
-<h1>include <cstdio></h1>
-
-<p>static_assert(BUFSIZ >= 1024, &ldquo;Buffer size is too small&rdquo;);</p>
-
-<p>template <typename T>
-struct Foo {</p>
-
-<pre><code>static_assert(sizeof(int) == 4, "Int size is not 4 bytes");
+<pre><code>std::string data_ = "Hello, Range-Based For!";
 </code></pre>
 
 <p>};</p>
 
-<p>int main(int argc, char* argv[]) {</p>
+<p>int main() {</p>
 
-<pre><code>// Allocate buffer on stack:
-char mybuffer[BUFSIZ];
-static_assert(sizeof(mybuffer) &gt;= 1024, "Buffer size is too small");
-
-// Read data into "mybuffer"...
+<pre><code>custom_container container;
+for (auto&amp; element : container)
+    std::cout &lt;&lt; element;
+std::cout &lt;&lt; std::endl;
 </code></pre>
 
 <p>}
 ```</p>
 
-<h3>C</h3>
+<p>The second approach is to provide freestanding <code>begin()</code> and <code>end()</code> functions for a data type:</p>
 
-<p>In C, static assertions are introduced as part of <a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">ISO/IEC 9899:2011 standard</a>), informally known as C11. The mechanism is exactly the same as in C++, but the function name is <code>_Static_assert()</code>. For example:</p>
+<p>```c++</p>
 
-<p>```c C11 Static Assert Example</p>
+<h1>include <iostream></h1>
 
-<h1>include &lt;stdio.h></h1>
+<h1>include <string></h1>
 
-<p>_Static_assert(BUFSIZ >= 1024, &ldquo;Buffer size is too small&rdquo;);</p>
+<p>class custom_container {
+public:</p>
 
-<p>struct Foo {</p>
+<pre><code>const std::string&amp; data() const { return data_; }
+</code></pre>
 
-<pre><code>char data[BUFSIZ];
+<p>private:</p>
+
+<pre><code>std::string data_ = "Hello, Range-Based For!";
 </code></pre>
 
 <p>};</p>
 
-<p>union Bar {</p>
+<p>const char* begin(const custom_container&amp; c) {</p>
 
-<pre><code>int x;
-char y[4];
+<pre><code>return c.data().c_str();
 </code></pre>
 
-<p>};</p>
+<p>}</p>
 
-<p>_Static_assert(sizeof(union Bar) == 4, &ldquo;Size of int is not 4 bytes&rdquo;);</p>
+<p>const char* end(const custom_container&amp; c) {</p>
 
-<p>int main(int argc, char* argv[]) {</p>
+<pre><code>return c.data().c_str() + c.data().size();
+</code></pre>
 
-<pre><code>// Allocate buffer on stack:
-char mybuffer[BUFSIZ];
-_Static_assert(sizeof(mybuffer) &gt;= 1024, "Buffer size is too small");
+<p>}</p>
 
-// Read data into "mybuffer"...
+<p>int main() {</p>
+
+<pre><code>custom_container container;
+for (auto&amp; element : container)
+    std::cout &lt;&lt; element;
+std::cout &lt;&lt; std::endl;
 </code></pre>
 
 <p>}
 ```</p>
 
-<p>It still cannot be used inside structs and unions, though.</p>
+<p>Note that compiler will first look for member functions, then for free-standing functions. This is described in 6.5.4/1 of the C++ standard.</p>
 
-<h3>Note on error messages</h3>
+<h2>Old Style Still Apply</h2>
 
-<p>There is but one thing about <code>static_assert()</code> that can be pretty annoying &ndash; having to specify an error message even if it is an empty string. Of course, providing good error messages is the way to go. But there are a lot of cases when a condition used in assertion just does not need any extra words.</p>
+<p>So can we switch to use a new range-based for loops everywhere? Where possible, it could simplify the code and theoretically even make it faster (only if optimizing compiler is way too silly and does not handle loop optimizations well). But in cases where we do need an iterator or perhaps some other loop type like <code>while</code>, the range-based for loop won&rsquo;t work. For example, the below loop cannot be substituted for a new one:</p>
 
-<p>The first solution that immediately comes to mind is to use the macro like this:</p>
+<p>```c++
+auto it = map.begin(), eit = map.end();
+while (it != eit) {</p>
 
-<p>```c++</p>
-
-<h1>define STATIC_ASSERT(Expr) static_assert((Expr), #Expr)</h1>
-
-<p>```</p>
-
-<p>Note, however, that it won&rsquo;t work well with expressions that contain a comma, like this:</p>
-
-<p><code>c++
-STATIC_ASSERT(!std::is_same&lt;T, int&gt;::value);
-</code></p>
-
-<p>Of course, programmers can enclose an expression in extra pair of <code>()</code>, but there is a better to do this, using <a href="http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html">variadic macros</a>. Here is a complete example:</p>
-
-<p>```c++</p>
-
-<h1>include &lt;type_traits></h1>
-
-<h1>define STATIC_ASSERT_IMPL(Expr) static_assert((Expr), #Expr)</h1>
-
-<h1>define STATIC_ASSERT(&hellip;) STATIC_ASSERT_IMPL((<strong>VA_ARGS</strong>))</h1>
-
-<p>template <typename T>
-struct Foo final {</p>
-
-<pre><code>STATIC_ASSERT(!std::is_same&lt;T, int&gt;::value);
-</code></pre>
-
-<p>};</p>
-
-<p>int main(int argc, char* argv[]) {</p>
-
-<pre><code>STATIC_ASSERT(sizeof(int) == 4);
+<pre><code>if (it-&gt;second &gt; 0)
+    ++it;
+else
+    it = map.erase(it);
 </code></pre>
 
 <p>}
@@ -417,324 +243,589 @@ struct Foo final {</p>
 <h2>See Also</h2>
 
 <ul>
-<li><a href="http://www.robertgamble.net/2012/01/c11-static-assertions.html">C11 Static Assertions</a> by Robert Gamble</li>
-<li><a href="http://docs.oracle.com/javase/1.4.2/docs/guide/lang/assert.html">Java: Programming with assertions</a></li>
-<li><a href="http://www.boost.org/doc/libs/release/doc/html/boost_staticassert.html">Boost.StaticAssert library</a></li>
-<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/dd293588.aspx">MSDN on &ldquo;static_assert()&rdquo;</a></li>
-<li><a href="http://www.drdobbs.com/compile-time-assertions/184401873">Compile-Time Assertions</a> by Ralf Holly</li>
+<li><a href="/auto-type">C++, Type Safety and Automatic Type Deduction With “auto” Keyword</a></li>
 </ul>
 
 
-<h2>References</h2>
+<h3>References</h3>
 
 <ul>
-<li><a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">C11 (C Standard Revision)</a>)</li>
-<li><a href="http://gcc.gnu.org/wiki/C11Status">GCC C11 Status</a></li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a></li>
-<li><a href="http://rosettacode.org/wiki/Assertions">Assertions</a> by RosettaCode.org</li>
+<li><a href="http://en.cppreference.com/w/cpp/language/range-for">Range-based for loop @ cppreference.com</a></li>
+<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2930.html">N2930 &ndash; Range-Based For Loop Wording (Without Concepts)</a></li>
 </ul>
 
 ]]></content>
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[C++11 Final Override]]></title>
-    <link href="http://741MHz.com/final-override/"/>
-    <updated>2013-02-27T00:00:00-05:00</updated>
-    <id>http://741MHz.com/final-override</id>
-    <content type="html"><![CDATA[<h2>Preface</h2>
-
-<p>The alternative name for this article is “How to protect yourself from others when it comes to polymorphism.” That is pretty much the primary purpose of two brand new C++ keywords introduced in C++11 — the <code>override</code> and <code>final</code>.</p>
-
-<p>Those who have at least some experience in team-based C++ development must be aware of at least one of many pitfalls of polymorphism and virtual methods in particular. Let’s go over some of real-world problems that could easily force developers to run a debugger or read the code over and over again trying to figure out why the program is not working as expected.</p>
-
-<h2>A Missing Virtual Function</h2>
-
-<p>This could happen to anyone — there was a base class with a virtual function and developer has decided to overload it for a good reason. Everything was fine and the program worked as expected. But one day after, a fresh build simply stopped working, and the reason is not obvious. After spending some time debugging the program, it turned out that a function that should have been called does not appear to be called at all. What could be wrong?</p>
-
-<p>Consider the following code where the Foo class is written by one developer while Bar was written by someone else and could even be part of another project:</p>
+    <title type="html"><![CDATA[Inheriting constructors in C++11]]></title>
+    <link href="http://741MHz.com/inheriting-constructors/"/>
+    <updated>2013-11-17T13:00:00-05:00</updated>
+    <id>http://741MHz.com/inheriting-constructors</id>
+    <content type="html"><![CDATA[<p>We have previously reviewed a feature introduced in C++11 that allows a class to delegate work between multiple constructors constructors of a class, called &ldquo;<a href="/delegating-constructors">Delegating Constructors</a>&rdquo; that allows one constructor to call another:</p>
 
 <p>```c++
-class Foo {
-public:</p>
+struct A {</p>
 
-<pre><code>Foo() { }
-virtual ~Foo() { }
+<pre><code>explicit A(int i) : x(i), n(x * (x - 1)) {}
+explicit A(double f) : A((int)lround(f)) {}
 
-virtual int init() {
-    do_very_important_stuff();
-}
-</code></pre>
-
-<p>};</p>
-
-<p>class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-virtual ~Bar() { }
-
-virtual int init() {
-    Foo::init();
-    do_some_more_important_stuff();
-}
+int x;
+int n;
 </code></pre>
 
 <p>};
 ```</p>
 
-<p>A few years later a new developer joins the company and accidentally removes a virtual keyword from the <code>init()</code> method’s declaration of class <em>Foo</em>. How that could even happen, you may ask? Maybe he was learning Emacs and executed a <em>replace-regexp</em> command without noticing all of the changes. Or maybe he just read the <em>Code Refactoring</em> book and decided to improve the code but couldn’t check all of the usages of class <em>Foo</em> because they were in a different repository that he didn’t have access to. Who knows? Things happen. As a result, the <code>Bar::init()</code> is no longer called because it does no longer override its base method. For example:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<h1>include <memory></h1>
-
-<p>class Foo {
-public:</p>
-
-<pre><code>Foo() { }
-virtual ~Foo() { }
-
-int init() {
-    std::cout &lt;&lt; "Hello, World!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-virtual ~Bar() { }
-
-virtual int init() {
-    Foo::init();
-    std::cout &lt;&lt; "The code is working!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>int main() {</p>
-
-<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
-foo-&gt;init();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above program will not print an expected “The code is working!” line and someone would definitely waste some time trying to figure out why, especially if the project has a few million lines of code.</p>
-
-<h2>A Million Dollars Typo</h2>
-
-<p>Typos can also cause a lot of troubles. For example, developers can misspell the name of the method when overriding:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<h1>include <memory></h1>
-
-<p>class Foo {
-public:</p>
-
-<pre><code>Foo() { }
-virtual ~Foo() { }
-
-virtual void doSomeVeryImportantWork() {
-}
-</code></pre>
-
-<p>};</p>
-
-<p>class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-virtual ~Bar() { }
-
-virtual void doSomeVeryInportantWork() {
-    std::cout &lt;&lt; "The code is working!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>int main() {</p>
-
-<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
-foo-&gt;doSomeVeryImportantWork();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above program prints nothing despite the expectations and the reason is not immediately obvious.</p>
-
-<h2>Signature Changes</h2>
-
-<p>Signature change is another seemingly innocent change that may potentially waste a log of valuable time when not accounted for properly. For example, the base class’s <code>init()</code> function is changed from this:</p>
-
-<pre><code>virtual void init() { }
-</code></pre>
-
-<p>… to this:</p>
-
-<pre><code>virtual void init(int x = 0) {
-}
-</code></pre>
-
-<p>The whole project still compiles just fine. Yet the program doesn’t work as expected anymore.</p>
-
-<p>It’s also possible to accidentally override someone’s virtual function, etc. The list of such gotchas can go on and on. For those who can relate to this — you must know that you are not alone! C++ developers including myself have dealt with this and similar problems for the past few decades.</p>
-
-<p>Luckily, since introduction of the C++11 the sun is shining on our side of the fence!</p>
-
-<h2>We Override!</h2>
-
-<p>Instead of using (or not using) a <code>virtual</code> keyword and assuming the base class has the method being overridden, we can now use the brand new <code>override</code> keyword. The compiler will then make sure that a method declared with that keyword really overrides the base method. And if that turns out to be not the case, the code won’t compile and the error would be caught during compilation, which is a lot better than debugging. The following is the new version of the first example:</p>
+<p>Although extremely useful in boosting efficiency, it does not solve the problem when programmer wants to create a derived class that has exactly the same set of constructor as its base class or classes. In which case programmers are forced to tediously duplicate constructors of the base class, for example:</p>
 
 <p>```c++
-class Bar : public Foo {
-public:</p>
+struct A {</p>
 
-<pre><code>Bar() { }
-virtual ~Bar() { }
+<pre><code>A(int) {}
+A(double) {}
+A(int, double) {}
+</code></pre>
 
-int init() override {
-    Foo::init();
-    std::cout &lt;&lt; "The code is working!\n";
-}
+<p>};</p>
+
+<p>struct B : A {</p>
+
+<pre><code>// Programmers are forced to define at least one
+// if not all of the following constructors:
+B(int v) : A(v) {}
+B(double v) : A(v) {}
+B(int x, double y) : A(x, y) {}
 </code></pre>
 
 <p>};
 ```</p>
 
-<p>The compilation fails if the base class`s init() method is no longer there:</p>
-
-<pre><code>error: ‘int Bar::init()’ marked override, but does not override
-</code></pre>
-
-<h2>It’s Final!</h2>
-
-<p>The second keyword is <code>final</code>. It is a little bit less useful but is still a good self-defense mechanism against unintended usage and/or code changes.</p>
-
-<p>What it means is that a method marked as final is not only virtual and must override its base but that nobody else can further override it. For example:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<h1>include <memory></h1>
-
-<p>class Foo {
-public:</p>
-
-<pre><code>Foo() { }
-virtual ~Foo() { }
-
-virtual int init() {
-    std::cout &lt;&lt; "Hello, World!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-~Bar() override { }
-
-int init() final {
-    Foo::init();
-    std::cout &lt;&lt; "This code works!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>int main() {</p>
-
-<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
-foo-&gt;init();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above code is sound and secure. But if somebody else would try to write a class like this:</p>
+<p>C++11 solves this problem by introducing constructor inheritance. In a derived class, programmers can write a single <code>using T::T;</code> statement that makes a derived class automatically inherit constructors of a base class. For example:</p>
 
 <p>```c++
-class BetterBar : public Bar {
-public:</p>
+struct A {</p>
 
-<pre><code>BetterBar() { }
-~BetterBar() override { }
+<pre><code>A(int) {}
+A(double) {}
+A(int, double) {}
+</code></pre>
 
-int init() override {
-    Bar::init();
-    std::cout &lt;&lt; "Even better init() function!\n";
-}
+<p>};</p>
+
+<p>struct B : A {</p>
+
+<pre><code>using A::A;
 </code></pre>
 
 <p>};
 ```</p>
 
-<p>… a compiler would tell them that they are wrong by issuing an error: </p>
-
-<pre><code>error: virtual function ‘virtual int BetterBar::init()’
-error: overriding final function ‘virtual int Bar::init()’
-</code></pre>
-
-<p>The <code>final</code> keyword can also be applied to the whole class in order to prevent further derivation from it. For example:</p>
+<p>How this works is obvious for utmost simple cases. It might not be as clear when multiple inheritance is involved. For those cases, inheriting constructors would only work if all but one base classes have default constructors. For example, the following would work:</p>
 
 <p>```c++
-class Bar final : public Foo {
-  public:</p>
+struct A {</p>
 
-<pre><code>Bar() {}
+<pre><code>A() {}
 </code></pre>
 
-<p>&hellip;
-```</p>
+<p>};</p>
 
-<p>If anyone tries to inherit from Bar, the compiler issues an error: </p>
+<p>struct B {</p>
 
-<pre><code>error: cannot derive from ‘final’ base ‘Bar’ in derived type ‘BetterBar’
+<pre><code>B(int) {}
 </code></pre>
 
-<p>What is interesting is that almost the same effect can be achieved in a less obvious way by applying the <code>final</code> keyword to a virtual destructor of either base (which is not the same as <code>final</code> in this case because it introduces a virtual table) or any derived class:</p>
+<p>};</p>
 
-<p>```c++
-class Foo { // You cannot derive from me!
-public:</p>
+<p>struct C : A, B {</p>
 
-<pre><code>Foo() { }
-virtual ~Foo() final { }
+<pre><code>using B::B;
 </code></pre>
 
 <p>};
 ```</p>
 
-<p>Template containers from the standard C++ library might be good candidates to be marked with a final keyword, as it is generally not a good idea to derive from them in almost every case.</p>
+<p>And will be an equivalent of the following hand-crafted constructor:</p>
 
-<h2>Conclusion</h2>
+<p>```c++
+struct C : A, B {</p>
 
-<p>C++11 introduces two important keywords in relation to polymorphism and inheritance — the <code>override</code> and <code>final</code>. Using those keywords should become a habit of any C++ developer. It is worth using every time except when writing a base class. This will make the code clear, maintainable, and potentially save hours that would have been otherwise wasted chasing an error in debugger.</p>
+<pre><code>C(int v) : A(), B(v) {}
+</code></pre>
 
-<h2>References</h2>
+<p>};
+```</p>
+
+<p>But if <code>A</code> does not have default constructor (even if the signature is the same as <code>B</code>), it won&rsquo;t work, so the below code is ill-formed:</p>
+
+<p>```c++
+struct A {</p>
+
+<pre><code>A(int) {}
+</code></pre>
+
+<p>};</p>
+
+<p>struct B {</p>
+
+<pre><code>B(int) {}
+</code></pre>
+
+<p>};</p>
+
+<p>struct C : A, B {</p>
+
+<pre><code>using B::B;
+</code></pre>
+
+<p>};
+```</p>
+
+<p>There is also another catch that programmers should be aware of. It is the same old problem as forgetting to initialize class fields:</p>
+
+<p>```c++
+struct A {</p>
+
+<pre><code>A(int) {}
+</code></pre>
+
+<p>};</p>
+
+<p>struct B : A {</p>
+
+<pre><code>using A::A;
+int x;
+</code></pre>
+
+<p>};
+```</p>
+
+<p>With the above code, class <code>B</code> introduces <code>B(int)</code> constructor through inheritance of <code>A</code>&rsquo;s constructor(s), but it leaves <code>x</code> uninitialized. This means that inherited constructors might be useless if we need to initialize POD types. But do not rush with writing a custom constructor in this case. One can use non-static data member initializers, another new C++11 feature that we have reviewed before, to initialize <code>x</code>. For example:</p>
+
+<p>```c++
+struct A {</p>
+
+<pre><code>A(int) {}
+</code></pre>
+
+<p>};</p>
+
+<p>struct B : A {</p>
+
+<pre><code>using A::A; // Inheriting A's constructor to create B::B(int){}
+int x = 0;  // Initializing "x" using non-static field initializer.
+</code></pre>
+
+<p>};
+```</p>
+
+<h3>See Also</h3>
 
 <ul>
-<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">N2928</a> &ndash; Explicit Virtual Overrides</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">N3206</a> &ndash; Override control: Eliminating Attributes</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">N3272</a> &ndash; Follow-up on override control</li>
-<li><a href="http://clang.llvm.org/cxx_status.html">Clang C++11 Status Report</a></li>
-<li><a href="http://gcc.gnu.org/projects/cxx0x.html">GCC C++11 Status Report</a></li>
+<li><a href="/delegating-constructors">Delegating constructors in C++11</a></li>
+<li><a href="/member-initializers/">Non-Static Data Member Initializers</a></li>
+</ul>
+
+
+<h3>References</h3>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2540.htm">N2540 &ndash; Inheriting Constructors (revision 5)</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Default Template Arguments For Functions]]></title>
+    <link href="http://741MHz.com/default-function-template-arguments/"/>
+    <updated>2013-11-14T20:35:00-05:00</updated>
+    <id>http://741MHz.com/default-function-template-arguments</id>
+    <content type="html"><![CDATA[<p>One of the features that C++ provides to its users is the ability to write code in an object-oriented manner. The first object-oriented system was created in 1960 by <a href="http://en.wikipedia.org/wiki/Ivan_Sutherland">Ivan Sutherland</a>. 32 years later, when C++ first appeared back in 1983, object-oriented paradigm was so popular that everything that was not a class or a method was treated as a defective entity.</p>
+
+<p>The beauty of C++ compared to many other languages like Java, where there can be no freestanding methods or global variables, is the fact that C++ neither tries to limit its users in terms of ideas they can have, nor does it force any specific ideas or ideals upon its users. It always allowed programmers to make their creations follow object-oriented, procedural, data-oriented designs, or have no design whatsoever.</p>
+
+<p>In practice, however, there will always be limits. But C++ honestly tries not to stand in a way and help us, the programmers, to code anything that we could possibly have in our heads. And C++11 have proved this one more time with a lot of changes over the previous revision effectively improving the language to allow us to achieve more with less labor, focus on our current ideas rather than overcoming limitations of our tools and programming language, and come up with even more ideas, because ideas are most important.</p>
+
+<blockquote><p>It is not labor, not capital, not land, that has created modern wealth or is creating it today. It is <em>ideas</em> that create wealth, and what is wanted is more ideas&hellip;</p>
+
+<p>— <a href="http://en.wikipedia.org/wiki/Emerson_Harrington">Harrington Emerson</a></p></blockquote>
+
+<p>Back in a day, freestanding functions, as well as freestanding function templates, did not get a lot of attention because people fell for the hype of object-oriented design. As a consequence, it was never possible to have seemingly simple and intuitive things such as a default template argument for a function template. It was allowed for classes, but not for functions. To give an example, the following would work:</p>
+
+<p>```c++
+template <typename X, typename Y = int>
+struct A {</p>
+
+<pre><code>static void func(X x, Y y) {
+    // ...
+}
+</code></pre>
+
+<p>};
+```</p>
+
+<p>But the function template like this would not compile:</p>
+
+<p><code>c++
+template &lt;typename X, typename Y = int&gt;
+void func(X x, Y y) {
+}
+</code></p>
+
+<p>Seems a little bit odd. Bjarne Stroustrup answered why this was happening in April 2000 when <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226">he wrote</a>:</p>
+
+<blockquote><p>The prohibition of default template arguments for function templates is a misbegotten remnant of the time where freestanding functions were treated as second-class citizens and required all template arguments to be deduced from the function arguments rather than specified.</p>
+
+<p>The restriction seriously cramps programming style by unnecessarily making freestanding functions different from member functions, thus making it harder to write STL-style code.</p>
+
+<p>— <a href="http://www.stroustrup.com">Bjarne Stroustrup</a></p></blockquote>
+
+<p>Luckily, this was written along with a proposal on how to fix it, and after a couple of meetings with the core language working group, all of the small details were thought through and the final resolution was proposed in October 2002. It consisted of seven changes to different sections and paragraphs to the C++ standard.</p>
+
+<p>If you are interested in details, you can check them out at <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226">http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226</a>.</p>
+
+<p>What&rsquo;s important is that today we need to waste our time no more working around this limitation as all of the production quality C++ compilers and tools support default template arguments for function templates, and we we can write our code like this:</p>
+
+<p><code>c++
+template &lt;class T, class U = double&gt;
+void f(T t = 0, U u = 0);
+</code></p>
+
+<p>Long live C++!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Automatic Type Deduction With 'auto' Keyword]]></title>
+    <link href="http://741MHz.com/auto-type/"/>
+    <updated>2013-11-13T23:20:00-05:00</updated>
+    <id>http://741MHz.com/auto-type</id>
+    <content type="html"><![CDATA[<p>Programming languages matter. Type theory matters, too. Some say that C++ programming language is a type-safe language. But is that really so?</p>
+
+<p>There is an alternative opinion on type safety where type safety is considered to be a property of a computer program rather than the language in which that program is written. That is, type-safety features of the language can be worked around to write a type unsafe program.</p>
+
+<p>C++ does not make it impossible to cast types (i.e. convert a void pointer to a pointer of other type), so writing extremely unsafe programs is still possible. However, as a language it tries its best to help programmers write type safe programs. Yet it is still easy to make a mistake. Consider the following example:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<p>int main() {</p>
+
+<pre><code>int x = 2;
+float y = 1.5;
+int z = x / y;
+std::cout &lt;&lt; z &lt;&lt; std::endl;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above program will print &ldquo;1&rdquo;. But why? An alternative scenario could have been <code>1.333...</code> Is this a bug? Or is this behavior intended?</p>
+
+<p>We do not know what was the programmer&rsquo;s intention here and therefore we cannot know. According to the language specification, however, the <code>x / y</code> expression in the above example yields a result of type <code>float</code>. This is described in §5/9 of the C++ standard and may also be referred to as &ldquo;implicit type conversion&rdquo;.</p>
+
+<blockquote><p>Many binary operators that expect operands of arithmetic or enumeration type cause conversions and yield result types in a similar way. The purpose is to yield a common type, which is also the type of the result.</p>
+
+<p>This pattern is called the usual arithmetic conversions, which are defined as follows:</p>
+
+<p>If either operand is of type long double, the other shall be converted to long double.</p>
+
+<p>— Otherwise, if either operand is double, the other shall be converted to double.</p>
+
+<p>— Otherwise, if either operand is float, the other shall be converted to float.</p>
+
+<p>— Otherwise, the integral promotions (4.5) shall be performed on both operands.54)</p>
+
+<p>— Then, if either operand is unsigned long the other shall be converted to unsigned long.</p>
+
+<p>— Otherwise, if one operand is a long int and the other unsigned int, then if a long int can represent all the values of an unsigned int, the unsigned int shall be converted to a long int; otherwise both operands shall be converted to unsigned long int.</p>
+
+<p>— Otherwise, if either operand is long, the other shall be converted to long.</p>
+
+<p>— Otherwise, if either operand is unsigned, the other shall be converted to unsigned.</p>
+
+<p>[Note: otherwise, the only remaining case is that both operands are int ]</p></blockquote>
+
+<p>So what actually happened is an explicit type casting where a <code>float</code> was casted back to to <code>int</code> when programmer wrote <code>int z = x / y</code>. If he or she wrote <code>float z = x / y</code> instead, then output of the program would have been <code>1.333</code>.</p>
+
+<p>But how many programmers remember all of the type conversion rules for binary operators? How to figure out whether a type cast was intentional or not?</p>
+
+<p>But more importantly, what type to choose when writing a generic code, such as a template function? Like in this case, for example:</p>
+
+<p>```c++
+template <typename A, typename B>
+void foo(A a, B b) {</p>
+
+<pre><code>A /* or B? or something else? */ c = a + b;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>In other words, every time programmers specify a type explicitly, they oftentimes may accidentally introduce violate type safety theory. And this is a problem.</p>
+
+<p>Fortunately, C++11 provides a way to solve it in a uniform way though the introduction of a &ldquo;old&rdquo; new <code>auto</code> keyword.</p>
+
+<h3>The &ldquo;auto&rdquo; keyword. Reloaded.</h3>
+
+<p>The reason &ldquo;old&rdquo; is in a previous sentence is because C++ always had an <code>auto</code> keyword. It basically meant that a variable has automatic storage duration. However, because a special keyword for type-safety was needed and the old <code>auto</code> keyword was not that useful (and the research has shown that it was almost never used), it was decided to give <code>auto</code> keyword a new meaning not to introduce any new keywords.</p>
+
+<p>Since the introduction of C++11, the <code>auto</code> keyword is used to indicate that the type of a variable is to be deduced from its initializer expression. For example:</p>
+
+<p><code>c++
+auto x = 3.14; // x has type double
+</code></p>
+
+<p>In other words, <code>auto</code> let&rsquo;s the compiler figure out / deduce the type automatically. Getting back to our old template problem, it can be now solved by using <code>auto</code>:</p>
+
+<p>```c++
+template <typename A, typename B>
+void foo(A a, B b) {</p>
+
+<pre><code>auto c = a + b;
+//  ^^^^ we now let compiler worry about the type here.
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Jumping a little bit upfront, a major concern in discussions of <code>auto</code> features prior to proposing it into a standard was the potential difficulty in figuring out whether the declared variable will be of a reference type or not. And it was decided that the rules of type deduction in case with <code>auto</code> should be the exactly the same as the rules of template argument deduction. Examples (the notation x : T in the comments is read as &ldquo;x has type T&rdquo;):</p>
+
+<p>```c++
+A foo();
+A&amp; bar();</p>
+
+<p>A x1 = foo(); // &ldquo;x1&rdquo; is of type &ldquo;A&rdquo;
+auto x1 = foo(); // &ldquo;x1&rdquo; is of type &ldquo;A&rdquo;</p>
+
+<p>A&amp; x2 = foo();  // error, we cannot bind a non−lvalue to a non-const reference
+auto&amp; x2 = foo();  // error</p>
+
+<p>A y1 = bar(); // &ldquo;y1&rdquo; is of type &ldquo;A&rdquo;
+auto y1 = bar(); // &ldquo;y1&rdquo; is of type &ldquo;A&rdquo;</p>
+
+<p>A&amp; y2 = bar(); // &ldquo;y2&rdquo; is of type &ldquo;A&amp;&rdquo;
+auto&amp; y2 = bar(); // &ldquo;y2&rdquo; is of type &ldquo;A&amp;&rdquo;
+```</p>
+
+<p>The <code>auto</code> keyword can also be used to declare more than one variable. The requirement in this case is that both deductions must lead to the same type. For example:</p>
+
+<p><code>c++
+auto a = 2;
+auto b = 1.2;
+auto c = 1, *d = &amp;a; // OK: "c" is of type "int", "d" is "int*"
+auto e = 1, *f = &amp;b; // ERROR: "e" is of type "int", "f" is "float*"
+</code></p>
+
+<h4>Auto in function declarations</h4>
+
+<p>For a moment, let&rsquo;s get back to our template example:</p>
+
+<p>```c++
+template <typename A, typename B>
+void foo(A a, B b) {</p>
+
+<pre><code>auto c = a + b;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Using auto has solved a problem of determining a type of &ldquo;c&rdquo;. However, there is potentially another problem. Let&rsquo;s say that we now want to return a result of addition from <code>foo()</code>, what should we specify as its return type?</p>
+
+<p>Luckily, folks designing C++ language has thought about this problem and put a special provision into the language that allows <code>auto</code> to be used with functions as part of the trailing notation syntax. The basic idea is to allow &ldquo;auto&rdquo; be specified in place of a return type, and then specify the actual type later. For example:</p>
+
+<p>```c++
+template <typename A, typename B>
+void foo(A a, B b) &ndash;> void {</p>
+
+<pre><code>auto c = a + b;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This alone does not solve the problem. However, a <code>decltype</code> keyword that we have talked about in the <a href="/decltype">previous article</a>, can now be used to perform type deduction. For example:</p>
+
+<p>```c++
+template <typename A, typename B>
+auto foo(A a, B b) &ndash;> decltype(a + b) {</p>
+
+<pre><code>return a + b;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Note that <code>decltype</code> alone can be used in some cases, for example:</p>
+
+<p>```
+template <typename A, typename B>
+decltype(1 + 2) foo(A a, B b) {</p>
+
+<pre><code>return a + b;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>However, if used without <code>auto</code> and is not placed into &ldquo;trailing&rdquo; part, function arguments cannot be used in inside <code>decltype()</code> as they have not even been declared yet (at the time of parsing).</p>
+
+<h3>Summary</h3>
+
+<p>All in all, <code>auto</code> is very similar to <code>decltype</code> but is &ldquo;prettier&rdquo; in terms of syntax,  allows for special case with return type deduction, and has reference-dropping semantics (similar to that of <a href="http://en.wikipedia.org/wiki/Typeof"><code>typeof</code> GCC extension</a>).</p>
+
+<p>Programmers are encouraged to use auto where possible unless explicit type conversion/cast is required &ndash; this would make the program even more type safe which in turn will help eliminate bugs related to type errors.</p>
+
+<h3>See Also</h3>
+
+<ul>
+<li><a href="/decltype/">Determining Type of Expression in C++</a></li>
+</ul>
+
+
+<h3>References</h3>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1984.pdf">N1984 &ndash; Deducing the type of variable from its initializer expression</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/6k3ybftz.aspx">&ldquo;auto&rdquo; keyword</a> @ MSDN</li>
+<li><a href="http://en.wikipedia.org/wiki/Type_safety#C.2B.2B">C++ type safety</a> @ Wikipedia</li>
+<li><a href="http://jameso.be/2012/02/11/language-matters.html">Why programming languages matter</a> by James O'Beirne</li>
+<li><a href="http://en.cppreference.com/w/cpp/language/auto">&ldquo;auto&rdquo; specifier</a> @ cppreference.com</li>
+<li><a href="http://stackoverflow.com/questions/5563000/implicit-type-conversion-rules-in-c-operators">Implicit type conversion rules in C++ operators</a> via Stack Overflow</li>
+<li><a href="http://en.wikipedia.org/wiki/Typeof">Typeof keyword</a> @ Wikipedia</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Type of Expression in C++]]></title>
+    <link href="http://741MHz.com/decltype/"/>
+    <updated>2013-11-11T00:37:00-05:00</updated>
+    <id>http://741MHz.com/decltype</id>
+    <content type="html"><![CDATA[<h3>The Problem</h3>
+
+<p>Those who program in C++ for a while must know how difficult it is sometimes to figure out a type of an expression, especially when in comes to <a href="http://en.wikipedia.org/wiki/Generic_programming">generic programming</a> using C++ templates. <a href="http://www.boost.org/doc/libs/release/doc/html/typeof.html">Boost.Typeof</a> library provides a great example where a simple expression using <a href="http://www.boost.org/doc/libs/release/doc/html/lambda.html">Boost.Lambda</a> that looks like this &ndash; <code>_1 &gt; 15 &amp;&amp; _2 &lt; 20</code> may returns an object of a complex type that can easily take a few dozen lines of code to describe, and may look like this:</p>
+
+<p>```c++
+lambda_functor&lt;</p>
+
+<pre><code>lambda_functor_base&lt;
+    logical_action&lt;and_action&gt;,
+    tuple&lt;
+        lambda_functor&lt;
+            lambda_functor_base&lt;
+                relational_action&lt;greater_action&gt;,
+                tuple&lt;
+                    lambda_functor&lt;placeholder&lt;1&gt; &gt;,
+                    int const
+                &gt;
+            &gt;
+        &gt;,
+        lambda_functor&lt;
+            lambda_functor_base&lt;
+                relational_action&lt;less_action&gt;,
+                tuple&lt;
+                    lambda_functor&lt;placeholder&lt;2&gt; &gt;,
+                    int const
+                &gt;
+            &gt;
+        &gt;
+    &gt;
+&gt;
+</code></pre>
+
+<blockquote><p>f = <em>1 > 15 &amp;&amp; </em>2 &lt; 20;
+```</p></blockquote>
+
+<p>In most cases programmers had to create more template functions and classes to have compiler deduct those types automatically. In some cases, this approach was creating unnecessary overhead and reduce maintainability of the code.</p>
+
+<h3>Typeof Solution</h3>
+
+<p>In the meantime, both GCC and EDG compilers have implemented a non-standard extension to C and C++ known as <code>typeof</code> operator. It worked extremely well for C, but there was a slight problem with C++ &ndash; the declared type of an expression deduced by <code>typeof</code> did not retain a reference if there was one. Consider the following example:</p>
+
+<p>```c++</p>
+
+<h1>include <cstdio></h1>
+
+<p>int main() {</p>
+
+<pre><code>int a = 1;
+int&amp; b = a;
+typeof(b) c = b; // expected c to be of type `int&amp;`, but it is just `int`.
+a = 2;
+printf("%d\n", c);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above program outputs <code>1</code> and not <code>2</code>, which means that type of <code>c</code> is in fact <code>int</code> and not <code>int&amp;</code>.</p>
+
+<h3>Boost.Typeof</h3>
+
+<p>The first code snippet with a very long type is taken from a &ldquo;Motivation&rdquo; section of Boost.Typeof library. And you guessed it right &ndash; that library is aiming at solving the problem.</p>
+
+<p>The Boost.Typeof library was a great success, and it did solve a lot of problems. Unfortunately, it did not provide a uniform solution, and certainly did not solve all of the problem. But most importantly, it proved that core C++ language does not provide powerful enough facilities to have a uniform, generic solution to determine a type of an expression, which seemingly is such a simple thing to do.</p>
+
+<h3>On The Way Into C++ Standard</h3>
+
+<p>Both <code>typeof</code> keyword and <code>Boost.Typeof</code> libraries quickly became &ldquo;celebrities&rdquo; in the programming world, gaining a lot of traction, usages and ever growing fan club. And it became obvious that people need a real, uniform, standard and portable solution.</p>
+
+<p>In 2002, Bjarne Stroustrup observed that the reference-dropping semantics offered by the <code>typeof</code> operator provided by the GCC and EDG compilers could be problematic and suggested extending the C++ language with mechanisms for querying the type of an expression, and initializing objects without specifying the type.</p>
+
+<p>In other words, the <code>typeof</code> operator was suggested to become a part of core language standard with a semantical improvement for not dropping a &ldquo;reference&rdquo;.</p>
+
+<p>In 2008, Jaakko Järvi have found an issue with <code>decltype</code> &ndash; it was not possible to use it to form a qualified-id. The <code>typeof</code> suffered the same problem. For example, the following code would not compile:</p>
+
+<p>```c++</p>
+
+<h1>include <vector></h1>
+
+<p>int main() {</p>
+
+<pre><code>std::vector&lt;int&gt; v;
+typeof(v)::value_type i = 0;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This, and similar issues pertaining to the wording inhibiting the use of decltype in the declaration of a derived class and in a destructor call, were addressed by David Vandevoorde, and voted into the working paper in March 2010.</p>
+
+<h3>The Solution: C++11 decltype</h3>
+
+<p>As a result, C++ officially got a new keyword named <code>decltype</code> that is now a part of ISO/IEC 14882:2011 standard also known as C++11. It effectively obsoletes <code>Boost.Typeof</code> and replaces non-standard <code>typeof</code> keyword. Here is an example (<a href="http://en.wikipedia.org/wiki/Decltype">taken from Wikipedia</a>):</p>
+
+<p><code>c++
+const int&amp;&amp; foo();
+const int bar();
+int i;
+struct A { double x; };
+const A* a = new A();
+decltype(foo()) x1; // type is const int&amp;&amp;
+decltype(bar()) x2; // type is int
+decltype(i) x3; // type is int
+decltype(a-&gt;x) x4; // type is double
+decltype((a-&gt;x)) x5; // type is const double&amp;
+</code></p>
+
+<p>It can also be used inside structures, with declarations of derived classes, scope resolution operator and so on.</p>
+
+<p>Those who have sinned by using non-standard <code>typeof</code> or suffered from numerous inconveniences and limitations of <code>Boost.Typeof</code>, behold the new power of <code>decltype</code>. And enjoy!</p>
+
+<h3>References</h3>
+
+<ul>
+<li><a href="http://gcc.gnu.org/onlinedocs/gcc/Typeof.html">GCC Typeof &ndash; Referring to a Type with typeof</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Decltype">Wikipedia article on <code>decltype</code></a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2343.pdf">N2343 Decltype: proposed wording</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3276.pdf">N3276 Decltype and Call Expressions</a></li>
+<li><a href="http://www.edg.com/docs/edg_cpp.pdf">EDG C++ Front End (Internal Documentation)</a></li>
 </ul>
 
 ]]></content>

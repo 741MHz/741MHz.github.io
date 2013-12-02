@@ -114,53 +114,208 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-23T00:00:00-04:00" pubdate data-updated="true">Mar 23<span>rd</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-06T00:00:00-04:00" pubdate data-updated="true">May 6<span>th</span>, 2013</time>
         
-           | <a href="/stranded/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/stranded/">Comments</a>
+           | <a href="/cpp-like-python/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/cpp-like-python/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/stranded/">Stranded</a></h1>
+      <h1 class="entry-title"><a href="/cpp-like-python/">C++ Like Python</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>One of the things I really love about WordPress.com is its community. The Daily Prompt movement is especially great — it helps to connect so many people together, share so many great stories, and ideas. I am relatively new to blogging in general and WordPress in particular, so most of the time I just enjoy good reads. But today’s Daily Prompt’s topic “Stranded” brought back some of my old good memories and I decided to share my story about how I got stranded in a foreign city for a few days with no money and no friends.</p>
+  <div class="entry-content clearfix"><p>Today I ran into a somewhat classy piece of code that was analyzing user’s answer to a <a href="https://en.wikipedia.org/wiki/Yes%E2%80%93no_question">Yes or No question</a>. The idea was to compare input to various possible answers disregarding the case. The code looked something like this:</p>
 
-<p>I have lived in New York area for a while now. But I am an immigrant, so I wasn’t always here. My life journey started in Illichivsk — a small half-resort, half-port city on the shores of the Black Sea, named after Vladimir Lenin. I was born there, in a country that does not exist anymore — USSR. In 1991, USSR fell apart, Ukraine got its independence, and I acquired a Ukrainian citizenship.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;strings.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">positive</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Y&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;OK&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;True&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Sure&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Of Course&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Why not?&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Could you please give me $100? &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">flush</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">positive</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">c_str</span><span class="p">()))</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
+</span><span class='line'>                      <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>The Illichivsk is a very small town. Back in the day there was no public transportation, no universities, no businesses, no jobs, no nothing. To say that it has always been extremely hard to make a living there is to say nothing at all. Both of my parents were working from dusk till dawn, and the income was barely enough to buy groceries. Everything was pretty much dead all year around except for the summers. I loved summers. It was a great chance for me to make some pocket-money. I used to buy some ice cream in the town, put it into a backpack and rush to the beach to sell it to lazy tourists. I would make enough money to buy an ice cream for my crush. Usually boys buy movie tickets and flowers, but we had no cinemas in Illichivsk. And flowers I used to steal from somebody’s lawn.</p>
 
-<p>One day my parents bought me a computer despite the fear that I would start playing video games all the time — they believed that computer would help me study. It worked out great — instead of playing video games I got into programming. First thing I installed on my computer was FreeBSD — operating system that somebody recommended to me in a local bookstore. It did not support my video card so I was working in console, 100% text mode. I got an English dictionary and translated manual pages word by word. That is pretty much how I learned to understand English and got my first experience with UNIX. I also bought a few Russian books about C programming and after about a year of studying day and night I started working as a freelancer taking on simple programming gigs. It was not paying a lot. But it was enough for me to quit my seasonal ice cream sales business.</p>
+<p>What I wanted was to extend that funky <code>positive()</code> function to add more possibilities and it made me sad a little. Since I am writing Python scripts once in a while, I remembered about Python’s “in” statement. If I were to write this in Python, I’d do something like this:</p>
 
-<p>I always knew that to achieve something in my life I had to get out of that town. And by the time I was finishing the high school I sent my résumé to pretty much every company in Ukraine that I could find. Most of them never got back. But one day I got a phone call from Miratech — a big outsourcing company with headquarters in Kiev — the capital of Ukraine. Boy was I excited. The bags got packed with a speed of light, the piggy bank crushed to finance the trip, and I hopped on the next train to Kiev to get to a job interview, before my parents could understand what is going on.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
+</span><span class='line'><span class="c"># -*- coding: utf-8 -*-</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">answer</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s">&#39;Could you please give me $100? &#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;yes&#39;</span><span class="p">,</span> <span class="s">&#39;ok&#39;</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;sure&#39;</span><span class="p">,</span> <span class="s">&#39;of course&#39;</span><span class="p">,</span> <span class="s">&#39;why not?&#39;</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;Thank You!&quot;</span>
+</span><span class='line'>        <span class="k">break</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>I was hired. I was excited. It felt great. I will never forget that moment, those overwhelming feelings, that small success, an achievement, a coincidence, a chance that I was given. There was only one small problem — you don’t get paid until the end of the month, and I haven’t even started yet. I had no money. I had no friends. I was a kid all by myself in the big city that I knew absolutely nothing about. Where do I go; what do I do? I was stranded.</p>
 
-<p>Having no other choice, I immediately called my parents for help. They could have sent some money and have me return home. But going home was not an option for me — it would have been a huge step back. I had different goals. I wanted to show up at work next day, make a career and settle in Kiev. My parents knew that, and so they took last $300 of family money that we had and my father hopped on the next train to Kiev to help me out. The idea was to rent an apartment for $150 (for one month), buy a ticket so he can go back home. And leave the rest to me so I can buy some food and go to work.</p>
+<p>Then I though, “Hey, C++ is by far a lot more powerful than Python syntax-wise, does this program really have to be that long and ugly?” Challenge accepted. A minute later, it looked even shorter than my Python version:</p>
 
-<p>Frankly speaking that was a very brave, naïve and indeed optimistic move. After my dad arrived on the scene, we spent the whole day rushing from one place to another trying to find an apartment. But nothing was up for rent for the money we had. A few apartments that we could afford were so far from the city that the only way to get to work for me would have been to drive a car, which I didn’t have. After a day of rat-running from one part of the city to another, we ended up in the middle of nowhere. It was 11 PM — too late to search for anything. We stood right there. We were hungry and freezing. We have stranded in a foreign city with no money and no friends. Where do we go; what do we do?</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">in</span><span class="p">(</span><span class="n">lower</span><span class="p">(</span><span class="n">raw_input</span><span class="p">(</span><span class="s">&quot;Could you please give me $100? &quot;</span><span class="p">)),</span>
+</span><span class='line'>           <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">,</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;true&quot;</span><span class="p">,</span> <span class="s">&quot;sure&quot;</span><span class="p">,</span> <span class="s">&quot;of course&quot;</span><span class="p">,</span> <span class="s">&quot;why not?&quot;</span><span class="p">))</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>The thought of giving up and going home has crossed my mind many times. Perhaps my father thought about that too, but he never said anything like that. Instead, he was telling me not to worry, that we would find the way out. Though of course he had no idea what to do either. We were about to go to the train terminal, try to sleep there and resume our journey in the early morning.
-Semiconscious, I was going through my phone’s address book looking for at least someone I could ask for help. But whom can I send an S.O.S. if I don’t know anyone who lives anywhere close? Suddenly, my eyes stopped on the entry that said “The Key”, and a phone number. What does it mean, whose phone number is that? Flashback. I remembered — a few months ago I was talking online on #rain IRC channel with a girl whose nickname was “key”. I told her that I would love to move to Kiev one day, if I ever get a chance. And she gave me her number just in case I get in trouble and would need help. I didn’t even know her name, but called the number. I said, — “Hello, this is Vlad, the kid from IRC chat. We met online, remember? I am here, uhm… I am not sure where I am exactly, I am here with my daddy, and we don’t know what to do… can you help us? Please.”</p>
 
-<p>I don’t know if she remembered me or not. She quickly asked what do we see in order to pinpoint our location, instructed us to get on a subway, told which train to take, what stop we should get off, and promised to meet us there. When we arrived, she was waiting for us, accompanied by quite big, nice and very beautiful dog — that was for her own protection, because you never know. “Hello, I’m Dasha. Follow me,” she said. My dad and me said “Hi,” introduced ourselves and started to tell our story while walking to her apartment.</p>
+<p>Well, of course this took some “magic” to work, which went to a reusable header. The complete program is a bit larger if put into a single source file:</p>
 
-<p>When we arrived, Dasha poured us some tea, regaled us with cookies, and introduced us to her dog, her husband and two beautiful kids. After hearing our story, Dasha said we could stay at her place as long as we need until we settle down. With her help, we were able to find a rental place in the next few days. My dad went back home. He left me all the money. It was enough for me to buy trolley bus tickets and buckwheat groats until I got my first paycheck.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cctype&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">raw_input</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">prompt</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">answer</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">prompt</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">flush</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">answer</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">answer</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;&amp;</span><span class="n">lower</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;&amp;</span><span class="n">s</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">c</span> <span class="o">:</span> <span class="n">s</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">c</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">in</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="n">size_t</span> <span class="n">N</span><span class="p">,</span> <span class="k">typename</span> <span class="p">...</span><span class="n">Args</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">in</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">arg0</span><span class="p">)[</span><span class="n">N</span><span class="p">],</span> <span class="n">Args</span> <span class="o">&amp;&amp;</span> <span class="p">...</span><span class="n">argN</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">s</span> <span class="o">==</span> <span class="n">arg0</span> <span class="o">||</span> <span class="n">in</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">argN</span><span class="p">)...);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">in</span><span class="p">(</span><span class="n">lower</span><span class="p">(</span><span class="n">raw_input</span><span class="p">(</span><span class="s">&quot;Could you please give me $100? &quot;</span><span class="p">)),</span>
+</span><span class='line'>               <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">,</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;true&quot;</span><span class="p">,</span> <span class="s">&quot;sure&quot;</span><span class="p">,</span> <span class="s">&quot;of course&quot;</span><span class="p">,</span> <span class="s">&quot;why not?&quot;</span><span class="p">))</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
+</span><span class='line'>                  <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>This was a life changing experiences for me, and a great lesson. We have been friends with Dasha and her family ever since. I am very grateful for our friendship. She and her family have moved to U.S. recently, so we are neighbors again. Her kids have grown up now. Oh, the time is flying so quickly…</p>
 
-<p>Catch every single moment of life.</p>
+<p><a href="http://en.wikipedia.org/wiki/Variadic_templates">Variadic templates</a> and <a href="http://en.wikipedia.org/wiki/Tail_call">tail recursion</a> can do magic (and compiler unrolls everything, I’ve checked).</p>
 
-<p>Enjoy it as long as you can.</p>
-
-<p>Never give up.</p>
-
-<p>Help each other.</p>
-
-<p>Be happy!</p>
+<p>I don’t want to start a language war or anything, but my opinion is that Python’s beauty is not in its simple or powerful syntax. Not at all.</p>
 </div>
   
   
@@ -191,15 +346,15 @@ Semiconscious, I was going through my phone’s address book looking for at leas
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
     
-    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
   </div>
 </section>
@@ -211,7 +366,7 @@ Semiconscious, I was going through my phone’s address book looking for at leas
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">18</span>
+        <span class="badge">25</span>
         C++
       </a>
     
@@ -223,13 +378,13 @@ Semiconscious, I was going through my phone’s address book looking for at leas
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">26</span>
+        <span class="badge">33</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">3</span>
+        <span class="badge">10</span>
         C++11
       </a>
     

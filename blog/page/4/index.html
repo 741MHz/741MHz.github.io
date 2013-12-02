@@ -114,20 +114,118 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-06T00:00:00-04:00" pubdate data-updated="true">May 6<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-13T23:20:00-05:00" pubdate data-updated="true">Nov 13<span>th</span>, 2013</time>
         
-           | <a href="/cpp-like-python/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/cpp-like-python/">Comments</a>
+           | <a href="/auto-type/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/auto-type/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/cpp-like-python/">C++ Like Python</a></h1>
+      <h1 class="entry-title"><a href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Today I ran into a somewhat classy piece of code that was analyzing user’s answer to a <a href="https://en.wikipedia.org/wiki/Yes%E2%80%93no_question">Yes or No question</a>. The idea was to compare input to various possible answers disregarding the case. The code looked something like this:</p>
+  <div class="entry-content clearfix"><p>Programming languages matter. Type theory matters, too. Some say that C++ programming language is a type-safe language. But is that really so?</p>
+
+<p>There is an alternative opinion on type safety where type safety is considered to be a property of a computer program rather than the language in which that program is written. That is, type-safety features of the language can be worked around to write a type unsafe program.</p>
+
+<p>C++ does not make it impossible to cast types (i.e. convert a void pointer to a pointer of other type), so writing extremely unsafe programs is still possible. However, as a language it tries its best to help programmers write type safe programs. Yet it is still easy to make a mistake. Consider the following example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">float</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">z</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above program will print &ldquo;1&rdquo;. But why? An alternative scenario could have been <code>1.333...</code> Is this a bug? Or is this behavior intended?</p>
+
+<p>We do not know what was the programmer&rsquo;s intention here and therefore we cannot know. According to the language specification, however, the <code>x / y</code> expression in the above example yields a result of type <code>float</code>. This is described in §5/9 of the C++ standard and may also be referred to as &ldquo;implicit type conversion&rdquo;.</p>
+
+<blockquote><p>Many binary operators that expect operands of arithmetic or enumeration type cause conversions and yield result types in a similar way. The purpose is to yield a common type, which is also the type of the result.</p>
+
+<p>This pattern is called the usual arithmetic conversions, which are defined as follows:</p>
+
+<p>If either operand is of type long double, the other shall be converted to long double.</p>
+
+<p>— Otherwise, if either operand is double, the other shall be converted to double.</p>
+
+<p>— Otherwise, if either operand is float, the other shall be converted to float.</p>
+
+<p>— Otherwise, the integral promotions (4.5) shall be performed on both operands.54)</p>
+
+<p>— Then, if either operand is unsigned long the other shall be converted to unsigned long.</p>
+
+<p>— Otherwise, if one operand is a long int and the other unsigned int, then if a long int can represent all the values of an unsigned int, the unsigned int shall be converted to a long int; otherwise both operands shall be converted to unsigned long int.</p>
+
+<p>— Otherwise, if either operand is long, the other shall be converted to long.</p>
+
+<p>— Otherwise, if either operand is unsigned, the other shall be converted to unsigned.</p>
+
+<p>[Note: otherwise, the only remaining case is that both operands are int ]</p></blockquote>
+
+<p>So what actually happened is an explicit type casting where a <code>float</code> was casted back to to <code>int</code> when programmer wrote <code>int z = x / y</code>. If he or she wrote <code>float z = x / y</code> instead, then output of the program would have been <code>1.333</code>.</p>
+
+<p>But how many programmers remember all of the type conversion rules for binary operators? How to figure out whether a type cast was intentional or not?</p>
+
+<p>But more importantly, what type to choose when writing a generic code, such as a template function? Like in this case, for example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span> <span class="cm">/* or B? or something else? */</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In other words, every time programmers specify a type explicitly, they oftentimes may accidentally introduce violate type safety theory. And this is a problem.</p>
+
+<p>Fortunately, C++11 provides a way to solve it in a uniform way though the introduction of a &ldquo;old&rdquo; new <code>auto</code> keyword.</p>
+
+<h3>The &ldquo;auto&rdquo; keyword. Reloaded.</h3>
+
+<p>The reason &ldquo;old&rdquo; is in a previous sentence is because C++ always had an <code>auto</code> keyword. It basically meant that a variable has automatic storage duration. However, because a special keyword for type-safety was needed and the old <code>auto</code> keyword was not that useful (and the research has shown that it was almost never used), it was decided to give <code>auto</code> keyword a new meaning not to introduce any new keywords.</p>
+
+<p>Since the introduction of C++11, the <code>auto</code> keyword is used to indicate that the type of a variable is to be deduced from its initializer expression. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span> <span class="n">x</span> <span class="o">=</span> <span class="mf">3.14</span><span class="p">;</span> <span class="c1">// x has type double</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In other words, <code>auto</code> let&rsquo;s the compiler figure out / deduce the type automatically. Getting back to our old template problem, it can be now solved by using <code>auto</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">//  ^^^^ we now let compiler worry about the type here.</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Jumping a little bit upfront, a major concern in discussions of <code>auto</code> features prior to proposing it into a standard was the potential difficulty in figuring out whether the declared variable will be of a reference type or not. And it was decided that the rules of type deduction in case with <code>auto</code> should be the exactly the same as the rules of template argument deduction. Examples (the notation x : T in the comments is read as &ldquo;x has type T&rdquo;):</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -143,179 +241,119 @@
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;string&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;strings.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">A</span> <span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">bar</span><span class="p">();</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">positive</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Y&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;OK&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;True&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Sure&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Of Course&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Why not?&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">A</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// &quot;x1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// &quot;x1&quot; is of type &quot;A&quot;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span>  <span class="c1">// error, we cannot bind a non−lvalue to a non-const reference</span>
+</span><span class='line'><span class="k">auto</span><span class="o">&amp;</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span>  <span class="c1">// error</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Could you please give me $100? &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">flush</span><span class="p">;</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">positive</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">c_str</span><span class="p">()))</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
-</span><span class='line'>                      <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">A</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y2&quot; is of type &quot;A&amp;&quot;</span>
+</span><span class='line'><span class="k">auto</span><span class="o">&amp;</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y2&quot; is of type &quot;A&amp;&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>What I wanted was to extend that funky <code>positive()</code> function to add more possibilities and it made me sad a little. Since I am writing Python scripts once in a while, I remembered about Python’s “in” statement. If I were to write this in Python, I’d do something like this:</p>
+<p>The <code>auto</code> keyword can also be used to declare more than one variable. The requirement in this case is that both deductions must lead to the same type. For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
-</span><span class='line'><span class="c"># -*- coding: utf-8 -*-</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">answer</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s">&#39;Could you please give me $100? &#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;yes&#39;</span><span class="p">,</span> <span class="s">&#39;ok&#39;</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;sure&#39;</span><span class="p">,</span> <span class="s">&#39;of course&#39;</span><span class="p">,</span> <span class="s">&#39;why not?&#39;</span><span class="p">):</span>
-</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;Thank You!&quot;</span>
-</span><span class='line'>        <span class="k">break</span>
-</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">b</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">d</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">;</span> <span class="c1">// OK: &quot;c&quot; is of type &quot;int&quot;, &quot;d&quot; is &quot;int*&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">e</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">f</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">b</span><span class="p">;</span> <span class="c1">// ERROR: &quot;e&quot; is of type &quot;int&quot;, &quot;f&quot; is &quot;float*&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Then I though, “Hey, C++ is by far a lot more powerful than Python syntax-wise, does this program really have to be that long and ugly?” Challenge accepted. A minute later, it looked even shorter than my Python version:</p>
+<h4>Auto in function declarations</h4>
+
+<p>For a moment, let&rsquo;s get back to our template example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">in</span><span class="p">(</span><span class="n">lower</span><span class="p">(</span><span class="n">raw_input</span><span class="p">(</span><span class="s">&quot;Could you please give me $100? &quot;</span><span class="p">)),</span>
-</span><span class='line'>           <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">,</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;true&quot;</span><span class="p">,</span> <span class="s">&quot;sure&quot;</span><span class="p">,</span> <span class="s">&quot;of course&quot;</span><span class="p">,</span> <span class="s">&quot;why not?&quot;</span><span class="p">))</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Well, of course this took some “magic” to work, which went to a reusable header. The complete program is a bit larger if put into a single source file:</p>
+<p>Using auto has solved a problem of determining a type of &ldquo;c&rdquo;. However, there is potentially another problem. Let&rsquo;s say that we now want to return a result of addition from <code>foo()</code>, what should we specify as its return type?</p>
+
+<p>Luckily, folks designing C++ language has thought about this problem and put a special provision into the language that allows <code>auto</code> to be used with functions as part of the trailing notation syntax. The basic idea is to allow &ldquo;auto&rdquo; be specified in place of a return type, and then specify the actual type later. For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;string&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;cctype&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">raw_input</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">prompt</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">answer</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">prompt</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">flush</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">answer</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">answer</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;&amp;</span><span class="n">lower</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;&amp;</span><span class="n">s</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">c</span> <span class="o">:</span> <span class="n">s</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">c</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">in</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="n">size_t</span> <span class="n">N</span><span class="p">,</span> <span class="k">typename</span> <span class="p">...</span><span class="n">Args</span><span class="o">&gt;</span>
-</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">in</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">arg0</span><span class="p">)[</span><span class="n">N</span><span class="p">],</span> <span class="n">Args</span> <span class="o">&amp;&amp;</span> <span class="p">...</span><span class="n">argN</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">s</span> <span class="o">==</span> <span class="n">arg0</span> <span class="o">||</span> <span class="n">in</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">argN</span><span class="p">)...);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">in</span><span class="p">(</span><span class="n">lower</span><span class="p">(</span><span class="n">raw_input</span><span class="p">(</span><span class="s">&quot;Could you please give me $100? &quot;</span><span class="p">)),</span>
-</span><span class='line'>               <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">,</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;true&quot;</span><span class="p">,</span> <span class="s">&quot;sure&quot;</span><span class="p">,</span> <span class="s">&quot;of course&quot;</span><span class="p">,</span> <span class="s">&quot;why not?&quot;</span><span class="p">))</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
-</span><span class='line'>                  <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">void</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><a href="http://en.wikipedia.org/wiki/Variadic_templates">Variadic templates</a> and <a href="http://en.wikipedia.org/wiki/Tail_call">tail recursion</a> can do magic (and compiler unrolls everything, I’ve checked).</p>
+<p>This alone does not solve the problem. However, a <code>decltype</code> keyword that we have talked about in the <a href="/decltype">previous article</a>, can now be used to perform type deduction. For example:</p>
 
-<p>I don’t want to start a language war or anything, but my opinion is that Python’s beauty is not in its simple or powerful syntax. Not at all.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">decltype</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note that <code>decltype</code> alone can be used in some cases, for example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">decltype</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>However, if used without <code>auto</code> and is not placed into &ldquo;trailing&rdquo; part, function arguments cannot be used in inside <code>decltype()</code> as they have not even been declared yet (at the time of parsing).</p>
+
+<h3>Summary</h3>
+
+<p>All in all, <code>auto</code> is very similar to <code>decltype</code> but is &ldquo;prettier&rdquo; in terms of syntax,  allows for special case with return type deduction, and has reference-dropping semantics (similar to that of <a href="http://en.wikipedia.org/wiki/Typeof"><code>typeof</code> GCC extension</a>).</p>
+
+<p>Programmers are encouraged to use auto where possible unless explicit type conversion/cast is required &ndash; this would make the program even more type safe which in turn will help eliminate bugs related to type errors.</p>
+
+<h3>See Also</h3>
+
+<ul>
+<li><a href="/decltype/">Determining Type of Expression in C++</a></li>
+</ul>
+
+
+<h3>References</h3>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1984.pdf">N1984 &ndash; Deducing the type of variable from its initializer expression</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/6k3ybftz.aspx">&ldquo;auto&rdquo; keyword</a> @ MSDN</li>
+<li><a href="http://en.wikipedia.org/wiki/Type_safety#C.2B.2B">C++ type safety</a> @ Wikipedia</li>
+<li><a href="http://jameso.be/2012/02/11/language-matters.html">Why programming languages matter</a> by James O&#8217;Beirne</li>
+<li><a href="http://en.cppreference.com/w/cpp/language/auto">&ldquo;auto&rdquo; specifier</a> @ cppreference.com</li>
+<li><a href="http://stackoverflow.com/questions/5563000/implicit-type-conversion-rules-in-c-operators">Implicit type conversion rules in C++ operators</a> via Stack Overflow</li>
+<li><a href="http://en.wikipedia.org/wiki/Typeof">Typeof keyword</a> @ Wikipedia</li>
+</ul>
+
 </div>
   
   
@@ -346,15 +384,15 @@
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
     
-    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
   </div>
 </section>
@@ -366,7 +404,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">18</span>
+        <span class="badge">25</span>
         C++
       </a>
     
@@ -378,13 +416,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">26</span>
+        <span class="badge">33</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">3</span>
+        <span class="badge">10</span>
         C++11
       </a>
     

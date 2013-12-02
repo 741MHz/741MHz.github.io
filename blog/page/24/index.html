@@ -114,47 +114,205 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2012-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2012</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
         
-           | <a href="/system-program-problem-detected/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/system-program-problem-detected/">Comments</a>
+           | <a href="/marvell-reset/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/marvell-reset/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/system-program-problem-detected/">System Program Problem Detected</a></h1>
+      <h1 class="entry-title"><a href="/marvell-reset/">Marvell 88E1111 Reset Sequence</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>I have just installed Ubuntu 12.10 and the first thing I ran into is tons of annoying popup windows telling me about system program problems and asking to report them:</p>
+  <div class="entry-content clearfix"><p>If you are one of the lucky owners of one of the Altera’s development kits with Marvell’s software-programmable 88E1111 Ethernet PHY then you know it’s a bitch. The problem is not really in a PHY itself — it’s not a bad piece of hardware at all. The problem is that Altera provides literally zero support or documentation with it. Go figure.</p>
 
-<p><img src="/images/ubuntu_system_problem/popup.png"></p>
+<p>As it turns out, the PHY’s default settings after the hardware reset is to work in center-aligned mode, whereas the default mode for FPGA data-transfers is edge-aligned. On top of that, some kits have a bug and the PHY must be reset two or three times in order to become operational.</p>
 
-<p>Apparently, this is a common problem that drives crazy a lot of people. What happens is some of the programs crash, and those cases are being reported by the Apport application. I highly doubt that anyone at Ubuntu is actually reading these reports. Firstly, millions of Ubuntu installations constantly have programs crashing and it must take an army of developers to investigate and fix them. Secondly, these crashes are happening for many years and they don’t seem to go away. So why bother? Here is how you disable this annoying reporting facility.</p>
+<p>The quick fix to get the I/O between FPGA and the PHY working without software-programming the PHY is to shift the clock 90°. That can be done with PLL. There are two problems with this approach however —it makes it a lot harder to time-constrain the design and it introduces an extra clock while the PHY is fully capable of working in edge-aligned mode. If only you knew how to set it up&hellip;</p>
 
-<h3>Launch a terminal</h3>
+<p>As it turned out, the only way to get the documentation for the PHY is to sign an NDA with Marvell. It sounds as ridiculous as the need to sign a NDA in order to get an owner’s manual for the car you have just bought. I didn’t want to do it and &ldquo;picked the red pill.&rdquo; ¡No pasarán!</p>
 
-<p>First, you need to open a terminal. You can do that by clicking on “Dash Home” button (on the top left of your screen), typing “Terminal”, and clicking on a Terminal application icon in order to launch it:</p>
+<p>After a few hours of searching through the darkest corners of the forum archives and reading a somewhat messy Altera’s Triple-Speed Ethernet drivers code, I finally came up with a piece of magic that properly resets the PHY and makes it use edge-aligned clock. It assumes that “base” is a memory address of the MAC’s MDIO space (see Table 6-1 of the TSE User Guides for details), a user-space Linux running on x86_64 (though can be easily ported to kernel mode):</p>
 
-<p><img src="/images/ubuntu_system_problem/open_terminal.png"></p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#define PHY_CTRL_REG 0x00</span>
+</span><span class='line'><span class="cp">#define PHY_AUTO_NEG 0x04</span>
+</span><span class='line'><span class="cp">#define PHY_AUTO_NEG 0x04</span>
+</span><span class='line'><span class="cp">#define PHY_1000BASE_T_CONTROL 0x09</span>
+</span><span class='line'><span class="cp">#define PHY_SPEC_CONTROL 0x10</span>
+</span><span class='line'><span class="cp">#define PHY_SPEC_STATUS 0x11</span>
+</span><span class='line'><span class="cp">#define PHY_SPEC_CONTROL_EXT 0x14</span>
+</span><span class='line'><span class="cp">#define PHY_SPEC_STATUS_EXT 0x1B</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define mb() asm volatile (&quot;&quot;: : :&quot;memory&quot;)</span>
+</span><span class='line'><span class="cp">#define rmb() mb()</span>
+</span><span class='line'><span class="cp">#define wmb() mb()</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="nf">phy_sw_reset</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="o">*</span><span class="n">base</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">uint32_t</span> <span class="n">ctrl</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">ctrl</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctrl</span> <span class="o">|</span> <span class="mh">0x8000</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">marvell_reset</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="o">*</span><span class="n">base</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">uint32_t</span> <span class="n">v</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Initialize Control (REG 0) */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">v</span> <span class="o">&amp;=</span> <span class="mh">0x8EBF</span><span class="p">;</span> <span class="cm">/* Reset */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0040</span><span class="p">;</span> <span class="cm">/* Enable Speed 1000 */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0100</span><span class="p">;</span> <span class="cm">/* Enable Full Duplex Mode */</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* AN Advertisement Register (REG 4) */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_AUTO_NEG</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_AUTO_NEG</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&amp;</span> <span class="mh">0xFE1F</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* 1000BASE-T Control Register (REG 9) */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_1000BASE_T_CONTROL</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_1000BASE_T_CONTROL</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&amp;</span> <span class="mh">0xFCFF</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* PHYSpecific Control Register (REG 16).</span>
+</span><span class='line'><span class="cm">       Set PHY Synchronizing FIFO to maximum */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">|</span> <span class="mh">0xC000</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Extended PHYSpecific Status Register (REG 27).</span>
+</span><span class='line'><span class="cm">       Set PHY HWCFG_MODE for RGMII to Copper. */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_STATUS_EXT</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_STATUS_EXT</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">|</span> <span class="mh">0x000B</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Extended PHYSpecific Control Register (REG 20).</span>
+</span><span class='line'><span class="cm">       Enable RGMII TX and RX Timing Control. */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL_EXT</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Bring it up */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">&amp;=</span> <span class="mh">0xFF7D</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0082</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL_EXT</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<h3>Disable Apport</h3>
 
-<p>In the terminal, type the following commands:</p>
+<p>Some of the logic and magic masks I dug out of the TCL script written for JTAG System Console that I stumbled upon in a <em>N647_TSE_Single_Port_RGMI_Dev_AIIGX_ACDS</em> reference design.</p>
 
-<pre><code>sudo sed -i 's;^enabled=1$;enabled=0;g' /etc/default/apport
-sudo service apport restart
-sudo rm /var/crash/*
-</code></pre>
-
-<p>The above commands will replace “enabled=1″ with “enabled=0″ in the “/etc/default/apport” configuration file, restart the Apport application and remove old reports to save you a valuable disk space. The problem should now go away.</p>
-
-<h3>Still having annoying popups?</h3>
-
-<p>Be aware that in earlier versions of Ubuntu there was a bug when restarting Apport didn’t really restart it (see <a href="https://bugs.launchpad.net/ubuntu/+source/apport/+bug/292402">Bug #292402</a>). So as the last resort, simply reboot your computer.</p>
-
-<p>Hope it helps! Good Luck!</p>
+<p>Hope it helps!</p>
 </div>
   
   
@@ -185,15 +343,15 @@ sudo rm /var/crash/*
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
     
-    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
   </div>
 </section>
@@ -205,7 +363,7 @@ sudo rm /var/crash/*
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">18</span>
+        <span class="badge">25</span>
         C++
       </a>
     
@@ -217,13 +375,13 @@ sudo rm /var/crash/*
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">26</span>
+        <span class="badge">33</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">3</span>
+        <span class="badge">10</span>
         C++11
       </a>
     

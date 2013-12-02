@@ -114,394 +114,53 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-23T00:00:00-04:00" pubdate data-updated="true">Mar 23<span>rd</span>, 2013</time>
         
-           | <a href="/final-override/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/final-override/">Comments</a>
+           | <a href="/stranded/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/stranded/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/final-override/">C++11 Final Override</a></h1>
+      <h1 class="entry-title"><a href="/stranded/">Stranded</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><h2>Preface</h2>
+  <div class="entry-content clearfix"><p>One of the things I really love about WordPress.com is its community. The Daily Prompt movement is especially great — it helps to connect so many people together, share so many great stories, and ideas. I am relatively new to blogging in general and WordPress in particular, so most of the time I just enjoy good reads. But today’s Daily Prompt’s topic “Stranded” brought back some of my old good memories and I decided to share my story about how I got stranded in a foreign city for a few days with no money and no friends.</p>
 
-<p>The alternative name for this article is “How to protect yourself from others when it comes to polymorphism.” That is pretty much the primary purpose of two brand new C++ keywords introduced in C++11 — the <code>override</code> and <code>final</code>.</p>
+<p>I have lived in New York area for a while now. But I am an immigrant, so I wasn’t always here. My life journey started in Illichivsk — a small half-resort, half-port city on the shores of the Black Sea, named after Vladimir Lenin. I was born there, in a country that does not exist anymore — USSR. In 1991, USSR fell apart, Ukraine got its independence, and I acquired a Ukrainian citizenship.</p>
 
-<p>Those who have at least some experience in team-based C++ development must be aware of at least one of many pitfalls of polymorphism and virtual methods in particular. Let’s go over some of real-world problems that could easily force developers to run a debugger or read the code over and over again trying to figure out why the program is not working as expected.</p>
+<p>The Illichivsk is a very small town. Back in the day there was no public transportation, no universities, no businesses, no jobs, no nothing. To say that it has always been extremely hard to make a living there is to say nothing at all. Both of my parents were working from dusk till dawn, and the income was barely enough to buy groceries. Everything was pretty much dead all year around except for the summers. I loved summers. It was a great chance for me to make some pocket-money. I used to buy some ice cream in the town, put it into a backpack and rush to the beach to sell it to lazy tourists. I would make enough money to buy an ice cream for my crush. Usually boys buy movie tickets and flowers, but we had no cinemas in Illichivsk. And flowers I used to steal from somebody’s lawn.</p>
 
-<h2>A Missing Virtual Function</h2>
+<p>One day my parents bought me a computer despite the fear that I would start playing video games all the time — they believed that computer would help me study. It worked out great — instead of playing video games I got into programming. First thing I installed on my computer was FreeBSD — operating system that somebody recommended to me in a local bookstore. It did not support my video card so I was working in console, 100% text mode. I got an English dictionary and translated manual pages word by word. That is pretty much how I learned to understand English and got my first experience with UNIX. I also bought a few Russian books about C programming and after about a year of studying day and night I started working as a freelancer taking on simple programming gigs. It was not paying a lot. But it was enough for me to quit my seasonal ice cream sales business.</p>
 
-<p>This could happen to anyone — there was a base class with a virtual function and developer has decided to overload it for a good reason. Everything was fine and the program worked as expected. But one day after, a fresh build simply stopped working, and the reason is not obvious. After spending some time debugging the program, it turned out that a function that should have been called does not appear to be called at all. What could be wrong?</p>
+<p>I always knew that to achieve something in my life I had to get out of that town. And by the time I was finishing the high school I sent my résumé to pretty much every company in Ukraine that I could find. Most of them never got back. But one day I got a phone call from Miratech — a big outsourcing company with headquarters in Kiev — the capital of Ukraine. Boy was I excited. The bags got packed with a speed of light, the piggy bank crushed to finance the trip, and I hopped on the next train to Kiev to get to a job interview, before my parents could understand what is going on.</p>
 
-<p>Consider the following code where the Foo class is written by one developer while Bar was written by someone else and could even be part of another project:</p>
+<p>I was hired. I was excited. It felt great. I will never forget that moment, those overwhelming feelings, that small success, an achievement, a coincidence, a chance that I was given. There was only one small problem — you don’t get paid until the end of the month, and I haven’t even started yet. I had no money. I had no friends. I was a kid all by myself in the big city that I knew absolutely nothing about. Where do I go; what do I do? I was stranded.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">do_very_important_stuff</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">do_some_more_important_stuff</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>Having no other choice, I immediately called my parents for help. They could have sent some money and have me return home. But going home was not an option for me — it would have been a huge step back. I had different goals. I wanted to show up at work next day, make a career and settle in Kiev. My parents knew that, and so they took last $300 of family money that we had and my father hopped on the next train to Kiev to help me out. The idea was to rent an apartment for $150 (for one month), buy a ticket so he can go back home. And leave the rest to me so I can buy some food and go to work.</p>
 
+<p>Frankly speaking that was a very brave, naïve and indeed optimistic move. After my dad arrived on the scene, we spent the whole day rushing from one place to another trying to find an apartment. But nothing was up for rent for the money we had. A few apartments that we could afford were so far from the city that the only way to get to work for me would have been to drive a car, which I didn’t have. After a day of rat-running from one part of the city to another, we ended up in the middle of nowhere. It was 11 PM — too late to search for anything. We stood right there. We were hungry and freezing. We have stranded in a foreign city with no money and no friends. Where do we go; what do we do?</p>
 
-<p>A few years later a new developer joins the company and accidentally removes a virtual keyword from the <code>init()</code> method’s declaration of class <em>Foo</em>. How that could even happen, you may ask? Maybe he was learning Emacs and executed a <em>replace-regexp</em> command without noticing all of the changes. Or maybe he just read the <em>Code Refactoring</em> book and decided to improve the code but couldn’t check all of the usages of class <em>Foo</em> because they were in a different repository that he didn’t have access to. Who knows? Things happen. As a result, the <code>Bar::init()</code> is no longer called because it does no longer override its base method. For example:</p>
+<p>The thought of giving up and going home has crossed my mind many times. Perhaps my father thought about that too, but he never said anything like that. Instead, he was telling me not to worry, that we would find the way out. Though of course he had no idea what to do either. We were about to go to the train terminal, try to sleep there and resume our journey in the early morning.
+Semiconscious, I was going through my phone’s address book looking for at least someone I could ask for help. But whom can I send an S.O.S. if I don’t know anyone who lives anywhere close? Suddenly, my eyes stopped on the entry that said “The Key”, and a phone number. What does it mean, whose phone number is that? Flashback. I remembered — a few months ago I was talking online on #rain IRC channel with a girl whose nickname was “key”. I told her that I would love to move to Kiev one day, if I ever get a chance. And she gave me her number just in case I get in trouble and would need help. I didn’t even know her name, but called the number. I said, — “Hello, this is Vlad, the kid from IRC chat. We met online, remember? I am here, uhm… I am not sure where I am exactly, I am here with my daddy, and we don’t know what to do… can you help us? Please.”</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Hello, World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>I don’t know if she remembered me or not. She quickly asked what do we see in order to pinpoint our location, instructed us to get on a subway, told which train to take, what stop we should get off, and promised to meet us there. When we arrived, she was waiting for us, accompanied by quite big, nice and very beautiful dog — that was for her own protection, because you never know. “Hello, I’m Dasha. Follow me,” she said. My dad and me said “Hi,” introduced ourselves and started to tell our story while walking to her apartment.</p>
 
+<p>When we arrived, Dasha poured us some tea, regaled us with cookies, and introduced us to her dog, her husband and two beautiful kids. After hearing our story, Dasha said we could stay at her place as long as we need until we settle down. With her help, we were able to find a rental place in the next few days. My dad went back home. He left me all the money. It was enough for me to buy trolley bus tickets and buckwheat groats until I got my first paycheck.</p>
 
-<p>The above program will not print an expected “The code is working!” line and someone would definitely waste some time trying to figure out why, especially if the project has a few million lines of code.</p>
+<p>This was a life changing experiences for me, and a great lesson. We have been friends with Dasha and her family ever since. I am very grateful for our friendship. She and her family have moved to U.S. recently, so we are neighbors again. Her kids have grown up now. Oh, the time is flying so quickly…</p>
 
-<h2>A Million Dollars Typo</h2>
+<p>Catch every single moment of life.</p>
 
-<p>Typos can also cause a lot of troubles. For example, developers can misspell the name of the method when overriding:</p>
+<p>Enjoy it as long as you can.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">doSomeVeryImportantWork</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">doSomeVeryInportantWork</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">doSomeVeryImportantWork</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>Never give up.</p>
 
+<p>Help each other.</p>
 
-<p>The above program prints nothing despite the expectations and the reason is not immediately obvious.</p>
-
-<h2>Signature Changes</h2>
-
-<p>Signature change is another seemingly innocent change that may potentially waste a log of valuable time when not accounted for properly. For example, the base class’s <code>init()</code> function is changed from this:</p>
-
-<pre><code>virtual void init() { }
-</code></pre>
-
-<p>… to this:</p>
-
-<pre><code>virtual void init(int x = 0) {
-}
-</code></pre>
-
-<p>The whole project still compiles just fine. Yet the program doesn’t work as expected anymore.</p>
-
-<p>It’s also possible to accidentally override someone’s virtual function, etc. The list of such gotchas can go on and on. For those who can relate to this — you must know that you are not alone! C++ developers including myself have dealt with this and similar problems for the past few decades.</p>
-
-<p>Luckily, since introduction of the C++11 the sun is shining on our side of the fence!</p>
-
-<h2>We Override!</h2>
-
-<p>Instead of using (or not using) a <code>virtual</code> keyword and assuming the base class has the method being overridden, we can now use the brand new <code>override</code> keyword. The compiler will then make sure that a method declared with that keyword really overrides the base method. And if that turns out to be not the case, the code won’t compile and the error would be caught during compilation, which is a lot better than debugging. The following is the new version of the first example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The compilation fails if the base class`s init() method is no longer there:</p>
-
-<pre><code>error: ‘int Bar::init()’ marked override, but does not override
-</code></pre>
-
-<h2>It’s Final!</h2>
-
-<p>The second keyword is <code>final</code>. It is a little bit less useful but is still a good self-defense mechanism against unintended usage and/or code changes.</p>
-
-<p>What it means is that a method marked as final is not only virtual and must override its base but that nobody else can further override it. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Hello, World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">final</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;This code works!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above code is sound and secure. But if somebody else would try to write a class like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">BetterBar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Bar</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">BetterBar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="o">~</span><span class="n">BetterBar</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Bar</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Even better init() function!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>… a compiler would tell them that they are wrong by issuing an error: </p>
-
-<pre><code>error: virtual function ‘virtual int BetterBar::init()’
-error: overriding final function ‘virtual int Bar::init()’
-</code></pre>
-
-<p>The <code>final</code> keyword can also be applied to the whole class in order to prevent further derivation from it. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="n">final</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>If anyone tries to inherit from Bar, the compiler issues an error: </p>
-
-<pre><code>error: cannot derive from ‘final’ base ‘Bar’ in derived type ‘BetterBar’
-</code></pre>
-
-<p>What is interesting is that almost the same effect can be achieved in a less obvious way by applying the <code>final</code> keyword to a virtual destructor of either base (which is not the same as <code>final</code> in this case because it introduces a virtual table) or any derived class:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span> <span class="c1">// You cannot derive from me!</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="n">final</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Template containers from the standard C++ library might be good candidates to be marked with a final keyword, as it is generally not a good idea to derive from them in almost every case.</p>
-
-<h2>Conclusion</h2>
-
-<p>C++11 introduces two important keywords in relation to polymorphism and inheritance — the <code>override</code> and <code>final</code>. Using those keywords should become a habit of any C++ developer. It is worth using every time except when writing a base class. This will make the code clear, maintainable, and potentially save hours that would have been otherwise wasted chasing an error in debugger.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">N2928</a> &ndash; Explicit Virtual Overrides</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">N3206</a> &ndash; Override control: Eliminating Attributes</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">N3272</a> &ndash; Follow-up on override control</li>
-<li><a href="http://clang.llvm.org/cxx_status.html">Clang C++11 Status Report</a></li>
-<li><a href="http://gcc.gnu.org/projects/cxx0x.html">GCC C++11 Status Report</a></li>
-</ul>
-
+<p>Be happy!</p>
 </div>
   
   
@@ -532,15 +191,15 @@ error: overriding final function ‘virtual int Bar::init()’
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
     
-    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
   </div>
 </section>
@@ -552,7 +211,7 @@ error: overriding final function ‘virtual int Bar::init()’
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">18</span>
+        <span class="badge">25</span>
         C++
       </a>
     
@@ -564,13 +223,13 @@ error: overriding final function ‘virtual int Bar::init()’
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">26</span>
+        <span class="badge">33</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">3</span>
+        <span class="badge">10</span>
         C++11
       </a>
     

@@ -114,46 +114,100 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-10T00:00:00-05:00" pubdate data-updated="true">Nov 10<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-23T09:23:00-05:00" pubdate data-updated="true">Nov 23<span>rd</span>, 2013</time>
         
-           | <a href="/right-angle-brackets/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/right-angle-brackets/">Comments</a>
+           | <a href="/range-for/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/range-for/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/right-angle-brackets/">C++ and Right Angle Brackets</a></h1>
+      <h1 class="entry-title"><a href="/range-for/">Range-Based for Loop</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>When it comes to computers, both programming and science have a &ldquo;longest match&rdquo; principe also known as &ldquo;maximal munch&rdquo;. This principle states that when creating some construct, as much of the available input as possible should be consumed. Which in turn leads to the fact that lexical syntax of many programming languages requires that tokens be built from the maximum possible number of characters from the input stream.</p>
-
-<p>As a result of this, C++ has been suffering a minor, but persisting, annoying, and somewhat embarrassing problem that required programmers to avoid having two consecutive right angle brackets when writing templates. For example, the following code has been incorrect in C++ for decades:</p>
+  <div class="entry-content clearfix"><p>How do you write a &ldquo;for&rdquo; loop in C++? This could be done in many different ways. One could write it like this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">matrix</span><span class="p">;</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// ...</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>This is because the longest token in this expression is <code>&gt;&gt;</code>, which is a token for <a href="http://en.wikipedia.org/wiki/Logical_shift">right logical shift</a>, and it has nothing to do with templates. So the compiler would give an error. For example:</p>
+<p>&hellip; or like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">for</span> <span class="p">(</span><span class="n">iterator_type</span> <span class="n">it</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">data</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="o">++</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// ...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The most hand-crafted loops though usually looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">for</span> <span class="p">(</span><span class="n">iterator_type</span> <span class="n">it</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">eit</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">eit</span><span class="p">;</span> <span class="o">++</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">reference_type</span><span class="o">&amp;</span> <span class="n">value</span> <span class="o">=</span> <span class="o">*</span><span class="n">it</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// ...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And although professional C++ developers, after years of training their left cerebral hemisphere, quickly grasp any of the above variations of the loop, one cannot not agree that a syntax is a bit inefficient and hard to read, especially for novice developers. So why such a simple thing should be that complicated? Can we do this simpler?</p>
+
+<h2>Range-Based For Loop (Since C++11)</h2>
+
+<p>C++11 provides a new, more readable syntax for iterating over a range of values, which is called a &ldquo;range-based for&rdquo;. Its syntax is very simple:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">for</span> <span class="p">(</span><span class="n">range_declaration</span> <span class="o">:</span> <span class="n">range_expression</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">loop_statement</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For the above syntax, the compiler will produce code similar to the following:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp"># g++ ./matrix.cc</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">matrix</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">21</span><span class="o">:</span><span class="mi">32</span><span class="o">:</span> <span class="nl">error:</span> <span class="n">a</span> <span class="n">space</span> <span class="n">is</span> <span class="n">required</span> <span class="n">between</span> <span class="n">consecutive</span> <span class="n">right</span> <span class="n">angle</span> <span class="n">brackets</span> <span class="p">(</span><span class="n">use</span> <span class="err">&#39;</span><span class="o">&gt;</span> <span class="o">&gt;</span><span class="err">&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">matrix</span><span class="p">;</span>
-</span><span class='line'>                               <span class="o">^~</span>
-</span><span class='line'>                               <span class="o">&gt;</span> <span class="o">&gt;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">__range</span> <span class="o">=</span> <span class="n">range_expression</span> <span class="p">;</span>
+</span><span class='line'><span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">__begin</span> <span class="o">=</span> <span class="n">begin_expr</span><span class="p">,</span> <span class="n">__end</span> <span class="o">=</span> <span class="n">end_expr</span><span class="p">;</span>  <span class="n">__begin</span> <span class="o">!=</span> <span class="n">__end</span><span class="p">;</span> <span class="o">++</span><span class="n">__begin</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">range_declaration</span> <span class="o">=</span> <span class="o">*</span><span class="n">__begin</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">loop_statement</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>And the programmers had to put a space between <code>&gt;</code> to fix it, like this: <code>std::vector&lt;std::vector&lt;int&gt; &gt; matrix;</code></p>
+<p>The generated code looks very similar to that of professionally hand-crafted for-loops. But it is a lot easier to both read and write. Let&rsquo;s go over a few code snippets demonstrating how to use this new for loop syntax.</p>
 
-<p>This is not the only example of maximal munch drawbacks. Another notable case is unintended beginning of multi-line comment as in this program:</p>
+<h2>Examples</h2>
+
+<p>A very simple iteration over a vector:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vec</span> <span class="p">{</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span> <span class="p">};</span>
+</span><span class='line'><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span> <span class="o">:</span> <span class="n">vec</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For more generic programming, using <a href="/c/auto">&ldquo;auto&rdquo; keyword</a> to let compiler automatically deduce the type is also possible:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -169,39 +223,39 @@
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;vector&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">a</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="o">*</span><span class="n">z</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">Range</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">print</span><span class="p">(</span><span class="k">const</span> <span class="n">Range</span><span class="o">&amp;</span> <span class="n">range</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">element</span> <span class="o">:</span> <span class="n">range</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Using &quot;auto&quot; with range-based for loop.</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">element</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">z</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">y</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">x</span> <span class="o">=</span> <span class="n">y</span><span class="o">/*</span><span class="n">z</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vec</span> <span class="p">{</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span> <span class="p">};</span>
+</span><span class='line'>    <span class="n">print</span><span class="p">(</span><span class="n">vec</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>For both humans and even a syntax highlighter it is clear that the intention of <code>x = y/*z</code> statement is to assigne <code>x</code> a result of dividing <code>y</code> by the value obtained through dereferencing <code>z</code> pointer. Yet <code>/*</code> is the longest match which corresponds to the beginning of the multiline comment, so the compiler would most likely fail:</p>
+<p>The range-based for loop also works with plain arrays:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&gt;</span> <span class="n">g</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">example</span><span class="p">.</span><span class="n">cc</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">example</span><span class="p">.</span><span class="n">cc</span><span class="o">:</span><span class="mi">25</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="n">unterminated</span> <span class="o">/*</span> <span class="n">comment</span>
-</span><span class='line'>    <span class="n">x</span> <span class="o">=</span> <span class="n">y</span><span class="o">/*</span><span class="n">z</span><span class="p">;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">const</span> <span class="kt">int</span> <span class="n">data</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span> <span class="p">};</span>
+</span><span class='line'><span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">v</span> <span class="o">:</span> <span class="n">data</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>For the good of all C++ developers, Daveed Vandevoorde from Edison Design Group has proposed three possible ways to fix C++ grammar to eliminate the problem of two consecutive right angle brackets in templates. One of them was chosen over other two and starting with C++11, programmers can now use <code>&gt;&gt;</code> in templates like this &ndash;  <code>std::vector&lt;std::vector&lt;std::vector&lt;int&gt;&gt;&gt;</code></p>
+<h3>Range-Based For With Custom Types</h3>
 
-<p>It is important that this change also breaks backwards compatibility which could affect some programs. Consider the following program:</p>
+<p>One of the questions that is often raised is how to use this new syntax with custom types. There are two possible ways to do this.</p>
+
+<p>The first is to make your custom class provide two member functions: <code>begin()</code> and <code>end()</code>. They should return beginning of the iterate-able range as well as its end, respectively (both should be of the same type). For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -223,34 +277,36 @@
 <span class='line-number'>18</span>
 <span class='line-number'>19</span>
 <span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
 </pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">template</span><span class="o">&lt;</span><span class="kt">int</span> <span class="n">I</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n">X</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">static</span> <span class="kt">int</span> <span class="k">const</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">custom_container</span> <span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">begin</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">data_</span><span class="p">.</span><span class="n">c_str</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">end</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">data_</span><span class="p">.</span><span class="n">c_str</span><span class="p">()</span> <span class="o">+</span> <span class="n">data_</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">data_</span> <span class="o">=</span> <span class="s">&quot;Hello, Range-Based For!&quot;</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">template</span><span class="o">&lt;&gt;</span> <span class="k">struct</span> <span class="n">X</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">typedef</span> <span class="kt">int</span> <span class="n">c</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n">Y</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">static</span> <span class="kt">int</span> <span class="k">const</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="k">const</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">Y</span><span class="o">&lt;</span><span class="n">X</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span> <span class="o">&gt;::</span><span class="n">c</span> <span class="o">&gt;::</span><span class="n">c</span><span class="o">&gt;::</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">Y</span><span class="o">&lt;</span><span class="n">X</span><span class="o">&lt;</span> <span class="mi">1</span><span class="o">&gt;&gt;::</span><span class="n">c</span> <span class="o">&gt;::</span><span class="n">c</span><span class="o">&gt;::</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">custom_container</span> <span class="n">container</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">element</span> <span class="o">:</span> <span class="n">container</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">element</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>It is valid in both old and new C++. However, it would produce different results.</p>
-
-<p>This is because in the old C++ <code>&gt;&gt;</code> was treated as the right shift operator that shifted 1 by the value of global <code>c</code> as part of <code>1&gt;&gt;::c</code> expression. But with a new grammar introduced in C++ this is no longer the case and so the same program would print <code>0</code> and <code>3</code> in pre-C++11, and two zeroes in C++11.</p>
-
-<p>Some compiler developers, when started working on implementing new C++ standard, have put a special feature their compilers that would warn users about such cases. For example, clang compiler would issue a warning in case it runs into this code:</p>
+<p>The second approach is to provide freestanding <code>begin()</code> and <code>end()</code> functions for a data type:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -258,24 +314,88 @@
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">right_angle_brackets</span><span class="p">.</span><span class="n">cc</span> <span class="o">&amp;&amp;</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">right_angle_brackets</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">19</span><span class="o">:</span><span class="mi">25</span><span class="o">:</span> <span class="nl">warning:</span> <span class="n">use</span> <span class="n">of</span> <span class="n">right</span><span class="o">-</span><span class="n">shift</span> <span class="k">operator</span> <span class="p">(</span><span class="err">&#39;</span><span class="o">&gt;&gt;</span><span class="err">&#39;</span><span class="p">)</span> <span class="n">in</span> <span class="k">template</span> <span class="n">argument</span> <span class="n">will</span> <span class="n">require</span>
-</span><span class='line'>      <span class="n">parentheses</span> <span class="n">in</span> <span class="n">C</span><span class="o">++</span><span class="mi">11</span> <span class="p">[</span><span class="o">-</span><span class="n">Wc</span><span class="o">++</span><span class="mi">11</span><span class="o">-</span><span class="n">compat</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">Y</span><span class="o">&lt;</span><span class="n">X</span><span class="o">&lt;</span> <span class="mi">1</span><span class="o">&gt;&gt;::</span><span class="n">c</span> <span class="o">&gt;::</span><span class="n">c</span><span class="o">&gt;::</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
-</span><span class='line'>                        <span class="o">^</span>
-</span><span class='line'>                       <span class="p">(</span>     <span class="p">)</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">custom_container</span> <span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">data</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">data_</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">data_</span> <span class="o">=</span> <span class="s">&quot;Hello, Range-Based For!&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">begin</span><span class="p">(</span><span class="k">const</span> <span class="n">custom_container</span><span class="o">&amp;</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">c</span><span class="p">.</span><span class="n">data</span><span class="p">().</span><span class="n">c_str</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">end</span><span class="p">(</span><span class="k">const</span> <span class="n">custom_container</span><span class="o">&amp;</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">c</span><span class="p">.</span><span class="n">data</span><span class="p">().</span><span class="n">c_str</span><span class="p">()</span> <span class="o">+</span> <span class="n">c</span><span class="p">.</span><span class="n">data</span><span class="p">().</span><span class="n">size</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">custom_container</span> <span class="n">container</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">element</span> <span class="o">:</span> <span class="n">container</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">element</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Hopefully, not many developers have intentionally used logical shifts as part of template parameters, and the amount of those cases are far less from those when an annoying extra space was required for no good reason.</p>
+<p>Note that compiler will first look for member functions, then for free-standing functions. This is described in 6.5.4/1 of the C++ standard.</p>
 
-<p>As for the problem with comments &ndash; it still exists in both C and C++. But how much of a problem is it, really?</p>
+<h2>Old Style Still Apply</h2>
 
-<h2>References</h2>
+<p>So can we switch to use a new range-based for loops everywhere? Where possible, it could simplify the code and theoretically even make it faster (only if optimizing compiler is way too silly and does not handle loop optimizations well). But in cases where we do need an iterator or perhaps some other loop type like <code>while</code>, the range-based for loop won&rsquo;t work. For example, the below loop cannot be substituted for a new one:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">eit</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">end</span><span class="p">();</span>
+</span><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">eit</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">++</span><span class="n">it</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>        <span class="n">it</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>See Also</h2>
 
 <ul>
-<li><a href="http://en.wikipedia.org/wiki/Maximal_munch">Maximal much principle</a></li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html">N1757 &ndash; Right Angle Brackets</a></li>
+<li><a href="/auto-type">C++, Type Safety and Automatic Type Deduction With “auto” Keyword</a></li>
+</ul>
+
+
+<h3>References</h3>
+
+<ul>
+<li><a href="http://en.cppreference.com/w/cpp/language/range-for">Range-based for loop @ cppreference.com</a></li>
+<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2930.html">N2930 &ndash; Range-Based For Loop Wording (Without Concepts)</a></li>
 </ul>
 
 </div>
@@ -308,15 +428,15 @@
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
     
-    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
   </div>
 </section>
@@ -328,7 +448,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">18</span>
+        <span class="badge">25</span>
         C++
       </a>
     
@@ -340,13 +460,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">26</span>
+        <span class="badge">33</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">3</span>
+        <span class="badge">10</span>
         C++11
       </a>
     

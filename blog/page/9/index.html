@@ -114,43 +114,341 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-29T22:00:00-04:00" pubdate data-updated="true">Mar 29<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-07T00:00:00-04:00" pubdate data-updated="true">May 7<span>th</span>, 2013</time>
         
-           | <a href="/ask-smart/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/ask-smart/">Comments</a>
+           | <a href="/static-assert/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/static-assert/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/ask-smart/">Ask Smart Questions and You Will Succeed</a></h1>
+      <h1 class="entry-title"><a href="/static-assert/">Static Assert</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Asking is ultimately one of the most important ways for you to succeed. You shall not be afraid to ask. You shall ask often. Ask for help and for a raise, ask for an advice and ask questions. Asking is very powerful. Not only it might help you to get an answer, you may as well receive something that is a lot more valuable, something you haven’t even thought of before. Asking helps you to make your way. It helps others to understand you better. Asking connects people. In English we say, “It doesn’t hurt to ask.” Russians say, “Nobody punches your nose for asking.” I am sure that other cultures have a similar saying.</p>
+  <div class="entry-content clearfix"><h2>Introduction</h2>
 
-<p>I have been hanging out on <a href="http://stackoverflow.com/">Stack Overflow</a>, a nice Q&amp;A site, for about two years now, and have answered some 770 questions. Not a lot, but I have enjoyed each and every question I have either answered or at least tried to answer. Yet my questions are what I am proud of the most. They were most helpful, at least for me. Sometimes, answering a question creates more questions and leads to a research, helps to learn something new — be that a programming trick, a new technology, a new interesting person that you didn’t know before. It is always better to ask than not to ask. In any case it makes you richer.</p>
+<p>Assertions is one of they key features of almost every programming language that help programmers verify their assumptions made when writing the code.
+In C, assertion mechanism is provided by <a href="http://man7.org/linux/man-pages/man3/assert.3.html">assert()</a> preprocessor macro defined by <a href="http://en.wikipedia.org/wiki/Assert.h">assert.h</a> header file. C++ programs can also use it by including &ldquo;<a href="http://en.cppreference.com/w/cpp/header/cassert">cassert</a>&rdquo; header file. As an added benefit, assertions also serve as documentation of the internal details of the program enhancing the code maintainability. Here is a simple C++11 example:</p>
 
-<p>OK, now it sounds like a crap from a cheap inspiration book. Things cannot be that simple. Indeed there is a catch to asking — just asking doesn’t really get you anywhere. You want people to be interested in your question, you want the question to be wise, you want your question to make others think, and oftentimes you want your question to be answered.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cassert&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argc</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">assert</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nullptr</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<blockquote><p>Whoever said “there’s no such thing as a bad question” clearly had never seen the Internet.<br/>
-— <a href="https://twitter.com/AndrewLBarber">Andrew Barber</a></p></blockquote>
 
-<p>There ain’t no such thing as a free lunch. And just like with everything else, in order for your questions to make you successful, some efforts from you are required. Of course nobody knows everything, and there is absolutely nothing wrong with saying, “I don’t know”. But you must at least show some efforts, some respect to those who read the question, or those who have already answered it million times over. There is a lot of great information about how to ask smart questions, and just in case you haven’t read it already, below are some links to a great tutorials about how to ask great questions. Trust me, you won’t waste your time by reading them. Those tutorials will definitely help you to succeed whatever your goals are:</p>
+<p>GNU C library also provides a convenient function to check for error numbers called &ldquo;<a href="http://man7.org/linux/man-pages/man3/assert_perror.3.html">assert_perror()</a>&rdquo;.</p>
+
+<p>There are at least 71 more programming language that provide assertion mechanism. You can check them out along with examples at <a href="http://rosettacode.org/wiki/Assertions">http://rosettacode.org/wiki/Assertions</a></p>
+
+<h2>The Problem</h2>
+
+<p>The <code>assert()</code> macro in both C and C++ would only check for errors at <a href="http://en.wikipedia.org/wiki/Run_time_(program_lifecycle_phase">execution time</a>) when the program is actually running. By definition that implies that:</p>
 
 <ul>
-<li><a href="http://www.catb.org/esr/faqs/smart-questions.html">How To Ask Questions The Smart Way</a> by Eric Steven Raymond</li>
-<li><a href="http://www.forbes.com/sites/stevedenning/2011/09/11/learning-to-ask-the-right-question-2/">Learning To Ask The Right Question</a> by Steve Denning, Forbes</li>
-<li><a href="http://mattgemmell.com/2008/12/08/what-have-you-tried/">What have You tried so far?</a> by Matt Gemmell</li>
-<li><a href="http://www.youngbloodcoaching.com/powerful-questions.html">The Art of Asking Powerful Questions</a></li>
+<li>It adds some overhead to the program execution (time, size or both).</li>
+<li>The assertion may not be exercised leaving a program undetected for a while (in the worse case, the program may pass a testing stage only to be discover by the end user later).</li>
 </ul>
 
 
-<p>And if you are looking for the right place to ask your questions online, you might find one of the <a href="http://stackexchange.com/">Stack Exchange Q&amp;A sites</a> very useful. Whether you are into LEGO, Marital Arts, Politics or Physics, interested in Chemistry, or History, or the history of chemistry, or whatever that is you are interested in – there is a web site for it.</p>
+<p>The above two points sound like are necessary evil. But what if we could get rid of those tradeoffs?</p>
 
-<p><a href="http://stackexchange.com/"><img src="/images/stack-exchange-top-sites.png"></a></p>
+<p>There are cases when there is enough information during <a href="http://en.wikipedia.org/wiki/Compile_time">compile-time</a> to detect a possible error. For example, macro definitions and <a href="http://msdn.microsoft.com/en-us/library/tby3xex3(v=vs.110">constant expressions</a>.aspx) are things that do not exist in compile-time.</p>
 
-<p>Hope it helps. Good Luck!</p>
+<p>If only there was a way to check constant expressions in compile-time it would have been always preferred over runtime checking.</p>
+
+<p>Luckily, programmers have figured out a few different ways to do this.</p>
+
+<h2>Workarounds</h2>
+
+<h3>Preprocessor Assertions</h3>
+
+<p>Both C and C++ preprocessors have <code>#error</code> directive that can be used to abort compilation with an error. It can be used to perform compile-time assertions.</p>
+
+<p>For example, consider a simple C program that reads data from into a buffer whose size is specified using a standard <a href="http://www.gnu.org/software/libc/manual/html_node/Controlling-Buffering.html"><code>BUFSIZ</code> macro</a> and the programmer wants to make sure that buffer is at least 1024 bytes large. The code using assertions might look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cassert&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Make sure we have at least 1024 bytes:</span>
+</span><span class='line'>    <span class="n">assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Given that <code>BUFSIZ</code> is a macro, a better solution would be to use preprocessor and its <code>#error</code> directive to check for this at compile-time instead:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#if BUFSIZ &lt; 1024</span>
+</span><span class='line'><span class="cp"># error Buffer size is too small</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>When the buffer size defined by <code>BUFSIZ</code> is large enough, the program would compile as normal. But when it isn&rsquo;t, the compile would refuse to compile the program spitting out an error that might look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">g</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">pedantic</span> <span class="p">.</span><span class="o">/</span><span class="n">assert_example</span><span class="p">.</span><span class="n">cc</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">assert_example</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">4</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span> <span class="nl">error:</span> <span class="n">Buffer</span> <span class="n">size</span> <span class="n">is</span> <span class="n">too</span> <span class="n">small</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Unfortunately, this mechanism can be used with binary operands only. In other words, something like this would not work by definition:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'><span class="cp">#if sizeof(mybuffer) &lt; 1024</span>
+</span><span class='line'><span class="cp"># error Buffer size is too small</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is because preprocessor knows nothing about <code>sizeof</code> operator and cannot use the result of this expression to compare it against 1024.</p>
+
+<p>Of course, being limited to macros usage only is a big problem. And so people accepted the challenge and came up with another way to overcome this limitation&hellip;</p>
+
+<h3>Negative Buffer Size</h3>
+
+<p>C and C++ developers have been relying on the fact that it is impossible to have a buffer of negative size in order to implement compile time assertions. The mechanism is very simple &ndash; evaluate a constant expression and yield <code>1</code> if it evaluates as <code>true</code>, or <code>-1</code> otherwise, and use the result as size of the buffer. For example, let&rsquo;s say we want to make sure that size of the integer is exactly 4 bytes, we could write code like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">typedef</span> <span class="kt">char</span> <span class="n">assert_int_size</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This approach, however, has its own limitations.</p>
+
+<p>In C, it can be used in both function and non-function scopes, but cannot be used inside structs and unions.</p>
+
+<p>Unlike C, C++ allows to have typedef statements, but there is another problem &ndash; if the static assertion is not dependent upon one or more template parameters, then the compiler is permitted to evaluate the static assertion at the point it is first seen, irrespective of whether the template is ever instantiated. In other words &ndash; it is hard to use with templates as programmers should always remember to use a template type in a condition.</p>
+
+<h2>Core Language Support</h2>
+
+<p>Over the years people have been working around issues associated with different workarounds to implement static assertions and realized that there is no way to implement them without a proper core language support.</p>
+
+<h3>C++</h3>
+
+<p>In 2004, Robert Klarer, Dr. John Maddock, Beman Dawes and Howard Hinnant wrote a proposal for adding a static assertion mechanism to the Core Language, known as <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a>.</p>
+
+<p>The proposal was accepted into the C++11 language specification and is implemented by the majority of C++ compilers today as &ldquo;<a href="http://en.cppreference.com/w/cpp/language/static_assert">static_assert()</a>&rdquo; keyword/function.</p>
+
+<p>It comes with no strings attached and accepts two parameters &ndash; a compile-time expressions that is evaluates to either <code>true</code> or <code>false</code> and a message. If the expression evaluates to <code>false</code>, the compilation is aborted and specified message is shown as an error message. <code>static_assert()</code> can be used in any scope, including templates. For example:</p>
+
+<figure class='code'><figcaption><span>Static Assert Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">static_assert</span><span class="p">(</span><span class="n">BUFSIZ</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&quot;Int size is not 4 bytes&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>C</h3>
+
+<p>In C, static assertions are introduced as part of <a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">ISO/IEC 9899:2011 standard</a>), informally known as C11. The mechanism is exactly the same as in C++, but the function name is <code>_Static_assert()</code>. For example:</p>
+
+<figure class='code'><figcaption><span>C11 Static Assert Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">_Static_assert</span><span class="p">(</span><span class="n">BUFSIZ</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">union</span> <span class="n">Bar</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">y</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">_Static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">union</span> <span class="n">Bar</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&quot;Size of int is not 4 bytes&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">_Static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It still cannot be used inside structs and unions, though.</p>
+
+<h3>Note on error messages</h3>
+
+<p>There is but one thing about <code>static_assert()</code> that can be pretty annoying &ndash; having to specify an error message even if it is an empty string. Of course, providing good error messages is the way to go. But there are a lot of cases when a condition used in assertion just does not need any extra words.</p>
+
+<p>The first solution that immediately comes to mind is to use the macro like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#define STATIC_ASSERT(Expr) static_assert((Expr), #Expr)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note, however, that it won&rsquo;t work well with expressions that contain a comma, like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Of course, programmers can enclose an expression in extra pair of <code>()</code>, but there is a better to do this, using <a href="http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html">variadic macros</a>. Here is a complete example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;type_traits&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define STATIC_ASSERT_IMPL(Expr) static_assert((Expr), #Expr)</span>
+</span><span class='line'><span class="cp">#define STATIC_ASSERT(...) STATIC_ASSERT_IMPL((__VA_ARGS__))</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="n">final</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="http://www.robertgamble.net/2012/01/c11-static-assertions.html">C11 Static Assertions</a> by Robert Gamble</li>
+<li><a href="http://docs.oracle.com/javase/1.4.2/docs/guide/lang/assert.html">Java: Programming with assertions</a></li>
+<li><a href="http://www.boost.org/doc/libs/release/doc/html/boost_staticassert.html">Boost.StaticAssert library</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/dd293588.aspx">MSDN on &ldquo;static_assert()&rdquo;</a></li>
+<li><a href="http://www.drdobbs.com/compile-time-assertions/184401873">Compile-Time Assertions</a> by Ralf Holly</li>
+</ul>
+
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">C11 (C Standard Revision)</a>)</li>
+<li><a href="http://gcc.gnu.org/wiki/C11Status">GCC C11 Status</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a></li>
+<li><a href="http://rosettacode.org/wiki/Assertions">Assertions</a> by RosettaCode.org</li>
+</ul>
+
 </div>
   
   
@@ -181,15 +479,15 @@
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
     
-    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
   </div>
 </section>
@@ -201,7 +499,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">18</span>
+        <span class="badge">25</span>
         C++
       </a>
     
@@ -213,13 +511,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">26</span>
+        <span class="badge">33</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">3</span>
+        <span class="badge">10</span>
         C++11
       </a>
     
