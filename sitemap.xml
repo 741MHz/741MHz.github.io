@@ -38,7 +38,11 @@
     </url>
     <url>
         <loc>http://741MHz.com/final-override/</loc>
-        <lastmod>2013-12-01T20:20:12-05:00</lastmod>
+        <lastmod>2013-12-01T20:26:12-05:00</lastmod>
+    </url>
+    <url>
+        <loc>http://741MHz.com/raii/</loc>
+        <lastmod>2013-12-01T20:36:33-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/assets/bootstrap/about.html</loc>
@@ -62,7 +66,7 @@
     </url>
     <url>
         <loc>http://741MHz.com/assets/bootstrap/</loc>
-        <lastmod>2013-12-01T20:20:12-05:00</lastmod>
+        <lastmod>2013-12-01T20:36:33-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/assets/bootstrap/javascript.html</loc>
@@ -70,11 +74,11 @@
     </url>
     <url>
         <loc>http://741MHz.com/blog/archives/</loc>
-        <lastmod>2013-12-01T20:20:12-05:00</lastmod>
+        <lastmod>2013-12-01T20:36:33-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/</loc>
-        <lastmod>2013-12-01T20:20:12-05:00</lastmod>
+        <lastmod>2013-12-01T20:36:33-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/robots.txt</loc>
