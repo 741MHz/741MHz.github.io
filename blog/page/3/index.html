@@ -114,47 +114,82 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2012-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2012</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-14T00:00:00-05:00" pubdate data-updated="true">Jan 14<span>th</span>, 2013</time>
         
-           | <a href="/system-program-problem-detected/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/system-program-problem-detected/">Comments</a>
+           | <a href="/vector-erase/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/vector-erase/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/system-program-problem-detected/">System Program Problem Detected</a></h1>
+      <h1 class="entry-title"><a href="/vector-erase/">Erasing Vector the Smart Way</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>I have just installed Ubuntu 12.10 and the first thing I ran into is tons of annoying popup windows telling me about system program problems and asking to report them:</p>
+  <div class="entry-content clearfix"><p>In the C++ world, <a href="http://en.cppreference.com/w/cpp/container/vector"><code>std::vector</code></a> is a <a href="http://en.wikipedia.org/wiki/Sequence_container_(C%2B%2B">sequence container</a>) that encapsulates <a href="http://en.wikipedia.org/wiki/Dynamic_array">dynamic size arrays</a>. One of the main perks of the vector is the fact that elements are stored <strong>contiguously</strong>. In other words, a pointer to an element of a vector may be passed to any function that expects a pointer to an element of array. Or simply put — <code>std::vector</code> is very close to a <a href="http://www.cplusplus.com/doc/tutorial/arrays/">plain old-school C-style array</a>, yet it provides developers with a lot of C++ perks like automatic memory management, bounds checking and more. Unfortunately, <code>std::vector</code> is so great that many developers are using it without really thinking too much about the underlying implementation and its downsides.</p>
 
-<p><img src="/images/ubuntu_system_problem/popup.png"></p>
+<h2>Erase Trap</h2>
 
-<p>Apparently, this is a common problem that drives crazy a lot of people. What happens is some of the programs crash, and those cases are being reported by the Apport application. I highly doubt that anyone at Ubuntu is actually reading these reports. Firstly, millions of Ubuntu installations constantly have programs crashing and it must take an army of developers to investigate and fix them. Secondly, these crashes are happening for many years and they don’t seem to go away. So why bother? Here is how you disable this annoying reporting facility.</p>
+<p>A common programming task is to remove one or more elements from the vector. Luckily, <code>std::vector</code> provides a wonderful method called <code>erase()</code> that does exactly that. So what’s the big deal? It’s a trap!</p>
 
-<h3>Launch a terminal</h3>
+<p>C++ is just like medicine — it is both a cure and a disease. Vector is no exception. Its contiguous memory layout may heal, or it may kill. In this case it is a serial killer. Let’s see why.</p>
 
-<p>First, you need to open a terminal. You can do that by clicking on “Dash Home” button (on the top left of your screen), typing “Terminal”, and clicking on a Terminal application icon in order to launch it:</p>
+<h2>The Innocent Piece of Code</h2>
 
-<p><img src="/images/ubuntu_system_problem/open_terminal.png"></p>
+<p>Let’s take a look at the real-world example that I ran into a few days ago. The goal was to remove all even numbers from a vector, leaving only odd ones. Here is how it was implemented:</p>
 
-<h3>Disable Apport</h3>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">array</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+</span><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">it</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">it</span> <span class="o">=</span> <span class="n">array</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>        <span class="o">++</span><span class="n">it</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>In the terminal, type the following commands:</p>
 
-<pre><code>sudo sed -i 's;^enabled=1$;enabled=0;g' /etc/default/apport
-sudo service apport restart
-sudo rm /var/crash/*
-</code></pre>
+<p>Logically thinking, the code is very sound — every element is being checked and removed only if it matches a given criteria. Developer even took extra care not to access invalidated iterator. Sounds like a great job. Nice, simple, and it works. Or does it?</p>
 
-<p>The above commands will replace “enabled=1″ with “enabled=0″ in the “/etc/default/apport” configuration file, restart the Apport application and remove old reports to save you a valuable disk space. The problem should now go away.</p>
+<h2>The Problem</h2>
 
-<h3>Still having annoying popups?</h3>
+<p>No, it does not. There is one big problem with that code that makes it totally useless. It takes about 55 seconds to run on just one million random elements. Why does that happen, you may ask? The developer  fell into a common trap! That happened because the elements of the vector are stored contiguously, in a contiguous memory and the whole vector is shifted left every time an element is erased. In other words — one does not simply erase an element that is not at the end of the vector.</p>
 
-<p>Be aware that in earlier versions of Ubuntu there was a bug when restarting Apport didn’t really restart it (see <a href="https://bugs.launchpad.net/ubuntu/+source/apport/+bug/292402">Bug #292402</a>). So as the last resort, simply reboot your computer.</p>
+<h2>The Solution</h2>
 
-<p>Hope it helps! Good Luck!</p>
+<p>Here is the right way of doing this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">array</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">remove_if</span><span class="p">(</span>
+</span><span class='line'>      <span class="n">array</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="n">v</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">),</span>
+</span><span class='line'>    <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">()</span>
+</span><span class='line'><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above code does the job in only 5 milliseconds. That is about eleven thousand times faster. What kind of sorcery is that? Very simple — <a href="http://en.cppreference.com/w/cpp/algorithm/remove"><code>std::remove_if()</code></a> does not erase elements from the vector. It does’t remove anything either. Just a good naming joke. So what the hell it does? It re-arranges elements in such a way that elements to be erased are moved towards the end of a vector. Once the job is done, all elements are erased from the vector with a single invocation of <code>erase()</code>. As a result, the whole vector is not shifted tens of thousands of times and runs a lot faster.</p>
+
+<h2>The Conclusion</h2>
+
+<p>There ain’t no such thing as a free lunch.</p>
 </div>
   
   
@@ -185,15 +220,15 @@ sudo rm /var/crash/*
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/final-override/">C++11 Final Override</a>
+    
+    <a class="list-group-item " href="/signal-handler/">How Not to Write a Signal Handler</a>
+    
+    <a class="list-group-item " href="/vector-erase/">Erasing Vector the Smart Way</a>
+    
     <a class="list-group-item " href="/switch/">From Switch Statement Down to Machine Code</a>
     
     <a class="list-group-item " href="/unreasonable-effectiveness-of-c/">Unreasonable Effectiveness of C</a>
-    
-    <a class="list-group-item " href="/system-program-problem-detected/">System Program Problem Detected</a>
-    
-    <a class="list-group-item " href="/exceptions-performance/">C++ Exceptions Performance</a>
-    
-    <a class="list-group-item " href="/awk-uniq/">Unique Lines Without Sorting</a>
     
   </div>
 </section>
@@ -205,7 +240,7 @@ sudo rm /var/crash/*
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">5</span>
+        <span class="badge">8</span>
         C++
       </a>
     
@@ -217,8 +252,14 @@ sudo rm /var/crash/*
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">7</span>
+        <span class="badge">10</span>
         Tech
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
+        <span class="badge">1</span>
+        C++11
       </a>
     
   </div>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C++ | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T19:56:40-05:00</updated>
+  <updated>2013-12-01T20:24:12-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,642 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[C++11 Final Override]]></title>
+    <link href="http://741MHz.com/final-override/"/>
+    <updated>2013-02-27T00:00:00-05:00</updated>
+    <id>http://741MHz.com/final-override</id>
+    <content type="html"><![CDATA[<h2>Preface</h2>
+
+<p>The alternative name for this article is “How to protect yourself from others when it comes to polymorphism.” That is pretty much the primary purpose of two brand new C++ keywords introduced in C++11 — the <code>override</code> and <code>final</code>.</p>
+
+<p>Those who have at least some experience in team-based C++ development must be aware of at least one of many pitfalls of polymorphism and virtual methods in particular. Let’s go over some of real-world problems that could easily force developers to run a debugger or read the code over and over again trying to figure out why the program is not working as expected.</p>
+
+<h2>A Missing Virtual Function</h2>
+
+<p>This could happen to anyone — there was a base class with a virtual function and developer has decided to overload it for a good reason. Everything was fine and the program worked as expected. But one day after, a fresh build simply stopped working, and the reason is not obvious. After spending some time debugging the program, it turned out that a function that should have been called does not appear to be called at all. What could be wrong?</p>
+
+<p>Consider the following code where the Foo class is written by one developer while Bar was written by someone else and could even be part of another project:</p>
+
+<p>```c++
+class Foo {
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() { }
+
+virtual int init() {
+    do_very_important_stuff();
+}
+</code></pre>
+
+<p>};</p>
+
+<p>class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+virtual ~Bar() { }
+
+virtual int init() {
+    Foo::init();
+    do_some_more_important_stuff();
+}
+</code></pre>
+
+<p>};
+```</p>
+
+<p>A few years later a new developer joins the company and accidentally removes a virtual keyword from the <code>init()</code> method’s declaration of class <em>Foo</em>. How that could even happen, you may ask? Maybe he was learning Emacs and executed a <em>replace-regexp</em> command without noticing all of the changes. Or maybe he just read the <em>Code Refactoring</em> book and decided to improve the code but couldn’t check all of the usages of class <em>Foo</em> because they were in a different repository that he didn’t have access to. Who knows? Things happen. As a result, the <code>Bar::init()</code> is no longer called because it does no longer override its base method. For example:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<h1>include <memory></h1>
+
+<p>class Foo {
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() { }
+
+int init() {
+    std::cout &lt;&lt; "Hello, World!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+virtual ~Bar() { }
+
+virtual int init() {
+    Foo::init();
+    std::cout &lt;&lt; "The code is working!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>int main() {</p>
+
+<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
+foo-&gt;init();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above program will not print an expected “The code is working!” line and someone would definitely waste some time trying to figure out why, especially if the project has a few million lines of code.</p>
+
+<h2>A Million Dollars Typo</h2>
+
+<p>Typos can also cause a lot of troubles. For example, developers can misspell the name of the method when overriding:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<h1>include <memory></h1>
+
+<p>class Foo {
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() { }
+
+virtual void doSomeVeryImportantWork() {
+}
+</code></pre>
+
+<p>};</p>
+
+<p>class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+virtual ~Bar() { }
+
+virtual void doSomeVeryInportantWork() {
+    std::cout &lt;&lt; "The code is working!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>int main() {</p>
+
+<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
+foo-&gt;doSomeVeryImportantWork();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above program prints nothing despite the expectations and the reason is not immediately obvious.</p>
+
+<h2>Signature Changes</h2>
+
+<p>Signature change is another seemingly innocent change that may potentially waste a log of valuable time when not accounted for properly. For example, the base class’s <code>init()</code> function is changed from this:</p>
+
+<pre><code>virtual void init() { }
+</code></pre>
+
+<p>… to this:</p>
+
+<pre><code>virtual void init(int x = 0) {
+}
+</code></pre>
+
+<p>The whole project still compiles just fine. Yet the program doesn’t work as expected anymore.</p>
+
+<p>It’s also possible to accidentally override someone’s virtual function, etc. The list of such gotchas can go on and on. For those who can relate to this — you must know that you are not alone! C++ developers including myself have dealt with this and similar problems for the past few decades.</p>
+
+<p>Luckily, since introduction of the C++11 the sun is shining on our side of the fence!</p>
+
+<h2>We Override!</h2>
+
+<p>Instead of using (or not using) a <code>virtual</code> keyword and assuming the base class has the method being overridden, we can now use the brand new <code>override</code> keyword. The compiler will then make sure that a method declared with that keyword really overrides the base method. And if that turns out to be not the case, the code won’t compile and the error would be caught during compilation, which is a lot better than debugging. The following is the new version of the first example:</p>
+
+<p>```c++
+class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+virtual ~Bar() { }
+
+int init() override {
+    Foo::init();
+    std::cout &lt;&lt; "The code is working!\n";
+}
+</code></pre>
+
+<p>};
+```</p>
+
+<p>The compilation fails if the base class`s init() method is no longer there:</p>
+
+<pre><code>error: ‘int Bar::init()’ marked override, but does not override
+</code></pre>
+
+<h2>It’s Final!</h2>
+
+<p>The second keyword is <code>final</code>. It is a little bit less useful but is still a good self-defense mechanism against unintended usage and/or code changes.</p>
+
+<p>What it means is that a method marked as final is not only virtual and must override its base but that nobody else can further override it. For example:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<h1>include <memory></h1>
+
+<p>class Foo {
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() { }
+
+virtual int init() {
+    std::cout &lt;&lt; "Hello, World!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+~Bar() override { }
+
+int init() final {
+    Foo::init();
+    std::cout &lt;&lt; "This code works!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>int main() {</p>
+
+<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
+foo-&gt;init();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above code is sound and secure. But if somebody else would try to write a class like this:</p>
+
+<p>```c++
+class BetterBar : public Bar {
+public:</p>
+
+<pre><code>BetterBar() { }
+~BetterBar() override { }
+
+int init() override {
+    Bar::init();
+    std::cout &lt;&lt; "Even better init() function!\n";
+}
+</code></pre>
+
+<p>};
+```</p>
+
+<p>… a compiler would tell them that they are wrong by issuing an error: </p>
+
+<pre><code>error: virtual function ‘virtual int BetterBar::init()’
+error: overriding final function ‘virtual int Bar::init()’
+</code></pre>
+
+<p>The <code>final</code> keyword can also be applied to the whole class in order to prevent further derivation from it. For example:</p>
+
+<p>```c++
+class Bar final : public Foo {
+  public:</p>
+
+<pre><code>Bar() {}
+</code></pre>
+
+<p>&hellip;
+```</p>
+
+<p>If anyone tries to inherit from Bar, the compiler issues an error: </p>
+
+<pre><code>error: cannot derive from ‘final’ base ‘Bar’ in derived type ‘BetterBar’
+</code></pre>
+
+<p>What is interesting is that almost the same effect can be achieved in a less obvious way by applying the <code>final</code> keyword to a virtual destructor of either base (which is not the same as <code>final</code> in this case because it introduces a virtual table) or any derived class:</p>
+
+<p>```c++
+class Foo { // You cannot derive from me!
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() final { }
+</code></pre>
+
+<p>};
+```</p>
+
+<p>Template containers from the standard C++ library might be good candidates to be marked with a final keyword, as it is generally not a good idea to derive from them in almost every case.</p>
+
+<h2>Conclusion</h2>
+
+<p>C++11 introduces two important keywords in relation to polymorphism and inheritance — the <code>override</code> and <code>final</code>. Using those keywords should become a habit of any C++ developer. It is worth using every time except when writing a base class. This will make the code clear, maintainable, and potentially save hours that would have been otherwise wasted chasing an error in debugger.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">N2928</a> &ndash; Explicit Virtual Overrides</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">N3206</a> &ndash; Override control: Eliminating Attributes</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">N3272</a> &ndash; Follow-up on override control</li>
+<li><a href="http://clang.llvm.org/cxx_status.html">Clang C++11 Status Report</a></li>
+<li><a href="http://gcc.gnu.org/projects/cxx0x.html">GCC C++11 Status Report</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[How Not To Write a Signal Handler]]></title>
+    <link href="http://741MHz.com/signal-handler/"/>
+    <updated>2013-01-15T00:00:00-05:00</updated>
+    <id>http://741MHz.com/signal-handler</id>
+    <content type="html"><![CDATA[<p>Back in the day, I was reading a book about UNIX® programming and have learned how to write a signal handler. It was a long time ago and I don’t remember the book, but to this day the way described in that book is something that shows up in Google’s top results when you search for “How to write a signal handler”. Here it is — a simple, elegant solution to the world’s toughest problem:</p>
+
+<p>```c++ A simple, elegant solution to the world’s toughest problem.</p>
+
+<h1>include &lt;stdlib.h></h1>
+
+<h1>include &lt;signal.h></h1>
+
+<h1>include &lt;stdio.h></h1>
+
+<h1>include &lt;unistd.h></h1>
+
+<p>static void my_sig_handler(int signum) {</p>
+
+<pre><code>printf("Received interrupt signal!\n");
+</code></pre>
+
+<p>}</p>
+
+<p>int main() {</p>
+
+<pre><code>signal(SIGINT, my_sig_handler);
+for (;;) {
+    printf("Doing useful stuff...\n");
+    sleep(1); /* Sleep is not only useful, it is essential! */
+}
+return EXIT_SUCCESS;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Now imagine for a second that instead of a simple invocation of <code>sleep()</code> in the body of the <code>main()</code> function, just after the <code>printf()</code>, there was some very important code running a life support system and someone’s life was really dependent on that. What would have happened? Someone would not have been alive for long — that’s for sure. And the terrible signal handling is to blame and here is why…</p>
+
+<h2>You Have Been Warned</h2>
+
+<p>Let’s take a quick look at Linux® manual page for a <code>signal()</code> call. You can find by typing <code>man 2 signal</code> in the command line, or by checking it out online, here — <a href="http://man7.org/linux/man-pages/man2/signal.2.html">http://man7.org/linux/man-pages/man2/signal.2.html</a>. The first sentence in the manual page introduces you to the <code>signal()</code> call. The second sentence, now in bold, warns you, and I quote:</p>
+
+<blockquote><p>Avoid its use: use sigaction(2) instead.</p></blockquote>
+
+<h2>Your Computer Might Take a Trip to a Grocery Store</h2>
+
+<p>Continuing reading the manual page, the very first note under the NOTES section is this:</p>
+
+<blockquote><p>The effects of signal() in a multithreaded process are unspecified.</p></blockquote>
+
+<p>This is called <a href="http://en.wikipedia.org/wiki/Unspecified_behavior">Unspecified Behavior</a>. What it means is that standard does not say anything as for how the function should behave in a multi-threaded environment. Therefore, it may exhibit a different behavior on different systems including different versions of the same system, at discretion of those who implement it. Your mileage may vary.</p>
+
+<p>Even if your code does not explicitly use multiple threads, you are still in danger — it might be used as part of a bigger program in multi-threaded environment. But even if that’s not that case — hey, tomorrow you might want to do that. Do you really want to screw yourself upfront by using this bad <code>signal()</code> function? Think twice.</p>
+
+<h2>Asynchronicity &amp; Reentrancy</h2>
+
+<p>Signals are asynchronous by their nature. Another signal may be delivered to the process while the previous signal is still being “processed”. Therefore, signal handler must not introduce unwanted side effects, must be fully reentrant and cannot use any non-reentrant code — neither explicitly nor implicitly. Now take a quick look at the famous example mentioned at the beginning — there is a nice <code>printf()</code> right in the signal handler code. This is a life threatening piece of code because <code>printf()</code> is non-reentrant. In other words, it is possible that <code>printf()</code> function will get interrupted before it finishes and get called again as part of another signal handler. If that case the program will simply <a href="http://en.wikipedia.org/wiki/Deadlock">deadlock</a>.</p>
+
+<h2>Async-Signal-Safe Functions</h2>
+
+<p>The section 7 of the manual page about signal (which you can see by typing <code>man 7 signal</code> in your terminal or read online here — <a href="http://man7.org/linux/man-pages/man7/signal.7.html">http://man7.org/linux/man-pages/man7/signal.7.html</a>) states the following:</p>
+
+<blockquote><p><strong>Async-signal-safe functions</strong>
+A signal handler function must be very careful, since processing elsewhere may be interrupted at some arbitrary point in the execution of the program. POSIX has the concept of “safe function”. If a signal interrupts the execution of an unsafe function, and handler calls an unsafe function, then the behavior of the program is undefined.</p></blockquote>
+
+<p>And then it lists all async-signal-safe functions. So if you don’t know what functions are safe to use inside a signal handler and what functions are not — refer to that list and make sure you are not doing anything dangerous.</p>
+
+<h2>Better Safe Than Sorry</h2>
+
+<p>What is the best way not to become a drag addict? Not to take drugs in the first place. What is the best way to write a safe signal handler? Not to write it all. OK, I am just kidding. Seriously though — if you really want your signal handler to be safe and portable, consider not doing anything inside it except modifying a global <a href="http://en.wikipedia.org/wiki/Volatile_variable">volatile</a> variable of <a href="http://en.cppreference.com/w/cpp/utility/program/sig_atomic_t"><code>sig_atomic_t</code></a> type. Taking all of the above into account, below is an example of how a safe signal handler may look like in real life (note the absence of <code>signal()</code> function in the code):</p>
+
+<p>```c++ Simple and safe signal handling</p>
+
+<h1>include &lt;stdlib.h></h1>
+
+<h1>include &lt;signal.h></h1>
+
+<h1>include &lt;stdio.h></h1>
+
+<h1>include &lt;string.h></h1>
+
+<h1>include &lt;unistd.h></h1>
+
+<p>static volatile sig_atomic_t got_signal = 0;</p>
+
+<p>static void my_sig_handler(int signo)
+{</p>
+
+<pre><code>got_signal = 1;
+</code></pre>
+
+<p>}</p>
+
+<p>int main()
+{</p>
+
+<pre><code>struct sigaction sa;
+
+memset(&amp;sa, 0, sizeof(struct sigaction));
+sa.sa_handler = &amp;my_sig_handler;
+if (sigaction(SIGINT, &amp;sa, NULL) == -1) {
+    perror("sigaction");
+    return EXIT_FAILURE;
+}
+
+for (;;) {
+    if (got_signal) {
+        got_signal = 0;
+        printf("Received interrupt signal!\n");
+    }
+    printf("Doing useful stuff...\n");
+    sleep(1); /* Sleep is not only useful, it is essential! */
+}
+return EXIT_SUCCESS;
+</code></pre>
+
+<p>}
+```</p>
+
+<h2>Modern Signal Handling</h2>
+
+<p>It is the 2013th year in the Common Era at the moment of this writing and you might think that people should have came up with something better in terms of signal handling at this time. The truth is that they did. It is just not that well known yet due to a huge momentum of outdated information still overflowing the Internet.</p>
+
+<h3>FreeBSD, NetBSD, OS X, iOS…</h3>
+
+<p>In the above family of operating systems, the modern way of handling signals is to use <a href="http://en.wikipedia.org/wiki/Kqueue">Kqueue</a> — a scalable event notification mechanism. Here is an example:</p>
+
+<p>```c++ Kqueue Signal Handling</p>
+
+<h1>include &lt;sys/types.h></h1>
+
+<h1>include &lt;sys/event.h></h1>
+
+<h1>include &lt;sys/time.h></h1>
+
+<h1>include &lt;signal.h></h1>
+
+<h1>include &lt;string.h></h1>
+
+<h1>include &lt;errno.h></h1>
+
+<h1>include &lt;stdlib.h></h1>
+
+<h1>include &lt;stdio.h></h1>
+
+<p>int main()
+{</p>
+
+<pre><code>int kq;
+int i;
+struct kevent ke;
+struct timespec timeout;
+struct sigaction sa;
+
+/* Block the signal we want to process with kevent first.
+   This is needed because kevent has lower precedence. */
+memset(&amp;sa, 0, sizeof(struct sigaction));
+sa.sa_handler = SIG_IGN;
+sigaction(SIGINT, &amp;sa, NULL);
+
+/* Create kqueue... */
+kq = kqueue();
+if (kq == -1) {
+    return EXIT_FAILURE;
+}
+/* Add a signal event */
+EV_SET(&amp;ke, SIGINT, EVFILT_SIGNAL, EV_ADD, 0, 0, NULL);
+i = kevent(kq, &amp;ke, 1, NULL, 0, NULL);
+if (i == -1)
+    return EXIT_FAILURE;
+/* Set a timeout (we no longer need to use a blocking sleep(1),
+   and this is great! */
+timeout.tv_sec = 1; /* To sleep for one second */
+timeout.tv_nsec = 0;
+
+/* Dispatch events */
+for (;;) {
+    i = kevent(kq, NULL, 0, &amp;ke, 1, &amp;timeout);
+    if (i &gt; 0) {
+        /* Got event(s) to dispatch. Note that we can do whatever the hell
+           we want here because we are __not__ in the signal handler. */
+        if (ke.ident == SIGINT) {
+            printf("Received interrupt signal!\n");
+        }
+    } else if (i == 0) {
+        /* Timeout elapsed */
+        printf("Doing useful stuff...\n");
+    } else if (i == -1) {
+        if (errno == EINTR)
+            continue; /* System call interrupted - just restart */
+        return EXIT_FAILURE; /* Something went wrong. */
+    }
+}
+return EXIT_SUCCESS;
+</code></pre>
+
+<p>}
+```</p>
+
+<h3>Linux</h3>
+
+<p>Linux provides <code>signalfd()</code> for handling signals. The beauty of it is that it may be used by itself, or may be combined with event notification mechanisms such as <code>epoll()</code> and friends. The manual page for <code>signalfd()</code> comes with a good example, so I don’t even have to write one. Here it is:</p>
+
+<p>```c++ Signalfd &amp; Epoll Signal Handling</p>
+
+<h1>include &lt;sys/signalfd.h></h1>
+
+<h1>include &lt;signal.h></h1>
+
+<h1>include &lt;unistd.h></h1>
+
+<h1>include &lt;stdlib.h></h1>
+
+<h1>include &lt;stdio.h></h1>
+
+<h1>define handle_error(msg)                               \</h1>
+
+<pre><code>do { perror(msg); exit(EXIT_FAILURE); } while (0)
+</code></pre>
+
+<p>int
+main(int argc, char *argv[])
+{</p>
+
+<pre><code>sigset_t mask;
+int sfd;
+struct signalfd_siginfo fdsi;
+ssize_t s;
+
+sigemptyset(&amp;mask);
+sigaddset(&amp;mask, SIGINT);
+sigaddset(&amp;mask, SIGQUIT);
+
+/* Block signals so that they aren't handled
+   according to their default dispositions */
+
+if (sigprocmask(SIG_BLOCK, &amp;mask, NULL) == -1)
+    handle_error("sigprocmask");
+
+sfd = signalfd(-1, &amp;mask, 0);
+if (sfd == -1)
+    handle_error("signalfd");
+
+for (;;) {
+    s = read(sfd, &amp;fdsi, sizeof(struct signalfd_siginfo));
+    if (s != sizeof(struct signalfd_siginfo))
+        handle_error("read");
+
+    if (fdsi.ssi_signo == SIGINT) {
+        printf("Got SIGINT\n");
+    } else if (fdsi.ssi_signo == SIGQUIT) {
+        printf("Got SIGQUIT\n");
+        exit(EXIT_SUCCESS);
+    } else {
+        printf("Read unexpected signal\n");
+    }
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<h2>Make the world a better place!</h2>
+
+<p>Please make the world a better place by writing correct and safe signal handling code.</p>
+
+<p>Thank you very much for reading!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Erasing Vector The Smart Way]]></title>
+    <link href="http://741MHz.com/vector-erase/"/>
+    <updated>2013-01-14T00:00:00-05:00</updated>
+    <id>http://741MHz.com/vector-erase</id>
+    <content type="html"><![CDATA[<p>In the C++ world, <a href="http://en.cppreference.com/w/cpp/container/vector"><code>std::vector</code></a> is a <a href="http://en.wikipedia.org/wiki/Sequence_container_(C%2B%2B">sequence container</a>) that encapsulates <a href="http://en.wikipedia.org/wiki/Dynamic_array">dynamic size arrays</a>. One of the main perks of the vector is the fact that elements are stored <strong>contiguously</strong>. In other words, a pointer to an element of a vector may be passed to any function that expects a pointer to an element of array. Or simply put — <code>std::vector</code> is very close to a <a href="http://www.cplusplus.com/doc/tutorial/arrays/">plain old-school C-style array</a>, yet it provides developers with a lot of C++ perks like automatic memory management, bounds checking and more. Unfortunately, <code>std::vector</code> is so great that many developers are using it without really thinking too much about the underlying implementation and its downsides.</p>
+
+<h2>Erase Trap</h2>
+
+<p>A common programming task is to remove one or more elements from the vector. Luckily, <code>std::vector</code> provides a wonderful method called <code>erase()</code> that does exactly that. So what’s the big deal? It’s a trap!</p>
+
+<p>C++ is just like medicine — it is both a cure and a disease. Vector is no exception. Its contiguous memory layout may heal, or it may kill. In this case it is a serial killer. Let’s see why.</p>
+
+<h2>The Innocent Piece of Code</h2>
+
+<p>Let’s take a look at the real-world example that I ran into a few days ago. The goal was to remove all even numbers from a vector, leaving only odd ones. Here is how it was implemented:</p>
+
+<p>```c++
+std::vector<int>::iterator it = array.begin();
+while (it != array.end()) {</p>
+
+<pre><code>if (*it % 2 == 0)
+    it = array.erase(it);
+else
+    ++it;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Logically thinking, the code is very sound — every element is being checked and removed only if it matches a given criteria. Developer even took extra care not to access invalidated iterator. Sounds like a great job. Nice, simple, and it works. Or does it?</p>
+
+<h2>The Problem</h2>
+
+<p>No, it does not. There is one big problem with that code that makes it totally useless. It takes about 55 seconds to run on just one million random elements. Why does that happen, you may ask? The developer  fell into a common trap! That happened because the elements of the vector are stored contiguously, in a contiguous memory and the whole vector is shifted left every time an element is erased. In other words — one does not simply erase an element that is not at the end of the vector.</p>
+
+<h2>The Solution</h2>
+
+<p>Here is the right way of doing this:</p>
+
+<p>```c++
+array.erase(</p>
+
+<pre><code>std::remove_if(
+    array.begin(), array.end(), [](int v) {
+        return v % 2 == 0;
+    }
+),
+array.end()
+</code></pre>
+
+<p>);
+```</p>
+
+<p>The above code does the job in only 5 milliseconds. That is about eleven thousand times faster. What kind of sorcery is that? Very simple — <a href="http://en.cppreference.com/w/cpp/algorithm/remove"><code>std::remove_if()</code></a> does not erase elements from the vector. It does’t remove anything either. Just a good naming joke. So what the hell it does? It re-arranges elements in such a way that elements to be erased are moved towards the end of a vector. Once the job is done, all elements are erased from the vector with a single invocation of <code>erase()</code>. As a result, the whole vector is not shifted tens of thousands of times and runs a lot faster.</p>
+
+<h2>The Conclusion</h2>
+
+<p>There ain’t no such thing as a free lunch.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[From Switch Statement Down to Machine Code]]></title>
@@ -820,608 +1456,6 @@ return EXIT_SUCCESS;
 <li><a href="http://article.gmane.org/gmane.comp.version-control.git/57918">Linus Torvalds opinion on C++</a> — you are full of bullshit!</li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[C++ Exceptions Performance]]></title>
-    <link href="http://741MHz.com/exceptions-performance/"/>
-    <updated>2011-07-22T00:00:00-04:00</updated>
-    <id>http://741MHz.com/exceptions-performance</id>
-    <content type="html"><![CDATA[<h3>Introduction</h3>
-
-<p>Exceptions provide a way to react to special conditions that change the normal flow of a program execution. Exception handling in general can refer to programming language construct, computer hardware mechanism, or both.</p>
-
-<p>Many people are concerned with performance impact introduced by using exception mechanism in C++. For example, one of my colleagues believes that using exceptions should be avoided at any cost to improve execution speed of an application. Is that true or not? Let’s find out.</p>
-
-<h3>Using exceptions</h3>
-
-<p>It is important to understand that exception is not a general case of a program execution flow but an unexpected situation. Such situation should normally not arise at all. However, errors happen and we need to check for them. A large chunk of any good program is mostly dedicated to proper error handling. There are two fundamental approaches when dealing with error handling — return codes or exceptions. For example, let’s say we have a custom function that implements division:</p>
-
-<p><code>c++
-int divide (int x, int y)
-{
-  return x / y;
-}
-</code></p>
-
-<p>We need to make sure that divisor is not zero because you cannot divide by zero (at least not with integer arithmetics). There are two ways of doing this. Let’s start from C-style error checking that will make our function look like this:</p>
-
-<p>```c++
-int divide (int x, int y, int &amp; result)
-{
-  if (y == 0)</p>
-
-<pre><code>return -1;
-</code></pre>
-
-<p>  result = x / y;
-  return 0;
-}
-```</p>
-
-<p>C++ error checking using exceptions will look something like this:</p>
-
-<p>```c++
-int divide (int x, int y)
-{</p>
-
-<pre><code>if (y == 0)
-    throw std::logic_error (“Division by zero”);
-return x / y;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The use cases for these two functions will be different. For C-style function, we will always have to check for return code to make sure that operation succeeded:</p>
-
-<p>```c++
-void foo (int x, int y)
-{</p>
-
-<pre><code>int result;
-if (divide (x, y, result) == 0)
-{
-    // Division was successful. Do something with “result”.
-}
-else
-{
-    // Error occurred!
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The C++ use case:</p>
-
-<p>```c++
-void foo (int x, int y)
-{</p>
-
-<pre><code>try
-{
-    int result = divide (x, y);
-    // Division was successful. Do something with “result”.
-}
-catch (const std::logic_error &amp;)
-{
-    // Error occurred!
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>C++ way with exceptions is handy when program flow is somewhat more complicated. What if we need to invoke “divide” function two times? In that case we will have to check for error twice using C-style:</p>
-
-<p>```c++
-void foo (int x, int y)
-{</p>
-
-<pre><code>int result;
-if (divide (x, y, result) == 0)
-{
-    // Division was successful. Do something with “result”.
-}
-else
-{
-    // Error occurred!
-}
-
-if (divide (y, x, result) == 0)
-{
-    // Division was successful. Do something with “result”.
-}
-else
-{
-    // Error occurred!
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>But in C++, one try-catch block will do:</p>
-
-<p>```c++
-void foo (int x, int y)
-{</p>
-
-<pre><code>try
-{
-    int result = divide (x, y);
-    // Division was successful. Do something with “result”.
-    result = divide (x, y);
-    // Division was successful. Do something with “result”, again.
-}
-catch (const std::logic_error &amp;)
-{
-    // Error occurred!
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Now, imagine that we have to invoke “divide” function ten or hundred times. And to make it even more complex, imagine that we have multiple nested functions and every function needs to check for an error. Using exception now seems to be the ideal way to go. Well, that is what exceptions were designed for — to make things easier.</p>
-
-<h3>Easy vs Fast</h3>
-
-<p>There are a lot of things that will make our lives as developers easier. But sometimes our programs should be fast. And not only fast but fastest in the world, or even the whole universe. And we have to sacrifice the ease of development to achieve that. This is the case with high-frequency trading programs, for example. So if a programmer writing code for high-frequency trading will think that wrapping invocation of “divide” function with “try-catch” block will slow down his application even by a nanosecond in comparison with C-style error checking, he will choose the hardest way and check for error code every time he invokes “divide” function. Indeed, he will spend much more time to achieve his goals, but will that be a right decision?</p>
-
-<h3>Under the hood</h3>
-
-<p>To answer the question above, we need to dive into the implementation details and figure out how exceptions are implemented. From this point, there is a huge difference between C++ and higher-level languages such as Java, C#, Python and others. In C++, there are two methods for handling exceptions at run-time — “setjmp/longjmp” (hereinafter jumping) method and “zero-cost” exception handling.</p>
-
-<p>Jumping method saves the context when entering a frame with an exception handler. Then when an exception is raised, the context can be restored immediately, without the need for tracking stack frames. This method provides very fast exception propagation, but introduces significant overhead for use of exception handlers, even if no exception is raised.</p>
-
-<p>Zero-cost method generates static tables to describe exception ranges. No dynamic code is required when entering a frame containing an exception handler. When an exception is raised, the tables are used to control a back trace of the subprogram invocation stack to locate the required exception handler. This method has considerably poorer performance for the propagation of exceptions, but there is no overhead for exception handlers if no exception is raised.</p>
-
-<p>There is always upside and downside and we have to make a choice. Taking into account that exceptions are not a part of normal execution flow, we need to optimize the most common case when exceptions are not thrown and sacrifice the speed of handling them. So many production-quality C++ compilers made that choice in favor of zero-cost method.</p>
-
-<h3>Digging into the assembler</h3>
-
-<p>So let’s get back to our “divide” function and compare C-style error checking with zero-cost exception handling. C-style error checking:</p>
-
-<p>```c++
-int divide (int x, int y, int &amp; result)
-{</p>
-
-<pre><code>if (y == 0)
-    return -1;
-result = x / y;
-return 0;
-</code></pre>
-
-<p>}</p>
-
-<p>int foo (int &amp; result)
-{</p>
-
-<pre><code>volatile int x = 4, y = 28;
-int d1, d2;
-if (divide (x, y, d1) == -1)
-    return -1;
-if (divide (y, x, d2) == -1)
-    return -1;
-result = d1 + d2;
-return 0;
-</code></pre>
-
-<p>}</p>
-
-<p>int main ()
-{</p>
-
-<pre><code>int result;
-foo (result);
-return result;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Code using exceptions:</p>
-
-<p>```c++
-int divide (int x, int y)
-{</p>
-
-<pre><code>if (y == 0)
-    throw std::logic_error ("Division by zero");
-return x / y;
-</code></pre>
-
-<p>}</p>
-
-<p>int foo ()
-{</p>
-
-<pre><code>volatile int x = 4, y = 28;
-return divide (x, y) + divide (y, x);
-</code></pre>
-
-<p>}</p>
-
-<p>int main ()
-{</p>
-
-<pre><code>try
-{
-    return foo ();
-}
-catch (const std::exception &amp;)
-{
-    return -1;
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Here is what will actually happen for C-style example (I removed code that won’t get executed for simplicity):</p>
-
-<p>```
-__Z6divideiiRi:
-  pushq   %rbp
-  movq    %rsp, %rbp
-  movl    %edi, -4(%rbp)
-  movl    %esi, -8(%rbp)
-  movq    %rdx, -16(%rbp)
-  cmpl    $0, -8(%rbp)
-  jne L2
-;; Skipped return of -1. We will always jump to L2
-L2:
-  movl    -4(%rbp), %eax
-  movl    %eax, %edx
-  sarl    $31, %edx
-  idivl   -8(%rbp)
-  movl    %eax, %edx
-  movq    -16(%rbp), %rax
-  movl    %edx, (%rax)
-  movl    $0, %eax
-  popq    %rbp
-  ret</p>
-
-<p><strong>Z3fooRi:
-  pushq   %rbp
-  movq    %rsp, %rbp
-  subq    $24, %rsp
-  movq    %rdi, -24(%rbp)
-  movl    $4, -4(%rbp)
-  movl    $28, -8(%rbp)
-  movl    -8(%rbp), %ecx
-  movl    -4(%rbp), %eax
-  leaq    -12(%rbp), %rdx
-  movl    %ecx, %esi
-  movl    %eax, %edi
-  call    </strong>Z6divideiiRi
-  cmpl    $-1, %eax
-  sete    %al
-  testb   %al, %al
-  je  L5
-;; Skipped return of -1, we will always jump to L5.
-L5:
-  movl    -4(%rbp), %ecx
-  movl    -8(%rbp), %eax
-  leaq    -16(%rbp), %rdx
-  movl    %ecx, %esi
-  movl    %eax, %edi
-  call    __Z6divideiiRi
-  cmpl    $-1, %eax
-  sete    %al
-  testb   %al, %al
-  je  L7
-;; Skipped return of -1, always jumping to L7.
-L7:
-  movl    -12(%rbp), %edx
-  movl    -16(%rbp), %eax
-  addl    %eax, %edx
-  movq    -24(%rbp), %rax
-  movl    %edx, (%rax)
-  movl    $0, %eax
-  leave
-  ret</p>
-
-<p>_main:
-  pushq   %rbp
-  movq    %rsp, %rbp
-  subq    $16, %rsp
-  leaq    -4(%rbp), %rax
-  movq    %rax, %rdi
-  call    __Z3fooRi
-  movl    -4(%rbp), %eax
-  leave
-  ret
-```</p>
-
-<p>That’s a lot of error checking code that gets executed assuming it doesn’t happen very often! If we need to call “divide” function more, we will have to add more checking for “-1” return result, and assembly listing will get longer and longer because of that check. Let’s see how the code will look like with exception handling:</p>
-
-<p>```
-__Z6divideii:
-  pushq   %rbp
-  movq    %rsp, %rbp
-  pushq   %r12
-  pushq   %rbx
-  subq    $32, %rsp
-  movl    %edi, -36(%rbp)
-  movl    %esi, -40(%rbp)
-  cmpl    $0, -40(%rbp)
-  jne L2
-;; Skipped the code that allocates and throws exception. We will always jump to L2.
-L2:
-  movl    -36(%rbp), %eax
-  movl    %eax, %edx
-  sarl    $31, %edx
-  idivl   -40(%rbp)
-  addq    $32, %rsp
-  popq    %rbx
-  popq    %r12
-  popq    %rbp
-  ret</p>
-
-<p><strong>Z3foov:
-  pushq   %rbp
-  movq    %rsp, %rbp
-  pushq   %rbx
-  subq    $24, %rsp
-  movl    $4, -20(%rbp)
-  movl    $28, -24(%rbp)
-  movl    -24(%rbp), %edx
-  movl    -20(%rbp), %eax
-  movl    %edx, %esi
-  movl    %eax, %edi
-  call    </strong>Z6divideii
-  movl    %eax, %ebx
-  movl    -20(%rbp), %edx
-  movl    -24(%rbp), %eax
-  movl    %edx, %esi
-  movl    %eax, %edi
-  call    __Z6divideii
-  addl    %ebx, %eax
-  addq    $24, %rsp
-  popq    %rbx
-  popq    %rbp
-  ret</p>
-
-<p>_main:
-  pushq   %rbp
-  movq    %rsp, %rbp
-  pushq   %rbx
-  subq    $24, %rsp
-  call    __Z3foov
-  movl    %eax, %ebx
-  movl    %ebx, %eax
-  addq    $24, %rsp
-  popq    %rbx
-  popq    %rbp
-  ret
-;; Stack unwinding code is invoked from statically generated exception
-;; table. That code is stripped out, will never be reached in our example.
-```</p>
-
-<p>That is much better! We managed to avoid two unnecessary checks of return result. Other than that code that is being executed is exactly the same.</p>
-
-<h3>Jumping exceptions</h3>
-
-<p>Now, let’s say we have a compiler that is using “setjmp/longjmp” approach to implement exceptions. Even with that approach, exception handling could be faster than error checking. Consider the following example:</p>
-
-<p>```c++
-while (doContinue) {</p>
-
-<pre><code>try {
-    doSomeWork ();
-}
-catch (...) { /* do something about it! */ }
-</code></pre>
-
-<p>}
-```</p>
-
-<p>… that will be indeed slower than this:</p>
-
-<p>```c++
-while (doContinue) {</p>
-
-<pre><code>if (doSomeWork () != 0) {
-    /* do something about it! */
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>… but how about this:</p>
-
-<p>```c++
-while (doContinue) {</p>
-
-<pre><code>try {
-    do {
-        doSomeWork ();
-    } while (doContinue);
-    break;
-} catch (...) { /* do something about it! */ }
-</code></pre>
-
-<p>}
-```</p>
-
-<p>In the example above, we set recovery point once and avoid checking return result of the function multiple times. Of course, that is the best-case scenario assuming that exceptional situation almost never happens. But that is a fair assumption. Otherwise that situation should be treated as normal execution flow and handled differently, without exceptions, which will be the same for both C-style and C++-style programmers. Please note that above optimization makes no sense in case with zero-cost exception mechanism.</p>
-
-<h3>Finding out what exception mechanism is being used</h3>
-
-<p>Unfortunately, the only way to find out what underlying mechanism is used by compiler for exception handling is to write a simple program using exceptions, compile it into assembler language and analyze results.</p>
-
-<h3>Other performance considerations</h3>
-
-<p>Using exceptions will make binary size bigger, no matter what mechanism is used to implement exception handling. So if program size is more important than execution speed, exceptions should not be used. And in those cases where you want to gain maximum execution speed with minimal impact on binary size, you have to do additional testing in order to find the best combination of C-style error checking and exception handling code that achieves your result.</p>
-
-<h3>Summary</h3>
-
-<p>Performance can mean many different things — from the speed of execution or size of the binary to the time developer spends writing code.</p>
-
-<p>In this article we have discussed execution speed of an application using exceptions vs. an application using C-style error checking, and developer’s time needed to write the same program using these two approaches.</p>
-
-<p>If binary size of the compiled program is the most important factor then exceptions should not be used.</p>
-
-<p>If execution speed or ease of development (or both!) is the most important factor then programmer deciding to give up the ease of using exceptions in favor of C-style error checking will not only spend much more time writing the code, make the code more complicated, run into the problem of actually describing the error (especially in multi-threaded environment, and especially when thread local storage cannot be used due to handling of exception in different thread in case of asynchronous programming), but will also make it slower.</p>
-
-<h3>References</h3>
-
-<ul>
-<li><a href="http://en.wikipedia.org/wiki/Exception_handling">Exception Handling – Wikipedia</a></li>
-<li><a href="http://www.boost.org/community/error_handling.html">Error and Exception Handling by Dave Abrahams</a></li>
-<li><a href="http://mentorembedded.github.io/cxx-abi/abi-eh.html">Itanium C++ ABI: Exception Handling</a></li>
-<li><a href="http://gcc.gnu.org/onlinedocs/gnat_ugn_unw/Exception-Handling-Control.html">GNAT Exception Handling Control</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Predefined Macros]]></title>
-    <link href="http://741MHz.com/predefined-macros/"/>
-    <updated>2010-10-17T00:00:00-04:00</updated>
-    <id>http://741MHz.com/predefined-macros</id>
-    <content type="html"><![CDATA[<p>Every C and C++ compiler has several object-like macros that are implicitly defined and can be used  without supplying their definitions on the command line or through including header files. Such macros are called &ldquo;predefined&rdquo; and can help figure out for what architecture you compile for, on what platform, if the source code being compiled is C or C++, and even tell the language standard of the code being used.</p>
-
-<p>All predefined macros are described in GCC online documentation. However, not all of them are guaranteed to be defined. Sometimes it is helpful to see a list of macros defined by the compiler with their values, if any. To do that, run a preprocessor with zero input, using the following command:</p>
-
-<pre><code>cpp -dM &lt;/dev/null
-</code></pre>
-
-<p>This will produce the output like this:</p>
-
-<p>```</p>
-
-<h1>define <strong>unix</strong> 1</h1>
-
-<h1>define __x86_64 1</h1>
-
-<h1>define <strong>DBL_MIN_10_EXP</strong> (-307)</h1>
-
-<h1>define <strong>FINITE_MATH_ONLY</strong> 0</h1>
-
-<h1>define <strong>GNUC_PATCHLEVEL</strong> 3</h1>
-
-<p>```</p>
-
-<p>From the above output we can tell that code is being compiled for x86_64 architecture. The output may change depending on the platform and/or compiler settings.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Wait For File With Inotify]]></title>
-    <link href="http://741MHz.com/inotify-wait/"/>
-    <updated>2010-09-29T00:00:00-04:00</updated>
-    <id>http://741MHz.com/inotify-wait</id>
-    <content type="html"><![CDATA[<p>Imagine a situation where you have been asked to create a program that needs user to upload a file. It sounds easy, but there is a little problem. The program needs to wait for the file to appear, and how to do so efficiently might not be immediately obvious. The easiest and perhaps most naive implementation that comes to mind first is to check whether the file exist, wait some time using <a href="http://man7.org/linux/man-pages/man3/sleep.3.html"><code>sleep()</code></a> and repeat this loop if files still does not exist afterwards.</p>
-
-<p>This approach has some problems. It is not clear what time the program needs to sleep. If the interval is too long, a second for example, then user may experience a second long delay. This might be unacceptable. On the other hand, having a sleep interval too short would put an extra load on the entire system — operating system will have to <a href="http://en.wikipedia.org/wiki/Schedule_(computer_science">schedule</a>) this program more frequently, the filesystem access will be performed on each loop cycle, etc. This might slow down other applications running on the same server. Either way there is a problem that cannot be solved without a proper support from operating system that can tell the program when the file is created.</p>
-
-<p><a href="http://en.wikipedia.org/wiki/Linux">Linux</a> has introduced the <a href="http://en.wikipedia.org/wiki/Inotify"><em>inotify</em></a> subsystem that was designed to solve this and similar problems by extending the filesystem with notifications of changes that are reported to the applications. To demonstrate how it works, I wrote a simple C++ that check if the file exists and waits for it if it doesn’t:</p>
-
-<p><div class='bogus-wrapper'><notextile><figure class='code panel panel-default'><figcaption class='panel-heading'><h3 class='panel-title'>Wait for file using inotify (inotify_wait.cpp)</h3> <a href='/downloads/code/inotify_wait.cpp'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;cstring&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;sys/inotify.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">directory</span> <span class="o">=</span> <span class="s">&quot;/tmp&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">filename</span> <span class="o">=</span> <span class="s">&quot;test.txt&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">fullpath</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">inotify_init</span><span class="p">();</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">watch</span> <span class="o">=</span> <span class="n">inotify_add_watch</span><span class="p">(</span>
-</span><span class='line'>        <span class="n">fd</span><span class="p">,</span> <span class="n">directory</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span>
-</span><span class='line'>        <span class="n">IN_MODIFY</span> <span class="o">|</span> <span class="n">IN_CREATE</span> <span class="o">|</span> <span class="n">IN_MOVED_TO</span>
-</span><span class='line'>    <span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">access</span><span class="p">(</span><span class="n">fullpath</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">F_OK</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;File %s exists.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">fullpath</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
-</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">char</span>    <span class="n">buf</span><span class="p">[</span><span class="mi">1024</span> <span class="o">*</span> <span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">inotify_event</span><span class="p">)</span> <span class="o">+</span> <span class="mi">16</span><span class="p">)];</span>
-</span><span class='line'>    <span class="n">ssize_t</span> <span class="n">length</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">bool</span>    <span class="n">is_created</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">is_created</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">length</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>        <span class="n">inotify_event</span> <span class="o">*</span><span class="n">event</span><span class="p">;</span>
-</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">length</span><span class="p">);</span>
-</span><span class='line'>             <span class="n">i</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inotify_event</span><span class="p">)</span> <span class="o">+</span> <span class="n">event</span><span class="o">-&gt;</span><span class="n">len</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">{</span>
-</span><span class='line'>            <span class="n">event</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">inotify_event</span> <span class="o">*&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="n">event</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">filename</span> <span class="o">==</span> <span class="n">event</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;The file %s was created.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">event</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
-</span><span class='line'>                <span class="n">is_created</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-</span><span class='line'>                <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>            <span class="p">}</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">inotify_rm_watch</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">watch</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
-
-<p>Note that we subscribe for filesystem notifications before checking if file exists. It is needed to avoid a race condition where file is created exactly after we checked for its existence and before we subscribed for notifications.</p>
-
-<p>A similar approach is used in many applications. For example, <a href="www.bittorrent.com">BitTorrent</a> application can monitor a “Downloads” directory for new torrent files and open them automatically.</p>
 ]]></content>
   </entry>
   

@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: C++11 | Ranting @ 741 MHz]]></title>
+  <link href="http://741MHz.com/blog/categories/c-plus-plus-11/atom.xml" rel="self"/>
+  <link href="http://741MHz.com/"/>
+  <updated>2013-12-01T20:24:12-05:00</updated>
+  <id>http://741MHz.com/</id>
+  <author>
+    <name><![CDATA[741MHz.com]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[C++11 Final Override]]></title>
+    <link href="http://741MHz.com/final-override/"/>
+    <updated>2013-02-27T00:00:00-05:00</updated>
+    <id>http://741MHz.com/final-override</id>
+    <content type="html"><![CDATA[<h2>Preface</h2>
+
+<p>The alternative name for this article is “How to protect yourself from others when it comes to polymorphism.” That is pretty much the primary purpose of two brand new C++ keywords introduced in C++11 — the <code>override</code> and <code>final</code>.</p>
+
+<p>Those who have at least some experience in team-based C++ development must be aware of at least one of many pitfalls of polymorphism and virtual methods in particular. Let’s go over some of real-world problems that could easily force developers to run a debugger or read the code over and over again trying to figure out why the program is not working as expected.</p>
+
+<h2>A Missing Virtual Function</h2>
+
+<p>This could happen to anyone — there was a base class with a virtual function and developer has decided to overload it for a good reason. Everything was fine and the program worked as expected. But one day after, a fresh build simply stopped working, and the reason is not obvious. After spending some time debugging the program, it turned out that a function that should have been called does not appear to be called at all. What could be wrong?</p>
+
+<p>Consider the following code where the Foo class is written by one developer while Bar was written by someone else and could even be part of another project:</p>
+
+<p>```c++
+class Foo {
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() { }
+
+virtual int init() {
+    do_very_important_stuff();
+}
+</code></pre>
+
+<p>};</p>
+
+<p>class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+virtual ~Bar() { }
+
+virtual int init() {
+    Foo::init();
+    do_some_more_important_stuff();
+}
+</code></pre>
+
+<p>};
+```</p>
+
+<p>A few years later a new developer joins the company and accidentally removes a virtual keyword from the <code>init()</code> method’s declaration of class <em>Foo</em>. How that could even happen, you may ask? Maybe he was learning Emacs and executed a <em>replace-regexp</em> command without noticing all of the changes. Or maybe he just read the <em>Code Refactoring</em> book and decided to improve the code but couldn’t check all of the usages of class <em>Foo</em> because they were in a different repository that he didn’t have access to. Who knows? Things happen. As a result, the <code>Bar::init()</code> is no longer called because it does no longer override its base method. For example:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<h1>include <memory></h1>
+
+<p>class Foo {
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() { }
+
+int init() {
+    std::cout &lt;&lt; "Hello, World!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+virtual ~Bar() { }
+
+virtual int init() {
+    Foo::init();
+    std::cout &lt;&lt; "The code is working!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>int main() {</p>
+
+<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
+foo-&gt;init();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above program will not print an expected “The code is working!” line and someone would definitely waste some time trying to figure out why, especially if the project has a few million lines of code.</p>
+
+<h2>A Million Dollars Typo</h2>
+
+<p>Typos can also cause a lot of troubles. For example, developers can misspell the name of the method when overriding:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<h1>include <memory></h1>
+
+<p>class Foo {
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() { }
+
+virtual void doSomeVeryImportantWork() {
+}
+</code></pre>
+
+<p>};</p>
+
+<p>class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+virtual ~Bar() { }
+
+virtual void doSomeVeryInportantWork() {
+    std::cout &lt;&lt; "The code is working!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>int main() {</p>
+
+<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
+foo-&gt;doSomeVeryImportantWork();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above program prints nothing despite the expectations and the reason is not immediately obvious.</p>
+
+<h2>Signature Changes</h2>
+
+<p>Signature change is another seemingly innocent change that may potentially waste a log of valuable time when not accounted for properly. For example, the base class’s <code>init()</code> function is changed from this:</p>
+
+<pre><code>virtual void init() { }
+</code></pre>
+
+<p>… to this:</p>
+
+<pre><code>virtual void init(int x = 0) {
+}
+</code></pre>
+
+<p>The whole project still compiles just fine. Yet the program doesn’t work as expected anymore.</p>
+
+<p>It’s also possible to accidentally override someone’s virtual function, etc. The list of such gotchas can go on and on. For those who can relate to this — you must know that you are not alone! C++ developers including myself have dealt with this and similar problems for the past few decades.</p>
+
+<p>Luckily, since introduction of the C++11 the sun is shining on our side of the fence!</p>
+
+<h2>We Override!</h2>
+
+<p>Instead of using (or not using) a <code>virtual</code> keyword and assuming the base class has the method being overridden, we can now use the brand new <code>override</code> keyword. The compiler will then make sure that a method declared with that keyword really overrides the base method. And if that turns out to be not the case, the code won’t compile and the error would be caught during compilation, which is a lot better than debugging. The following is the new version of the first example:</p>
+
+<p>```c++
+class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+virtual ~Bar() { }
+
+int init() override {
+    Foo::init();
+    std::cout &lt;&lt; "The code is working!\n";
+}
+</code></pre>
+
+<p>};
+```</p>
+
+<p>The compilation fails if the base class`s init() method is no longer there:</p>
+
+<pre><code>error: ‘int Bar::init()’ marked override, but does not override
+</code></pre>
+
+<h2>It’s Final!</h2>
+
+<p>The second keyword is <code>final</code>. It is a little bit less useful but is still a good self-defense mechanism against unintended usage and/or code changes.</p>
+
+<p>What it means is that a method marked as final is not only virtual and must override its base but that nobody else can further override it. For example:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<h1>include <memory></h1>
+
+<p>class Foo {
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() { }
+
+virtual int init() {
+    std::cout &lt;&lt; "Hello, World!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>class Bar : public Foo {
+public:</p>
+
+<pre><code>Bar() { }
+~Bar() override { }
+
+int init() final {
+    Foo::init();
+    std::cout &lt;&lt; "This code works!\n";
+}
+</code></pre>
+
+<p>};</p>
+
+<p>int main() {</p>
+
+<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
+foo-&gt;init();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above code is sound and secure. But if somebody else would try to write a class like this:</p>
+
+<p>```c++
+class BetterBar : public Bar {
+public:</p>
+
+<pre><code>BetterBar() { }
+~BetterBar() override { }
+
+int init() override {
+    Bar::init();
+    std::cout &lt;&lt; "Even better init() function!\n";
+}
+</code></pre>
+
+<p>};
+```</p>
+
+<p>… a compiler would tell them that they are wrong by issuing an error: </p>
+
+<pre><code>error: virtual function ‘virtual int BetterBar::init()’
+error: overriding final function ‘virtual int Bar::init()’
+</code></pre>
+
+<p>The <code>final</code> keyword can also be applied to the whole class in order to prevent further derivation from it. For example:</p>
+
+<p>```c++
+class Bar final : public Foo {
+  public:</p>
+
+<pre><code>Bar() {}
+</code></pre>
+
+<p>&hellip;
+```</p>
+
+<p>If anyone tries to inherit from Bar, the compiler issues an error: </p>
+
+<pre><code>error: cannot derive from ‘final’ base ‘Bar’ in derived type ‘BetterBar’
+</code></pre>
+
+<p>What is interesting is that almost the same effect can be achieved in a less obvious way by applying the <code>final</code> keyword to a virtual destructor of either base (which is not the same as <code>final</code> in this case because it introduces a virtual table) or any derived class:</p>
+
+<p>```c++
+class Foo { // You cannot derive from me!
+public:</p>
+
+<pre><code>Foo() { }
+virtual ~Foo() final { }
+</code></pre>
+
+<p>};
+```</p>
+
+<p>Template containers from the standard C++ library might be good candidates to be marked with a final keyword, as it is generally not a good idea to derive from them in almost every case.</p>
+
+<h2>Conclusion</h2>
+
+<p>C++11 introduces two important keywords in relation to polymorphism and inheritance — the <code>override</code> and <code>final</code>. Using those keywords should become a habit of any C++ developer. It is worth using every time except when writing a base class. This will make the code clear, maintainable, and potentially save hours that would have been otherwise wasted chasing an error in debugger.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">N2928</a> &ndash; Explicit Virtual Overrides</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">N3206</a> &ndash; Override control: Eliminating Attributes</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">N3272</a> &ndash; Follow-up on override control</li>
+<li><a href="http://clang.llvm.org/cxx_status.html">Clang C++11 Status Report</a></li>
+<li><a href="http://gcc.gnu.org/projects/cxx0x.html">GCC C++11 Status Report</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

@@ -114,25 +114,32 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-23T00:00:00-04:00" pubdate data-updated="true">Oct 23<span>rd</span>, 2010</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-10T00:00:00-05:00" pubdate data-updated="true">Jan 10<span>th</span>, 2013</time>
         
-           | <a href="/awk-uniq/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/awk-uniq/">Comments</a>
+           | <a href="/unreasonable-effectiveness-of-c/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/unreasonable-effectiveness-of-c/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/awk-uniq/">Unique Lines Without Sorting</a></h1>
+      <h1 class="entry-title"><a href="/unreasonable-effectiveness-of-c/">Unreasonable Effectiveness of C</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Today I ran into a small problem where I had a set of unsorted lines of text and wanted to remove duplicate lines without sorting the data. Both <code>uniq</code> and <code>sort -u</code> commands require data to be sorted, so they won&rsquo;t work. There is a way of doing this with AWK:</p>
+  <div class="entry-content clearfix"><p>It is always nice to run into like-minded people. Today I ran into <a href="http://damienkatz.net/">Damien Katz</a>, CTO at <a href="http://www.couchbase.com/">Couchbase</a>,  and his brilliant story about why C is a beautiful high-level language. For a big fan of C like me it would have been a crime not to share this story. If you agree that OOP is a hype and a disease or if you think that C++ is a horrible language then you will definitely enjoy it:</p>
 
-<pre><code>awk '!($0 in lines) { lines[$0]; print }'
-</code></pre>
+<blockquote><p>For years I’ve tried my damnedest to get away from C. Too simple, too many details to manage, too old and crufty, too low level. I’ve had intense and torrid love affairs with Java, C++, and Erlang. I’ve built things I’m proud of with all of them, and yet each has broken my heart. They’ve made promises they couldn’t keep, created cultures that focus on the wrong things, and made devastating tradeoffs that eventually make you suffer painfully. And I keep crawling back to C.</p></blockquote>
 
-<p>The above script will collect unique lines in order of their appearance and store them in array called lines that gets printed at the end. This probably won&rsquo;t work for huge data sets but works well on up to a few thousand lines of text.</p>
+<p><a href="http://damienkatz.net/2013/01/the_unreasonable_effectiveness_of_c.html">[Read the full story&hellip;]</a></p>
+
+<p>While we are at it, you may also enjoy:</p>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Object-oriented_programming#Criticism">Object Oriented Programming Criticism</a></li>
+<li><a href="http://article.gmane.org/gmane.comp.version-control.git/57918">Linus Torvalds opinion on C++</a> — you are full of bullshit!</li>
+</ul>
+
 </div>
   
   
@@ -163,15 +170,15 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/final-override/">C++11 Final Override</a>
+    
+    <a class="list-group-item " href="/signal-handler/">How Not to Write a Signal Handler</a>
+    
+    <a class="list-group-item " href="/vector-erase/">Erasing Vector the Smart Way</a>
+    
     <a class="list-group-item " href="/switch/">From Switch Statement Down to Machine Code</a>
     
     <a class="list-group-item " href="/unreasonable-effectiveness-of-c/">Unreasonable Effectiveness of C</a>
-    
-    <a class="list-group-item " href="/system-program-problem-detected/">System Program Problem Detected</a>
-    
-    <a class="list-group-item " href="/exceptions-performance/">C++ Exceptions Performance</a>
-    
-    <a class="list-group-item " href="/awk-uniq/">Unique Lines Without Sorting</a>
     
   </div>
 </section>
@@ -183,7 +190,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">5</span>
+        <span class="badge">8</span>
         C++
       </a>
     
@@ -195,8 +202,14 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">7</span>
+        <span class="badge">10</span>
         Tech
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
+        <span class="badge">1</span>
+        C++11
       </a>
     
   </div>

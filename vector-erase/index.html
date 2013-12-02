@@ -4,7 +4,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Predefined Macros - Ranting @ 741 MHz</title>
+  <title>Erasing Vector The Smart Way - Ranting @ 741 MHz</title>
   <meta name="author" content="741MHz.com">
 
   
@@ -16,7 +16,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://741MHz.com/predefined-macros">
+  <link rel="canonical" href="http://741MHz.com/vector-erase">
   <link href="/favicon.png" type="image/png" rel="icon">
   <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
 
@@ -110,7 +110,7 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-17T00:00:00-04:00" pubdate data-updated="true">Oct 17<span>th</span>, 2010</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-14T00:00:00-05:00" pubdate data-updated="true">Jan 14<span>th</span>, 2013</time>
         
            | <a href="#disqus_thread"
              data-disqus-identifier="http://741MHz.com">Comments</a>
@@ -119,35 +119,76 @@
     
     
     <h1 class="entry-title">
-        Predefined Macros
+        Erasing Vector the Smart Way
         
     </h1>
     
   </header>
 
 
-<div class="entry-content clearfix"><p>Every C and C++ compiler has several object-like macros that are implicitly defined and can be used  without supplying their definitions on the command line or through including header files. Such macros are called &ldquo;predefined&rdquo; and can help figure out for what architecture you compile for, on what platform, if the source code being compiled is C or C++, and even tell the language standard of the code being used.</p>
+<div class="entry-content clearfix"><p>In the C++ world, <a href="http://en.cppreference.com/w/cpp/container/vector"><code>std::vector</code></a> is a <a href="http://en.wikipedia.org/wiki/Sequence_container_(C%2B%2B">sequence container</a>) that encapsulates <a href="http://en.wikipedia.org/wiki/Dynamic_array">dynamic size arrays</a>. One of the main perks of the vector is the fact that elements are stored <strong>contiguously</strong>. In other words, a pointer to an element of a vector may be passed to any function that expects a pointer to an element of array. Or simply put — <code>std::vector</code> is very close to a <a href="http://www.cplusplus.com/doc/tutorial/arrays/">plain old-school C-style array</a>, yet it provides developers with a lot of C++ perks like automatic memory management, bounds checking and more. Unfortunately, <code>std::vector</code> is so great that many developers are using it without really thinking too much about the underlying implementation and its downsides.</p>
 
-<p>All predefined macros are described in GCC online documentation. However, not all of them are guaranteed to be defined. Sometimes it is helpful to see a list of macros defined by the compiler with their values, if any. To do that, run a preprocessor with zero input, using the following command:</p>
+<h2>Erase Trap</h2>
 
-<pre><code>cpp -dM &lt;/dev/null
-</code></pre>
+<p>A common programming task is to remove one or more elements from the vector. Luckily, <code>std::vector</code> provides a wonderful method called <code>erase()</code> that does exactly that. So what’s the big deal? It’s a trap!</p>
 
-<p>This will produce the output like this:</p>
+<p>C++ is just like medicine — it is both a cure and a disease. Vector is no exception. Its contiguous memory layout may heal, or it may kill. In this case it is a serial killer. Let’s see why.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<h2>The Innocent Piece of Code</h2>
+
+<p>Let’s take a look at the real-world example that I ran into a few days ago. The goal was to remove all even numbers from a vector, leaving only odd ones. Here is how it was implemented:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>#define __unix__ 1
-</span><span class='line'>#define __x86_64 1
-</span><span class='line'>#define __DBL_MIN_10_EXP__ (-307)
-</span><span class='line'>#define __FINITE_MATH_ONLY__ 0
-</span><span class='line'>#define __GNUC_PATCHLEVEL__ 3</span></code></pre></td></tr></table></div></figure>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">array</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+</span><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">it</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">it</span> <span class="o">=</span> <span class="n">array</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>        <span class="o">++</span><span class="n">it</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
-<p>From the above output we can tell that code is being compiled for x86_64 architecture. The output may change depending on the platform and/or compiler settings.</p>
+<p>Logically thinking, the code is very sound — every element is being checked and removed only if it matches a given criteria. Developer even took extra care not to access invalidated iterator. Sounds like a great job. Nice, simple, and it works. Or does it?</p>
+
+<h2>The Problem</h2>
+
+<p>No, it does not. There is one big problem with that code that makes it totally useless. It takes about 55 seconds to run on just one million random elements. Why does that happen, you may ask? The developer  fell into a common trap! That happened because the elements of the vector are stored contiguously, in a contiguous memory and the whole vector is shifted left every time an element is erased. In other words — one does not simply erase an element that is not at the end of the vector.</p>
+
+<h2>The Solution</h2>
+
+<p>Here is the right way of doing this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">array</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">remove_if</span><span class="p">(</span>
+</span><span class='line'>      <span class="n">array</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="n">v</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">),</span>
+</span><span class='line'>    <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">()</span>
+</span><span class='line'><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above code does the job in only 5 milliseconds. That is about eleven thousand times faster. What kind of sorcery is that? Very simple — <a href="http://en.cppreference.com/w/cpp/algorithm/remove"><code>std::remove_if()</code></a> does not erase elements from the vector. It does’t remove anything either. Just a good naming joke. So what the hell it does? It re-arranges elements in such a way that elements to be erased are moved towards the end of a vector. Once the job is done, all elements are erased from the vector with a single invocation of <code>erase()</code>. As a result, the whole vector is not shifted tens of thousands of times and runs a lot faster.</p>
+
+<h2>The Conclusion</h2>
+
+<p>There ain’t no such thing as a free lunch.</p>
 </div>
 
 
@@ -171,7 +212,7 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-17T00:00:00-04:00" pubdate data-updated="true">Oct 17<span>th</span>, 2010</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-14T00:00:00-05:00" pubdate data-updated="true">Jan 14<span>th</span>, 2013</time>
           
 
 <span class="glyphicon glyphicon-tags"></span>&nbsp;
@@ -186,7 +227,7 @@
         
           <div class="sharing">
   
-  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/predefined-macros/" data-via="" data-counturl="http://741MHz.com/predefined-macros/" >Tweet</a>
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/vector-erase/" data-via="" data-counturl="http://741MHz.com/vector-erase/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -198,10 +239,10 @@
         
           <ul class="meta text-muted pager">
             
-            <li class="previous"><a href="/inotify-wait/" title="Previous Post: Wait For File With Inotify">&laquo; Wait For File With Inotify</a></li>
+            <li class="previous"><a href="/switch/" title="Previous Post: From Switch Statement Down to Machine Code">&laquo; From Switch Statement Down to Machine Code</a></li>
             
             
-            <li class="next"><a href="/awk-uniq/" title="Next Post: Unique Lines Without Sorting">Unique Lines Without Sorting &raquo;</a></li>
+            <li class="next"><a href="/signal-handler/" title="Next Post: How Not To Write a Signal Handler">How Not To Write a Signal Handler &raquo;</a></li>
             
           </ul>
         
@@ -230,7 +271,7 @@
     
     <a class="list-group-item " href="/signal-handler/">How Not to Write a Signal Handler</a>
     
-    <a class="list-group-item " href="/vector-erase/">Erasing Vector the Smart Way</a>
+    <a class="list-group-item active" href="/vector-erase/">Erasing Vector the Smart Way</a>
     
     <a class="list-group-item " href="/switch/">From Switch Statement Down to Machine Code</a>
     
@@ -299,8 +340,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://741MHz.com/predefined-macros/';
-        var disqus_url = 'http://741MHz.com/predefined-macros/';
+        var disqus_identifier = 'http://741MHz.com/vector-erase/';
+        var disqus_url = 'http://741MHz.com/vector-erase/';
         var disqus_script = 'embed.js';
       
     (function () {

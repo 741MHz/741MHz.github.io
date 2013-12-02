@@ -4,7 +4,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Ranting @ 741 MHz</title>
+  <title>C++11 Final Override - Ranting @ 741 MHz</title>
   <meta name="author" content="741MHz.com">
 
   
@@ -16,7 +16,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://741MHz.com">
+  <link rel="canonical" href="http://741MHz.com/final-override">
   <link href="/favicon.png" type="image/png" rel="icon">
   <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
 
@@ -92,12 +92,8 @@
         <div id="content">
           <div class="row">
   <div class="page-content col-md-9">
-    <div class="blog-index">
+    <article class="hentry" role="article">
       
-      
-      
-        <article class="post">
-          
   <header class="page-header">
     
       <p class="meta text-muted text-uppercase">
@@ -116,18 +112,21 @@
 
 <span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
         
-           | <a href="/final-override/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/final-override/">Comments</a>
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://741MHz.com">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/final-override/">C++11 Final Override</a></h1>
+    <h1 class="entry-title">
+        C++11 Final Override
+        
+    </h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><h2>Preface</h2>
+<div class="entry-content clearfix"><h2>Preface</h2>
 
 <p>The alternative name for this article is “How to protect yourself from others when it comes to polymorphism.” That is pretty much the primary purpose of two brand new C++ keywords introduced in C++11 — the <code>override</code> and <code>final</code>.</p>
 
@@ -503,36 +502,82 @@ error: overriding final function ‘virtual int Bar::init()’
 </ul>
 
 </div>
+
+
+      <footer>
+        <p class="meta text-muted">
+          
+  
+
+<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">Vlad Lazarenko</span></span>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
+          
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/c-plus-plus-11/'>C++11</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/final-override/" data-via="" data-counturl="http://741MHz.com/final-override/" >Tweet</a>
   
   
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
 
-
-        </article>
-      
-    </div>
-
-    <ul class="pager">
-      
-        <li class="previous"><a href="/blog/page/2/">&larr;&nbsp;Older</a></li>
-      
-      <li><a href="/blog/archives">Blog Archives</a></li>
-      
-        <li class="next disabled"><a href="#">Newer&nbsp;&rarr;</a></li>
-      
-    </ul>
+        
+        
+          <ul class="meta text-muted pager">
+            
+            <li class="previous"><a href="/signal-handler/" title="Previous Post: How Not To Write a Signal Handler">&laquo; How Not To Write a Signal Handler</a></li>
+            
+            
+          </ul>
+        
+      </footer>
+    </article>
+    
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+      </section>
+    
   </div>
 
   
-    <aside class="sidebar col-md-3">
-      
-        <section class="panel panel-default">
+  <aside class="sidebar col-md-3">
+    
+      <section class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title">Recent Posts</h3>
   </div>
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/final-override/">C++11 Final Override</a>
+    <a class="list-group-item active" href="/final-override/">C++11 Final Override</a>
     
     <a class="list-group-item " href="/signal-handler/">How Not to Write a Signal Handler</a>
     
@@ -581,8 +626,8 @@ error: overriding final function ‘virtual int Bar::init()’
 
 
 
-      
-    </aside>
+    
+  </aside>
   
 </div>
 
@@ -604,7 +649,10 @@ error: overriding final function ‘virtual int Bar::init()’
       var disqus_shortname = '741mhz';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://741MHz.com/final-override/';
+        var disqus_url = 'http://741MHz.com/final-override/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
