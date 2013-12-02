@@ -114,24 +114,39 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-04-15T00:00:00-04:00" pubdate data-updated="true">Apr 15<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-04-16T00:00:00-04:00" pubdate data-updated="true">Apr 16<span>th</span>, 2013</time>
         
-           | <a href="/c-vs-cxx/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/c-vs-cxx/">Comments</a>
+           | <a href="/throw-stacktrace/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/throw-stacktrace/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/c-vs-cxx/">Two Different Languages - C and C++</a></h1>
+      <h1 class="entry-title"><a href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Good news everyone, we are looking for a C/C++ developer! Wait, that’s not good news at all!</p>
+  <div class="entry-content clearfix"><p>The tricky part about any exception is that the stack is already unwinded by the time exception is caught and there is no easy way to figure out from which part of the code it was thrown. Have you ever caught an exception that has no information that can be used to find where the problem is? The one that says «this should never happen» or even has no text at all. Hopefully, this doesn’t happen to you very often. But if you work with a large C++ codebase with tons of different components written by different developers then sooner or later it would definitely happen. It can be quite disappointing and take a lot of time going through the pile of somebody else’s code trying to figure out what went wrong. So you must be prepared. I might be a little bit unlucky in this regard – this happened to me a lot, so I decided to share a few ways for overcoming this type of situations.</p>
 
-<p>You see, the term «C/C++» is likely to piss off those who actually know both C and C++. On the other hand, majority of C++ developers mistakenly think they know C. And it would take at least a year or two for a C developer to learn C++. Yet «C/C++» is mentioned in way too many job postings. So who exactly are we looking for?</p>
+<h2>Backtrace API</h2>
 
-<p>Let’s start by asking a simple question — what would the main() function return in the below C/C++ program?</p>
+<p>Quite a few C runtime libraries provide a mechanism to examine the current thread’s call stack. It consists of three functions declared in <code>execinfo.h</code> header:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">backtrace</span><span class="p">(</span><span class="kt">void</span><span class="o">**</span> <span class="n">array</span><span class="p">,</span> <span class="kt">int</span> <span class="n">size</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">char</span><span class="o">**</span> <span class="nf">backtrace_symbols</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">array</span><span class="p">,</span> <span class="kt">int</span> <span class="n">size</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">backtrace_symbols_fd</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="k">const</span><span class="o">*</span> <span class="n">array</span><span class="p">,</span> <span class="kt">int</span> <span class="n">size</span><span class="p">,</span> <span class="kt">int</span> <span class="n">fd</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Using those functions, one can access the stack trace at any given point of program execution. Here is a simple example that prints the stack to standard output:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -140,72 +155,33 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="n">T</span><span class="p">;</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;execinfo.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">T</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">a</span><span class="p">;</span> <span class="kt">int</span> <span class="n">b</span><span class="p">;</span> <span class="p">};</span>
-</span><span class='line'>    <span class="k">return</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="sc">&#39;T&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="o">*</span><span class="n">callstack</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">frames</span> <span class="o">=</span> <span class="o">::</span><span class="n">backtrace</span><span class="p">(</span>
+</span><span class='line'>        <span class="n">callstack</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">callstack</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">callstack</span><span class="p">[</span><span class="mi">0</span><span class="p">]));</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="o">**</span><span class="n">symbols</span> <span class="o">=</span> <span class="o">::</span><span class="n">backtrace_symbols</span><span class="p">(</span><span class="n">callstack</span><span class="p">,</span> <span class="n">frames</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Stack Trace:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">frames</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\t&#39;</span> <span class="o">&lt;&lt;</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">free</span><span class="p">(</span><span class="n">symbols</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Of course it depends on architecture. But let’s assume that size of int is 4 bytes and structure T has no extra padding. The code is legal in both C and C++. Yet the correct answer depends on whether this is a C or C++ program. If it is a C program then the correct answer is 8. In case of C++ the answer is 9.</p>
-
-<h2>C is not C++</h2>
-
-<p>C++ originated back in 1979 and at that time it was based on C. It wasn’t even called C++ — its first name was «C with Classes». The language was renamed to «C++» only in 1983. At that time, both languages were closely related. However, from that point both C and C++ took a different evolution path and today, some 30+ years later, both languages are as different as Objective-C and C++, Java and C#, Python and Ruby, OCaml and F#. There is only one catch — the basic syntax of both is very similar to such a degree that it is possible to have a program that is both legal C and legal C++, which may or may not behave differently. Generally, everyone knows that C++ has tons of features that are not available in C but any C code can be compiled as C++. Therefore, C++ developers also think that they know C. And in most cases they are dangerously mistaken. Below is a list of the most common features of C language serving as traps for C++ fellows.</p>
-
-<h3>Casting void pointer</h3>
-
-<p>In C, void pointer can be implicitly casted to a pointer of any other type. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="mh">0xDEADDEAD</span><span class="p">;</span>
-</span><span class='line'><span class="kt">int</span> <span class="o">*</span><span class="n">i</span> <span class="o">=</span> <span class="n">ptr</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>C developers use this convenient feature all the time. However, any C++ compiler would choke on that and die.</p>
-
-<h3>Implicit function declaration</h3>
-
-<p>In C, it is not always necessary to declare a function before using it. Using an undeclared function implicitly declares it. This feature has been declared deprecated since 1999 but is still used here and there. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">foo</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>A perfectly legal C program that is illegal C++:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">gcc</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">c</span>
-</span><span class='line'><span class="err">$</span> <span class="n">g</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span> <span class="n">In</span> <span class="n">function</span> <span class="err">‘</span><span class="kt">int</span> <span class="n">main</span><span class="p">()</span><span class="err">’</span><span class="o">:</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="err">‘</span><span class="n">foo</span><span class="err">’</span> <span class="n">was</span> <span class="n">not</span> <span class="n">declared</span> <span class="n">in</span> <span class="n">this</span> <span class="n">scope</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>No arguments vs any arguments</h3>
-
-<p>In C, function prototype without parameters imply that function accepts any number of arguments and it is legal to call such a function with one or more arguments. In C++, function prototype without parameters means that function accepts no arguments and it is illegal to call such function with arguments. For example:</p>
+<p>This method can be used to get the stack trace before the exception is thrown and before the stack is unwinded. In order to do that, one could define a custom exception class that grabs the stack trace in its constructor. For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -215,129 +191,423 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">();</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;execinfo.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdexcept&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cstdlib&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;hello&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">class</span> <span class="nc">Exception</span> <span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="n">Exception</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">grab_backtrace</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above is absolutely legal C code that won’t compile as C++. As a matter of fact, I haven’t seen many C++ developers who can tell the difference between <code>void foo();</code> and <code>void foo(void);</code></p>
-
-<h3>Crossing initialization with goto or switch</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>  <span class="nl">out:</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above is a perfectly legal C code but is rejected by C++ compiler as C++ does not allow to cross initialization:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span><span class="mi">5</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="k">goto</span> <span class="n">into</span> <span class="n">protected</span> <span class="n">scope</span>
-</span><span class='line'>    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
-</span><span class='line'>    <span class="o">^</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">4</span><span class="o">:</span><span class="mi">9</span><span class="o">:</span> <span class="n">note</span><span class="o">:</span> <span class="n">jump</span> <span class="n">bypasses</span> <span class="n">variable</span> <span class="n">initialization</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>        <span class="o">^</span>
-</span><span class='line'><span class="mi">1</span> <span class="n">error</span> <span class="n">generated</span><span class="p">.</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Keywords clash</h3>
-
-<p>C++ would fail to compile any legal C code that happen to use C++ keywords:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">old</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">new</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">Exception</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">reason</span><span class="p">)</span> <span class="o">:</span> <span class="n">reason_</span><span class="p">(</span><span class="n">reason</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">reason_</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="sc">&#39;\n&#39;</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">grab_backtrace</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Exception</span><span class="p">()</span> <span class="k">throw</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">virtual</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">what</span><span class="p">()</span> <span class="k">const</span> <span class="k">throw</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">reason_</span><span class="p">.</span><span class="n">c_str</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">private</span><span class="o">:</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">grab_backtrace</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kt">void</span> <span class="o">*</span><span class="n">callstack</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">frames</span> <span class="o">=</span> <span class="o">::</span><span class="n">backtrace</span><span class="p">(</span>
+</span><span class='line'>            <span class="n">callstack</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">callstack</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">callstack</span><span class="p">[</span><span class="mi">0</span><span class="p">]));</span>
+</span><span class='line'>        <span class="kt">char</span> <span class="o">**</span><span class="n">symbols</span> <span class="o">=</span> <span class="n">backtrace_symbols</span><span class="p">(</span><span class="n">callstack</span><span class="p">,</span> <span class="n">frames</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">reason_</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;Stack Trace:&quot;</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">frames</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="n">reason_</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\t</span><span class="s">&quot;</span><span class="p">).</span><span class="n">append</span><span class="p">(</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">free</span><span class="p">(</span><span class="n">symbols</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">throw</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">free</span><span class="p">(</span><span class="n">symbols</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">reason_</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">do_something</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">do_something</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">++</span><span class="n">i</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="n">Exception</span><span class="p">(</span><span class="s">&quot;Recursion limit exceeded&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">do_something</span><span class="p">(</span><span class="n">argc</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">?</span> <span class="n">std</span><span class="o">::</span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">:</span> <span class="mi">10</span><span class="p">,</span> <span class="n">argc</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="o">&amp;</span><span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h2>More! More! More!</h2>
+<p>So far so good! Here is an example of running the above program:</p>
 
-<p>Oh, you knew that? If you knew all of the above and still consider yourself a “C/C++” developer, hold on a second. Name at least 10 more differences. Huh?</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">pedantic</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span> <span class="o">&amp;&amp;</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="mi">3</span>
+</span><span class='line'><span class="n">Recursion</span> <span class="n">limit</span> <span class="n">exceeded</span>
+</span><span class='line'><span class="n">Stack</span> <span class="nl">Trace:</span>
+</span><span class='line'>  <span class="mi">0</span>   <span class="n">a</span><span class="p">.</span><span class="n">out</span>                <span class="mh">0x00000001034fa7af</span> <span class="n">_ZN9Exception14grab_backtraceEv</span> <span class="o">+</span> <span class="mi">63</span>
+</span><span class='line'>  <span class="mi">1</span>   <span class="n">a</span><span class="p">.</span><span class="n">out</span>                <span class="mh">0x00000001034fa6f4</span> <span class="n">_ZN9ExceptionC2ERKSs</span> <span class="o">+</span> <span class="mi">116</span>
+</span><span class='line'>  <span class="mi">2</span>   <span class="n">a</span><span class="p">.</span><span class="n">out</span>                <span class="mh">0x00000001034fa56d</span> <span class="n">_ZN9ExceptionC1ERKSs</span> <span class="o">+</span> <span class="mi">29</span>
+</span><span class='line'>  <span class="mi">3</span>   <span class="n">a</span><span class="p">.</span><span class="n">out</span>                <span class="mh">0x00000001034fa33c</span> <span class="n">_Z12do_somethingii</span> <span class="o">+</span> <span class="mi">140</span>
+</span><span class='line'>  <span class="mi">4</span>   <span class="n">a</span><span class="p">.</span><span class="n">out</span>                <span class="mh">0x00000001034fa2df</span> <span class="n">_Z12do_somethingii</span> <span class="o">+</span> <span class="mi">47</span>
+</span><span class='line'>  <span class="mi">5</span>   <span class="n">a</span><span class="p">.</span><span class="n">out</span>                <span class="mh">0x00000001034fa42d</span> <span class="n">main</span> <span class="o">+</span> <span class="mi">93</span>
+</span><span class='line'>  <span class="mi">6</span>   <span class="n">libdyld</span><span class="p">.</span><span class="n">dylib</span>        <span class="mh">0x00007fff935e27e1</span> <span class="n">start</span> <span class="o">+</span> <span class="mi">0</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<ul>
-<li>In C++, comma operator can yield an l-value. In C it cannot.</li>
-<li>C does not allow duplicate typedefs while C++ does.</li>
-<li>C++ does not allow non-prototype function declarations while C does.</li>
-<li>C allows struct, union and enum to be declared in function prototypes, C++ doesn’t.</li>
-<li>C allows for implicit discard of pointer const qualifiers. This trick won’t work in C++.</li>
-<li>In C++, struct, union and enum declarations automatically imply a typedef with the same name. This is not the case in C.</li>
-<li>Character literals in C are of type int. In C++ they are of type char.</li>
-<li>C++ implicitly treats any const global as file scope unless it is explicitly declared extern, unlike C in which extern is the default.</li>
-<li>Functions market as “inline” in C are of file scope whereas they have external linkage by default in C++.</li>
-<li>C has VLA (Variable Length Arrays) support whereas C++ does not (until C++14).</li>
-</ul>
+
+<p>Unfortunately, there are a few problems with this approach. Firstly, there no file names and no line numbers. Secondly, this approach requires to use the “Exception” class as a base class of all exceptions in the project (well, at least for those you want to get a stack trace for), which indeed can be very problematic if not impossible. But even if all of the above is fine with you, this approach may still not work out for you because frame pointers can be omitted in optimized builds. For example, omitting frame pointers is a default behavior of recent GCC compilers for x86_64 platforms (which can also be turned on/off using <code>-fomit-frame-pointer</code> option). Our call stack becomes useless if frame pointers are omitted:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">fomit</span><span class="o">-</span><span class="n">frame</span><span class="o">-</span><span class="n">pointer</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span> <span class="o">&amp;&amp;</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="mi">3</span>
+</span><span class='line'><span class="n">Recursion</span> <span class="n">limit</span> <span class="n">exceeded</span>
+</span><span class='line'><span class="n">Stack</span> <span class="nl">Trace:</span>
+</span><span class='line'>  <span class="mi">0</span>   <span class="n">a</span><span class="p">.</span><span class="n">out</span>                <span class="mh">0x0000000105eca82d</span> <span class="n">_ZN9Exception14grab_backtraceEv</span> <span class="o">+</span> <span class="mi">61</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
-<p>And the list of technical differences/incompatibilities of C and C++ can go on and on. The list is so big that it is impossible to fit it into a blog post. But if you are interested, check out References section in the bottom of this post.</p>
+<p>Depending on the system, there could be other requirements in order to make this API work. For example, GNU runtime requires you to specify “-rdynamic” flag to instruct the linker to add all symbols, not only used ones, to the dynamic symbol table. So don’t forget to read a manual page for this API in your system before using this.</p>
 
-<p>Aside of technical differences, it would also be a mistake not to mention the coding style. Not a formatting style or using tabs versus spaces, but coding style. For example, C++ developers would always cast a result of <code>malloc()</code> whereas C developers would almost never do that.</p>
+<h2>__FILE__ and __LINE__</h2>
 
-<h2>Grammar of «C/C++»</h2>
+<p>C++ has many <a href="http://gcc.gnu.org/onlinedocs/cpp/Standard-Predefined-Macros.html">standard predefined macros</a>. <code>__FILE__</code> and <code>__LINE__</code> macros are those two that come handy in order to identify a point in a program:</p>
 
-<p>Trying to figure out the meaning behind «C/C++», I dug the usage of slash as a punctuation sign in English text. I have never learn English grammar in school so you may want to check me on this one. Anyhow, according to Wikipedia the slash is most commonly used as the word substitute for “or” which indicates a choice (often mutually-exclusive) is present.</p>
+<p><code>__FILE__</code>  macros expands to the name of the current input file, in the form of a C string constant. This is the path by which the preprocessor opened the file, not the short name specified in ‘#include’ or as the input file name argument. For example, “/usr/local/include/myheader.h” is a possible expansion of this macros.</p>
 
-<p>If that is the case, then companies are actually looking for either C or C++ developers, not both. Which doesn’t make any sense at all. Why nobody is looking for “Cobol/Ada” or “Lisp/Verilog” developers? Looking at other industries, there seem to be no companies searching for “Linguist/Plumber”-like people.</p>
+<p><code>__LINE__</code> macros expands to the current input line number, in the form of a decimal integer constant. While we call it a predefined macro, it’s a pretty strange macro, since its “definition” changes with each new line of source code.|</p>
 
-<p>So the grammar doesn’t seem to back up the usage of «C/C++» term. This leaves everyone guessing as to what it actually means and the only way to figure out is from the context.</p>
+<p>Using the above macros, it is possible to include both file and line information along with exception’s text, or maybe as additional member fields of any given exception class. There are multiple choices. Here is an example of one of possible implementations:</p>
 
-<h2>What it actually means</h2>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;stdexcept&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cstdlib&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Exception</span> <span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">template</span> <span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">location_len</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="kr">inline</span> <span class="n">Exception</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">location</span><span class="p">)[</span><span class="n">location_len</span><span class="p">],</span>
+</span><span class='line'>                     <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">reason</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="n">reason</span> <span class="o">+</span> <span class="n">location</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Exception</span><span class="p">()</span> <span class="k">throw</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define MY_THROW_STR_I(Arg) #Arg</span>
+</span><span class='line'><span class="cp">#define MY_THROW_STR(Arg) MY_THROW_STR_I(Arg)</span>
+</span><span class='line'><span class="cp">#define MY_THROW(Type, ...)                                             \</span>
+</span><span class='line'><span class="cp">    do {                                                                \</span>
+</span><span class='line'><span class="cp">        throw Type(&quot; @ &quot;; __FILE__ &quot;;:&quot; MY_THROW_STR(__LINE__), ##__VA_ARGS__); \</span>
+</span><span class='line'><span class="cp">    } while (0)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">do_something</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">do_something</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">++</span><span class="n">i</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">MY_THROW</span><span class="p">(</span><span class="n">Exception</span><span class="p">,</span> <span class="s">&quot;Recursion limit exceeded&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">do_something</span><span class="p">(</span><span class="n">argc</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">?</span> <span class="n">std</span><span class="o">::</span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">:</span> <span class="mi">10</span><span class="p">,</span> <span class="n">argc</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="o">&amp;</span><span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>The actual meaning of «C/C++» depends. Here are some examples of what this means according to my observations.</p>
 
-<p>In job postings, “We are looking for C/C++ developers” generally means “We are looking for C++ developers, nobody knows C here but why not put that in a title, too?”</p>
+<p>When the exception is caught and printed, the source file name and a line numbers are included, which makes it easy to trace the origins of such an exception:</p>
 
-<p>When somebody brags about being a “C/C++” developers it means they don’t really know any of those languages but learned to write a “Hello, World!” application using printf() and compile it with C++ compiler.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span>
+</span><span class='line'><span class="n">Recursion</span> <span class="n">limit</span> <span class="n">exceeded</span> <span class="err">@</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="nl">cpp:</span><span class="mi">26</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>In forums, «C/C++» section is usually dedicated for C++ crowd that might as well be able to answer some C-related questions if you get lucky.</p>
 
-<h2>Tip: Don’t Use «C/C++»</h2>
+<p>Of course, this does not include a stack trace. But it works if frame pointers are omitted, tail recursion optimization is applied, or even if all symbol names are stripped out of the executable. There is one problem though — it may not be useful without a stack trace in certain cases. For example, one may declare a helper function used to throw an exception, like this:</p>
 
-<p>If you are looking for a developer, make sure you clearly specify requirements and avoid the use of «C/C++». If it so happens that you are actually looking for someone who knows both, say «C and C++». If you are willing to spend a few years teaching C developer C++ language, say «C++ developer or C developer willing to learn C++». Using «C/C++» will only bring confusion to those reading the job posting.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">__attribute__</span><span class="p">((</span><span class="n">noreturn</span><span class="p">))</span> <span class="kt">void</span> <span class="n">report_error</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">reason</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">MY_THROW</span><span class="p">(</span><span class="n">Exception</span><span class="p">,</span> <span class="n">reason</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>End of rant.</p>
 
-<h2>References</h2>
+<p>In that case, the file and line of the exception origins will always be the same even if it was called from different places in the program. So this approach is also not a cure for all diseases.</p>
 
-<ul>
-<li><a href="http://en.wikipedia.org/wiki/Slash_(punctuation">Slash in English text.</a></li>
-<li><a href="http://david.tribble.com/text/cdiffs.htm">Incompatibilities Between ISO C and ISO C++</a> by David R. Tribble</li>
-<li><a href="http://en.wikipedia.org/wiki/Compatibility_of_C_and_C%2B%2B">Compatibility of C and C++</a></li>
-<li><a href="http://c-faq.com/malloc/mallocnocast.html">What’s wrong with casting malloc’s return value?</a></li>
-</ul>
+<h2>GDB Scripting: Automatic Backtrace on Exception Catchpoints</h2>
 
+<p>And the last but not least method is to use <a href="http://www.gnu.org/software/gdb/">GDB debugger</a>. If you are not familiar with this debugger, you definitely should spend some time learning it. It is one of the most powerful tools out there. And it comes extremely handy when dealing with exceptions.</p>
+
+<p><a href="http://sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html">GDB provides special catch points</a>, including those to catch exceptions being thrown, caught or even unhandled. We are interested in exceptions that are being thrown and so must use <code>catch throw</code> command. Here is an example of manually using GDB in order to examine a stack trace before the exception is thrown:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">gdb</span> <span class="o">-</span><span class="n">args</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="mi">5</span>
+</span><span class='line'><span class="n">Reading</span> <span class="n">symbols</span> <span class="n">from</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span><span class="p">...</span><span class="n">done</span><span class="p">.</span>
+</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="k">catch</span> <span class="k">throw</span>
+</span><span class='line'><span class="n">Catchpoint</span> <span class="mi">1</span> <span class="p">(</span><span class="k">throw</span><span class="p">)</span>
+</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">run</span>
+</span><span class='line'><span class="n">Starting</span> <span class="nl">program:</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="mi">5</span>
+</span><span class='line'><span class="n">Catchpoint</span> <span class="mi">1</span> <span class="p">(</span><span class="n">exception</span> <span class="n">thrown</span><span class="p">),</span> <span class="n">__cxxabiv1</span><span class="o">::</span><span class="n">__cxa_throw</span> <span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="mh">0x6030d0</span><span class="p">,</span> <span class="n">tinfo</span><span class="o">=</span><span class="mh">0x401420</span> <span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="mh">0x401198</span> <span class="p">)</span>
+</span><span class='line'>    <span class="n">at</span> <span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="n">libstdc</span><span class="o">++-</span><span class="n">v3</span><span class="o">/</span><span class="n">libsupc</span><span class="o">++/</span><span class="n">eh_throw</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">70</span>
+</span><span class='line'><span class="mi">70</span>      <span class="n">header</span><span class="o">-&gt;</span><span class="n">exc</span><span class="p">.</span><span class="n">unexpectedHandler</span> <span class="o">=</span> <span class="n">__unexpected_handler</span><span class="p">;</span>
+</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">backtrace</span>
+</span><span class='line'><span class="cp">#0  __cxxabiv1::__cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</span>
+</span><span class='line'>    <span class="n">at</span> <span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="n">libstdc</span><span class="o">++-</span><span class="n">v3</span><span class="o">/</span><span class="n">libsupc</span><span class="o">++/</span><span class="n">eh_throw</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">70</span>
+</span><span class='line'><span class="cp">#1  0x0000000000400fee in report_error (reason=&quot;Recursion limit exceeded&quot;) at ./test.cpp:25</span>
+</span><span class='line'><span class="cp">#2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</span>
+</span><span class='line'><span class="cp">#3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</span>
+</span><span class='line'><span class="cp">#4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</span>
+</span><span class='line'><span class="cp">#5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</span>
+</span><span class='line'><span class="cp">#6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</span>
+</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="k">continue</span>
+</span><span class='line'><span class="n">Continuing</span><span class="p">.</span>
+</span><span class='line'><span class="n">Recursion</span> <span class="n">limit</span> <span class="n">exceeded</span> <span class="err">@</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="nl">cpp:</span><span class="mi">25</span>
+</span><span class='line'><span class="p">[</span><span class="n">Inferior</span> <span class="mi">1</span> <span class="p">(</span><span class="n">process</span> <span class="mi">3865</span><span class="p">)</span> <span class="n">exited</span> <span class="n">with</span> <span class="n">code</span> <span class="mo">01</span><span class="p">]</span>
+</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">quit</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>At first, this might sound silly because in the real world a program may encounter a lot of exceptions and manually typing “backtrace” and “continue” every type that happens is nothing but a waste of time. But there is one trick — GDB can be automated. There are two ways of doing this — use a batch mode or a more sophisticated <a href="http://sourceware.org/gdb/wiki/PythonGdbTutorial">Python scripting</a>. For our purpose, a batch script will do just fine. Here is a simple script that turns off verbose output and paging, sets up a <code>throw</code> catch point and executes <code>backtrace</code> + <code>continue</code> commands every time the event is caught:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">set</span> <span class="n">verbose</span> <span class="n">off</span>
+</span><span class='line'><span class="n">set</span> <span class="n">pagination</span> <span class="n">off</span>
+</span><span class='line'><span class="k">catch</span> <span class="k">throw</span>
+</span><span class='line'><span class="n">commands</span>
+</span><span class='line'><span class="n">backtrace</span>
+</span><span class='line'><span class="k">continue</span>
+</span><span class='line'><span class="n">end</span>
+</span><span class='line'><span class="n">run</span>
+</span><span class='line'><span class="n">quit</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Save the above script into a file, and then run GDB in batch mode telling it to use that file, which in my case is called “gdb_bt_script”:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">gdb</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="n">batch</span> <span class="o">-</span><span class="n">x</span> <span class="p">.</span><span class="o">/</span><span class="n">gdb_bt_script</span> <span class="o">--</span><span class="n">args</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="mi">5</span>
+</span><span class='line'><span class="n">Catchpoint</span> <span class="mi">1</span> <span class="p">(</span><span class="k">throw</span><span class="p">)</span>
+</span><span class='line'><span class="n">Catchpoint</span> <span class="mi">1</span> <span class="p">(</span><span class="n">exception</span> <span class="n">thrown</span><span class="p">),</span> <span class="n">__cxxabiv1</span><span class="o">::</span><span class="n">__cxa_throw</span> <span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="mh">0x6030d0</span><span class="p">,</span> <span class="n">tinfo</span><span class="o">=</span><span class="mh">0x401420</span> <span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="mh">0x401198</span> <span class="p">)</span> <span class="n">at</span> <span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="n">libstdc</span><span class="o">++-</span><span class="n">v3</span><span class="o">/</span><span class="n">libsupc</span><span class="o">++/</span><span class="n">eh_throw</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">70</span>
+</span><span class='line'><span class="mi">70</span>      <span class="n">header</span><span class="o">-&gt;</span><span class="n">exc</span><span class="p">.</span><span class="n">unexpectedHandler</span> <span class="o">=</span> <span class="n">__unexpected_handler</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#0  __cxxabiv1::__cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</span>
+</span><span class='line'><span class="cp">#1  0x0000000000400fee in report_error (reason=&quot;Recursion limit exceeded&quot;) at ./test.cpp:25</span>
+</span><span class='line'><span class="cp">#2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</span>
+</span><span class='line'><span class="cp">#3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</span>
+</span><span class='line'><span class="cp">#4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</span>
+</span><span class='line'><span class="cp">#5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</span>
+</span><span class='line'><span class="cp">#6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</span>
+</span><span class='line'><span class="n">Recursion</span> <span class="n">limit</span> <span class="n">exceeded</span> <span class="err">@</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="nl">cpp:</span><span class="mi">25</span>
+</span><span class='line'><span class="p">[</span><span class="n">Inferior</span> <span class="mi">1</span> <span class="p">(</span><span class="n">process</span> <span class="mi">5849</span><span class="p">)</span> <span class="n">exited</span> <span class="n">with</span> <span class="n">code</span> <span class="mo">01</span><span class="p">]</span>
+</span><span class='line'><span class="err">$</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Whoala! Now we get a full stack trace including function parameters, their values, and file and line numbers. If the program is optimized and has no debug symbols, however, we get a little bit less:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">gdb</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="n">batch</span> <span class="o">-</span><span class="n">x</span> <span class="p">.</span><span class="o">/</span><span class="n">gdb_bt_script</span> <span class="o">--</span><span class="n">args</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="mi">5</span>
+</span><span class='line'><span class="n">Catchpoint</span> <span class="mi">1</span> <span class="p">(</span><span class="k">throw</span><span class="p">)</span>
+</span><span class='line'><span class="n">Catchpoint</span> <span class="mi">1</span> <span class="p">(</span><span class="n">exception</span> <span class="n">thrown</span><span class="p">),</span> <span class="n">__cxxabiv1</span><span class="o">::</span><span class="n">__cxa_throw</span> <span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="mh">0x6030d0</span><span class="p">,</span> <span class="n">tinfo</span><span class="o">=</span><span class="mh">0x401470</span> <span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="mh">0x401270</span> <span class="p">)</span> <span class="n">at</span> <span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="p">..</span><span class="o">/</span><span class="n">libstdc</span><span class="o">++-</span><span class="n">v3</span><span class="o">/</span><span class="n">libsupc</span><span class="o">++/</span><span class="n">eh_throw</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">70</span>
+</span><span class='line'><span class="mi">70</span>      <span class="n">header</span><span class="o">-&gt;</span><span class="n">exc</span><span class="p">.</span><span class="n">unexpectedHandler</span> <span class="o">=</span> <span class="n">__unexpected_handler</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#0  __cxxabiv1::__cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</span>
+</span><span class='line'><span class="cp">#1  0x00000000004010a8 in report_error(std::string const&amp;) ()</span>
+</span><span class='line'><span class="cp">#2  0x000000000040121e in do_something(int, int) ()</span>
+</span><span class='line'><span class="cp">#3  0x0000000000400ef6 in main ()</span>
+</span><span class='line'><span class="n">Recursion</span> <span class="n">limit</span> <span class="n">exceeded</span> <span class="err">@</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="nl">cpp:</span><span class="mi">25</span>
+</span><span class='line'><span class="p">[</span><span class="n">Inferior</span> <span class="mi">1</span> <span class="p">(</span><span class="n">process</span> <span class="mi">1877</span><span class="p">)</span> <span class="n">exited</span> <span class="n">with</span> <span class="n">code</span> <span class="mo">01</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Yet still a lot more than we get using backtrace API. But the most beautiful part is that this method does not require any code changes and works for pretty much any binary.</p>
+
+<h2>The End</h2>
+
+<p>Those were three fundamental methods that can help to identify a place where exception is thrown from. They are not mutually exclusive. Each has its cons and pros. I personally prefer to use GDB because it doesn’t require a code change, but use other two methods as well, depending on a situation. It is up to you to decide which one to use.</p>
+
+<p>Hope it helps and Good Luck!</p>
 </div>
   
   
@@ -368,15 +638,15 @@
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/static-assert/">C++11 Static Assert</a>
+    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    
+    <a class="list-group-item " href="/static-assert/">Static Assert</a>
     
     <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
     
     <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
     
     <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
-    
-    <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
     
   </div>
 </section>
@@ -388,7 +658,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">17</span>
+        <span class="badge">18</span>
         C++
       </a>
     
@@ -400,20 +670,14 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">25</span>
+        <span class="badge">26</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">2</span>
+        <span class="badge">3</span>
         C++11
-      </a>
-    
-    
-    <a class="list-group-item " href="/blog/categories/c">
-        <span class="badge">1</span>
-        C
       </a>
     
     

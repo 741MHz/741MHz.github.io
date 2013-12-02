@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Tech | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/tech/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T22:53:55-05:00</updated>
+  <updated>2013-12-01T22:59:28-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -14,7 +14,148 @@
 
   
   <entry>
-    <title type="html"><![CDATA[C++11 Static Assert]]></title>
+    <title type="html"><![CDATA[C++ and Right Angle Brackets]]></title>
+    <link href="http://741MHz.com/right-angle-brackets/"/>
+    <updated>2013-11-10T00:00:00-05:00</updated>
+    <id>http://741MHz.com/right-angle-brackets</id>
+    <content type="html"><![CDATA[<p>When it comes to computers, both programming and science have a &ldquo;longest match&rdquo; principe also known as &ldquo;maximal munch&rdquo;. This principle states that when creating some construct, as much of the available input as possible should be consumed. Which in turn leads to the fact that lexical syntax of many programming languages requires that tokens be built from the maximum possible number of characters from the input stream.</p>
+
+<p>As a result of this, C++ has been suffering a minor, but persisting, annoying, and somewhat embarrassing problem that required programmers to avoid having two consecutive right angle brackets when writing templates. For example, the following code has been incorrect in C++ for decades:</p>
+
+<p>```c++</p>
+
+<pre><code>std::vector&lt;std::vector&lt;int&gt;&gt; matrix;
+</code></pre>
+
+<p>```</p>
+
+<p>This is because the longest token in this expression is <code>&gt;&gt;</code>, which is a token for <a href="http://en.wikipedia.org/wiki/Logical_shift">right logical shift</a>, and it has nothing to do with templates. So the compiler would give an error. For example:</p>
+
+<p>```</p>
+
+<h1>g++ ./matrix.cc</h1>
+
+<p>./matrix.cc:21:32: error: a space is required between consecutive right angle brackets (use &lsquo;> >&rsquo;)</p>
+
+<pre><code>std::vector&lt;std::vector&lt;int&gt;&gt; matrix;
+                           ^~
+                           &gt; &gt;
+</code></pre>
+
+<p>```</p>
+
+<p>And the programmers had to put a space between <code>&gt;</code> to fix it, like this: <code>std::vector&lt;std::vector&lt;int&gt; &gt; matrix;</code></p>
+
+<p>This is not the only example of maximal munch drawbacks. Another notable case is unintended beginning of multi-line comment as in this program:</p>
+
+<p>```c</p>
+
+<h1>include &lt;stdio.h></h1>
+
+<p>int main() {</p>
+
+<pre><code>int a;
+int *z;
+int x;
+int y;
+
+a = 2;
+z = &amp;a;
+y = 10;
+x = y/*z;
+
+printf("%d\n", x);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>For both humans and even a syntax highlighter it is clear that the intention of <code>x = y/*z</code> statement is to assigne <code>x</code> a result of dividing <code>y</code> by the value obtained through dereferencing <code>z</code> pointer. Yet <code>/*</code> is the longest match which corresponds to the beginning of the multiline comment, so the compiler would most likely fail:</p>
+
+<p>```</p>
+
+<blockquote><p>g++ ./example.cc
+./example.cc:25:10: error: unterminated /* comment</p>
+
+<pre><code>x = y/*z;
+</code></pre>
+
+<p>```</p></blockquote>
+
+<p>For the good of all C++ developers, Daveed Vandevoorde from Edison Design Group has proposed three possible ways to fix C++ grammar to eliminate the problem of two consecutive right angle brackets in templates. One of them was chosen over other two and starting with C++11, programmers can now use <code>&gt;&gt;</code> in templates like this &ndash;  <code>std::vector&lt;std::vector&lt;std::vector&lt;int&gt;&gt;&gt;</code></p>
+
+<p>It is important that this change also breaks backwards compatibility which could affect some programs. Consider the following program:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<p>template<int I> struct X {</p>
+
+<pre><code>static int const c = 2;
+</code></pre>
+
+<p>};</p>
+
+<p>template&lt;> struct X<0> {</p>
+
+<pre><code>typedef int c;
+</code></pre>
+
+<p>};</p>
+
+<p>template<typename T> struct Y {</p>
+
+<pre><code>static int const c = 3;
+</code></pre>
+
+<p>};</p>
+
+<p>static int const c = 4;</p>
+
+<p>int main() {</p>
+
+<pre><code>std::cout &lt;&lt; (Y&lt;X&lt;1&gt; &gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+std::cout &lt;&lt; (Y&lt;X&lt; 1&gt;&gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+</code></pre>
+
+<p>}
+```</p>
+
+<p>It is valid in both old and new C++. However, it would produce different results.</p>
+
+<p>This is because in the old C++ <code>&gt;&gt;</code> was treated as the right shift operator that shifted 1 by the value of global <code>c</code> as part of <code>1&gt;&gt;::c</code> expression. But with a new grammar introduced in C++ this is no longer the case and so the same program would print <code>0</code> and <code>3</code> in pre-C++11, and two zeroes in C++11.</p>
+
+<p>Some compiler developers, when started working on implementing new C++ standard, have put a special feature their compilers that would warn users about such cases. For example, clang compiler would issue a warning in case it runs into this code:</p>
+
+<p>```
+$ clang++ ./right_angle_brackets.cc &amp;&amp; ./test
+./right_angle_brackets.cc:19:25: warning: use of right-shift operator (&lsquo;>>&rsquo;) in template argument will require</p>
+
+<pre><code>  parentheses in C++11 [-Wc++11-compat]
+std::cout &lt;&lt; (Y&lt;X&lt; 1&gt;&gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+                    ^
+                   (     )
+</code></pre>
+
+<p>```</p>
+
+<p>Hopefully, not many developers have intentionally used logical shifts as part of template parameters, and the amount of those cases are far less from those when an annoying extra space was required for no good reason.</p>
+
+<p>As for the problem with comments &ndash; it still exists in both C and C++. But how much of a problem is it, really?</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Maximal_munch">Maximal much principle</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html">N1757 &ndash; Right Angle Brackets</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Static Assert]]></title>
     <link href="http://741MHz.com/static-assert/"/>
     <updated>2013-05-07T00:00:00-04:00</updated>
     <id>http://741MHz.com/static-assert</id>
@@ -981,231 +1122,6 @@ std::memcpy(p + 17, "drunk!", 6);
 ```</p>
 
 <p>This of course doesn’t make it impossible to unprotect that memory. To make it so, we’d need some more sophisticated access control that possibly employs protection rings, etc. But this is as far as I am willing to go. I wish we had something like this done automatically when we declare or pass variables around as “const”. But this is not going to happen because moaning with memory protection is very expensive operation that would, if implemented, slow down the program and make it pretty much unusable. Maybe one day we’d get a special hardware that would make it a reality. But for now, let’s keep shooting ourselves in the foot. It is «<a href="/c-vs-cxx/">C/C++</a>», after all!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Why C++ Member Function Pointers Are 16 Bytes Wide]]></title>
-    <link href="http://741MHz.com/wide-pointers/"/>
-    <updated>2013-04-28T00:00:00-04:00</updated>
-    <id>http://741MHz.com/wide-pointers</id>
-    <content type="html"><![CDATA[<p>When talking about pointers, we generally assume it is something that can be represented by <code>void*</code> pointer which has a size of 8 bytes on the x86_64 architecture. For instance, here is an excerpt from a <a href="http://en.wikipedia.org/wiki/X86-64#Architectural_features">Wikipedia article about x86_64</a>:</p>
-
-<blockquote><p>Pushes and pops on the stack are always in 8-byte strides, and <strong>pointers are 8 bytes wide</strong>.</p></blockquote>
-
-<p>From the CPU point of view, pointer is nothing but a memory address, and all memory addresses are represented by 64-bit on the x86_64, so the assumption about 8 bytes is correct. It is also not that hard to verify this by simply printing sizes of pointers of different types:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<p>int main() {</p>
-
-<pre><code>std::cout &lt;&lt;
-    "sizeof(int*)      == " &lt;&lt; sizeof(int*) &lt;&lt; "\n"
-    "sizeof(double*)   == " &lt;&lt; sizeof(double*) &lt;&lt; "\n"
-    "sizeof(void(*)()) == " &lt;&lt; sizeof(void(*)()) &lt;&lt; std::endl;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Compile and run the above program, and it will tell that all pointers are of size 8:</p>
-
-<p><code>
-$ uname -i
-x86_64
-$ g++ -Wall ./example.cc
-$ ./a.out
-sizeof(int*)      == 8
-sizeof(double*)   == 8
-sizeof(void(*)()) == 8
-</code></p>
-
-<p>In C++, however, there is one exception — pointer to a member function. Interestingly enough, the size of a pointer to a member function is twice the size of any other pointer. This can be easily verified with this simple program which would print “16”:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<p>struct Foo {</p>
-
-<pre><code>void bar() const { }
-</code></pre>
-
-<p>};</p>
-
-<p>int main() {</p>
-
-<pre><code>std::cout &lt;&lt; sizeof(&amp;Foo::bar) &lt;&lt; std::endl;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Does this mean that Wikipedia is wrong? No, not at all. From the hardware point of view all pointers are still 8 bytes wide. So what is a pointer to a member function then? It is a feature of the C++ language, a concept that does not map directly to hardware and is being implemented in runtime (by compilers) resulting in a slight overhead that oftentimes incurs a performance penalty. The C++ language specification is not concerned with implementation details very much and there is nothing explaining this type of pointers. Luckily, there is Itanium C++ ABI specification that devotes itself to standardizing implementation details of the C++ runtime — it explains, for example, how virtual tables, RTTI and exceptions are implemented, and it also explains member pointers in §2.3:</p>
-
-<blockquote><p>A pointer to member function is a pair as follows:</p>
-
-<p>ptr:</p>
-
-<p>For a non-virtual function, this field is a simple function pointer. For a virtual function, it is 1 plus the virtual table offset (in bytes) of the function, represented as a ptrdiff_t. The value zero represents a NULL pointer, independent of the adjustment field value below.</p>
-
-<p>adj:</p>
-
-<p>The required adjustment to this, represented as a ptrdiff_t.</p></blockquote>
-
-<p>So a member function pointer is 16 bytes instead of 8 because along with a simple function pointer it also must store the information about how to adjust “this” pointer (something that is always passed to non-static member functions implicitly). What ABI spec does not say is why and when such an adjustment is required. It might not be that obvious at first. Let’s take a look at the following class hierarchy:</p>
-
-<p>```c++
-struct A {</p>
-
-<pre><code>void foo() const { }
-char pad0[32];
-</code></pre>
-
-<p>};</p>
-
-<p>struct B {</p>
-
-<pre><code>void bar() const { }
-char pad2[64];
-</code></pre>
-
-<p>};</p>
-
-<p>struct C : A, B
-{ };
-```</p>
-
-<p>Both A and B have a non-static member functions and a data member. Both of those methods can access data member of their class through an implicitly passed “this” pointer. In order to access any data member, the offset from the base address of the class object containing it, represented as a ptrdiff_t, is applied to “this” pointer. Things start to get complicated with multiple inheritance. What happens when we have a class C inherit both A and B? The compiler would take A and B and place them together in memory, where B comes after A. Therefore, methods of class A and methods of class B would “see” a different value of “this” pointer. This can be easily verified in practice, for example:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<p>struct A {</p>
-
-<pre><code>void foo() const {
-    std::cout &lt;&lt; "A's this: " &lt;&lt; this &lt;&lt; std::endl;
-}
-char pad0[32];
-</code></pre>
-
-<p>};</p>
-
-<p>struct B {</p>
-
-<pre><code>void bar() const {
-    std::cout &lt;&lt; "B's this: " &lt;&lt; this &lt;&lt; std::endl;
-}
-char pad2[64];
-</code></pre>
-
-<p>};</p>
-
-<p>struct C : A, B
-{ };</p>
-
-<p>int main()
-{</p>
-
-<pre><code>C obj;
-obj.foo();
-obj.bar();
-</code></pre>
-
-<p>}
-```</p>
-
-<p><code>
-$ g++ -Wall -o test ./test.cc &amp;&amp; ./test
-A's this: 0x7fff57ddfb48
-B's this: 0x7fff57ddfb68
-</code></p>
-
-<p>As you can see, “this” pointer’s value passed to B’s method is greater than one passed to A’s method by 32 bytes – an exact size of class A. But what happens when we have the following function that calls a method of class C by pointer?</p>
-
-<p>```c++
-void call_by_ptr(const C &amp;obj, void (C::*mem_func)() const) {</p>
-
-<pre><code>(obj.*mem_func)();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Depending on what method is being called, a different value of “this” must be passed. But the “call_by_ptr” function doesn’t know whether it got a pointer to “foo()” or a pointer to “bar()”. The only time when this information is available is when address of either of those methods is taken. And that’s why a pointer to a member function also has information about how to adjust “this” before calling a method. Now, let’s put all of that together into a simple program that demonstrates what is going on “under the hood”:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<p>struct A {</p>
-
-<pre><code>void foo() const {
-    std::cout &lt;&lt; "A's this:\t" &lt;&lt; this &lt;&lt; std::endl;
-}
-char pad0[32];
-</code></pre>
-
-<p>};</p>
-
-<p>struct B {</p>
-
-<pre><code>void bar() const {
-    std::cout &lt;&lt; "B's this:\t" &lt;&lt; this &lt;&lt; std::endl;
-}
-char pad2[64];
-</code></pre>
-
-<p>};</p>
-
-<p>struct C : A, B
-{ };</p>
-
-<p>void call_by_ptr(const C &amp;obj, void (C::*mem_func)() const)
-{</p>
-
-<pre><code>void *data[2];
-std::memcpy(data, &amp;mem_func, sizeof(mem_func));
-std::cout &lt;&lt; "------------------------------\n"
-    "Object ptr:\t" &lt;&lt; &amp;obj &lt;&lt;
-    "\nFunction ptr:\t" &lt;&lt; data[0] &lt;&lt;
-    "\nPointer adj:\t" &lt;&lt; data[1] &lt;&lt; std::endl;
-(obj.*mem_func)();
-</code></pre>
-
-<p>}</p>
-
-<p>int main()
-{</p>
-
-<pre><code>C obj;
-call_by_ptr(obj, &amp;C::foo);
-call_by_ptr(obj, &amp;C::bar);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above program prints the following:</p>
-
-<h2>```</h2>
-
-<p>Object ptr: 0x7fff535dfb28
-Function ptr:   0x10c620cac
-Pointer adj:    0</p>
-
-<h2>A&rsquo;s this:   0x7fff535dfb28</h2>
-
-<p>Object ptr: 0x7fff535dfb28
-Function ptr:   0x10c620cfe
-Pointer adj:    0x20
-B&rsquo;s this:   0x7fff535dfb48
-```</p>
-
-<p>Hopefully that clears things up a little bit.</p>
 ]]></content>
   </entry>
   

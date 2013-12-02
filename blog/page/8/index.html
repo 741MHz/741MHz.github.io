@@ -114,43 +114,230 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-29T22:00:00-04:00" pubdate data-updated="true">Mar 29<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-04-15T00:00:00-04:00" pubdate data-updated="true">Apr 15<span>th</span>, 2013</time>
         
-           | <a href="/ask-smart/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/ask-smart/">Comments</a>
+           | <a href="/c-vs-cxx/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/c-vs-cxx/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/ask-smart/">Ask Smart Questions and You Will Succeed</a></h1>
+      <h1 class="entry-title"><a href="/c-vs-cxx/">Two Different Languages - C and C++</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Asking is ultimately one of the most important ways for you to succeed. You shall not be afraid to ask. You shall ask often. Ask for help and for a raise, ask for an advice and ask questions. Asking is very powerful. Not only it might help you to get an answer, you may as well receive something that is a lot more valuable, something you haven’t even thought of before. Asking helps you to make your way. It helps others to understand you better. Asking connects people. In English we say, “It doesn’t hurt to ask.” Russians say, “Nobody punches your nose for asking.” I am sure that other cultures have a similar saying.</p>
+  <div class="entry-content clearfix"><p>Good news everyone, we are looking for a C/C++ developer! Wait, that’s not good news at all!</p>
 
-<p>I have been hanging out on <a href="http://stackoverflow.com/">Stack Overflow</a>, a nice Q&amp;A site, for about two years now, and have answered some 770 questions. Not a lot, but I have enjoyed each and every question I have either answered or at least tried to answer. Yet my questions are what I am proud of the most. They were most helpful, at least for me. Sometimes, answering a question creates more questions and leads to a research, helps to learn something new — be that a programming trick, a new technology, a new interesting person that you didn’t know before. It is always better to ask than not to ask. In any case it makes you richer.</p>
+<p>You see, the term «C/C++» is likely to piss off those who actually know both C and C++. On the other hand, majority of C++ developers mistakenly think they know C. And it would take at least a year or two for a C developer to learn C++. Yet «C/C++» is mentioned in way too many job postings. So who exactly are we looking for?</p>
 
-<p>OK, now it sounds like a crap from a cheap inspiration book. Things cannot be that simple. Indeed there is a catch to asking — just asking doesn’t really get you anywhere. You want people to be interested in your question, you want the question to be wise, you want your question to make others think, and oftentimes you want your question to be answered.</p>
+<p>Let’s start by asking a simple question — what would the main() function return in the below C/C++ program?</p>
 
-<blockquote><p>Whoever said “there’s no such thing as a bad question” clearly had never seen the Internet.<br/>
-— <a href="https://twitter.com/AndrewLBarber">Andrew Barber</a></p></blockquote>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="n">T</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">struct</span> <span class="n">T</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">a</span><span class="p">;</span> <span class="kt">int</span> <span class="n">b</span><span class="p">;</span> <span class="p">};</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="sc">&#39;T&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>There ain’t no such thing as a free lunch. And just like with everything else, in order for your questions to make you successful, some efforts from you are required. Of course nobody knows everything, and there is absolutely nothing wrong with saying, “I don’t know”. But you must at least show some efforts, some respect to those who read the question, or those who have already answered it million times over. There is a lot of great information about how to ask smart questions, and just in case you haven’t read it already, below are some links to a great tutorials about how to ask great questions. Trust me, you won’t waste your time by reading them. Those tutorials will definitely help you to succeed whatever your goals are:</p>
+
+<p>Of course it depends on architecture. But let’s assume that size of int is 4 bytes and structure T has no extra padding. The code is legal in both C and C++. Yet the correct answer depends on whether this is a C or C++ program. If it is a C program then the correct answer is 8. In case of C++ the answer is 9.</p>
+
+<h2>C is not C++</h2>
+
+<p>C++ originated back in 1979 and at that time it was based on C. It wasn’t even called C++ — its first name was «C with Classes». The language was renamed to «C++» only in 1983. At that time, both languages were closely related. However, from that point both C and C++ took a different evolution path and today, some 30+ years later, both languages are as different as Objective-C and C++, Java and C#, Python and Ruby, OCaml and F#. There is only one catch — the basic syntax of both is very similar to such a degree that it is possible to have a program that is both legal C and legal C++, which may or may not behave differently. Generally, everyone knows that C++ has tons of features that are not available in C but any C code can be compiled as C++. Therefore, C++ developers also think that they know C. And in most cases they are dangerously mistaken. Below is a list of the most common features of C language serving as traps for C++ fellows.</p>
+
+<h3>Casting void pointer</h3>
+
+<p>In C, void pointer can be implicitly casted to a pointer of any other type. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="mh">0xDEADDEAD</span><span class="p">;</span>
+</span><span class='line'><span class="kt">int</span> <span class="o">*</span><span class="n">i</span> <span class="o">=</span> <span class="n">ptr</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>C developers use this convenient feature all the time. However, any C++ compiler would choke on that and die.</p>
+
+<h3>Implicit function declaration</h3>
+
+<p>In C, it is not always necessary to declare a function before using it. Using an undeclared function implicitly declares it. This feature has been declared deprecated since 1999 but is still used here and there. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A perfectly legal C program that is illegal C++:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">gcc</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">c</span>
+</span><span class='line'><span class="err">$</span> <span class="n">g</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span> <span class="n">In</span> <span class="n">function</span> <span class="err">‘</span><span class="kt">int</span> <span class="n">main</span><span class="p">()</span><span class="err">’</span><span class="o">:</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="err">‘</span><span class="n">foo</span><span class="err">’</span> <span class="n">was</span> <span class="n">not</span> <span class="n">declared</span> <span class="n">in</span> <span class="n">this</span> <span class="n">scope</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>No arguments vs any arguments</h3>
+
+<p>In C, function prototype without parameters imply that function accepts any number of arguments and it is legal to call such a function with one or more arguments. In C++, function prototype without parameters means that function accepts no arguments and it is illegal to call such function with arguments. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;hello&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above is absolutely legal C code that won’t compile as C++. As a matter of fact, I haven’t seen many C++ developers who can tell the difference between <code>void foo();</code> and <code>void foo(void);</code></p>
+
+<h3>Crossing initialization with goto or switch</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>  <span class="nl">out:</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above is a perfectly legal C code but is rejected by C++ compiler as C++ does not allow to cross initialization:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span><span class="mi">5</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="k">goto</span> <span class="n">into</span> <span class="n">protected</span> <span class="n">scope</span>
+</span><span class='line'>    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span><span class='line'>    <span class="o">^</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">4</span><span class="o">:</span><span class="mi">9</span><span class="o">:</span> <span class="n">note</span><span class="o">:</span> <span class="n">jump</span> <span class="n">bypasses</span> <span class="n">variable</span> <span class="n">initialization</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">^</span>
+</span><span class='line'><span class="mi">1</span> <span class="n">error</span> <span class="n">generated</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Keywords clash</h3>
+
+<p>C++ would fail to compile any legal C code that happen to use C++ keywords:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">old</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">new</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>More! More! More!</h2>
+
+<p>Oh, you knew that? If you knew all of the above and still consider yourself a “C/C++” developer, hold on a second. Name at least 10 more differences. Huh?</p>
 
 <ul>
-<li><a href="http://www.catb.org/esr/faqs/smart-questions.html">How To Ask Questions The Smart Way</a> by Eric Steven Raymond</li>
-<li><a href="http://www.forbes.com/sites/stevedenning/2011/09/11/learning-to-ask-the-right-question-2/">Learning To Ask The Right Question</a> by Steve Denning, Forbes</li>
-<li><a href="http://mattgemmell.com/2008/12/08/what-have-you-tried/">What have You tried so far?</a> by Matt Gemmell</li>
-<li><a href="http://www.youngbloodcoaching.com/powerful-questions.html">The Art of Asking Powerful Questions</a></li>
+<li>In C++, comma operator can yield an l-value. In C it cannot.</li>
+<li>C does not allow duplicate typedefs while C++ does.</li>
+<li>C++ does not allow non-prototype function declarations while C does.</li>
+<li>C allows struct, union and enum to be declared in function prototypes, C++ doesn’t.</li>
+<li>C allows for implicit discard of pointer const qualifiers. This trick won’t work in C++.</li>
+<li>In C++, struct, union and enum declarations automatically imply a typedef with the same name. This is not the case in C.</li>
+<li>Character literals in C are of type int. In C++ they are of type char.</li>
+<li>C++ implicitly treats any const global as file scope unless it is explicitly declared extern, unlike C in which extern is the default.</li>
+<li>Functions market as “inline” in C are of file scope whereas they have external linkage by default in C++.</li>
+<li>C has VLA (Variable Length Arrays) support whereas C++ does not (until C++14).</li>
 </ul>
 
 
-<p>And if you are looking for the right place to ask your questions online, you might find one of the <a href="http://stackexchange.com/">Stack Exchange Q&amp;A sites</a> very useful. Whether you are into LEGO, Marital Arts, Politics or Physics, interested in Chemistry, or History, or the history of chemistry, or whatever that is you are interested in – there is a web site for it.</p>
+<p>And the list of technical differences/incompatibilities of C and C++ can go on and on. The list is so big that it is impossible to fit it into a blog post. But if you are interested, check out References section in the bottom of this post.</p>
 
-<p><a href="http://stackexchange.com/"><img src="/images/stack-exchange-top-sites.png"></a></p>
+<p>Aside of technical differences, it would also be a mistake not to mention the coding style. Not a formatting style or using tabs versus spaces, but coding style. For example, C++ developers would always cast a result of <code>malloc()</code> whereas C developers would almost never do that.</p>
 
-<p>Hope it helps. Good Luck!</p>
+<h2>Grammar of «C/C++»</h2>
+
+<p>Trying to figure out the meaning behind «C/C++», I dug the usage of slash as a punctuation sign in English text. I have never learn English grammar in school so you may want to check me on this one. Anyhow, according to Wikipedia the slash is most commonly used as the word substitute for “or” which indicates a choice (often mutually-exclusive) is present.</p>
+
+<p>If that is the case, then companies are actually looking for either C or C++ developers, not both. Which doesn’t make any sense at all. Why nobody is looking for “Cobol/Ada” or “Lisp/Verilog” developers? Looking at other industries, there seem to be no companies searching for “Linguist/Plumber”-like people.</p>
+
+<p>So the grammar doesn’t seem to back up the usage of «C/C++» term. This leaves everyone guessing as to what it actually means and the only way to figure out is from the context.</p>
+
+<h2>What it actually means</h2>
+
+<p>The actual meaning of «C/C++» depends. Here are some examples of what this means according to my observations.</p>
+
+<p>In job postings, “We are looking for C/C++ developers” generally means “We are looking for C++ developers, nobody knows C here but why not put that in a title, too?”</p>
+
+<p>When somebody brags about being a “C/C++” developers it means they don’t really know any of those languages but learned to write a “Hello, World!” application using printf() and compile it with C++ compiler.</p>
+
+<p>In forums, «C/C++» section is usually dedicated for C++ crowd that might as well be able to answer some C-related questions if you get lucky.</p>
+
+<h2>Tip: Don’t Use «C/C++»</h2>
+
+<p>If you are looking for a developer, make sure you clearly specify requirements and avoid the use of «C/C++». If it so happens that you are actually looking for someone who knows both, say «C and C++». If you are willing to spend a few years teaching C developer C++ language, say «C++ developer or C developer willing to learn C++». Using «C/C++» will only bring confusion to those reading the job posting.</p>
+
+<p>End of rant.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Slash_(punctuation">Slash in English text.</a></li>
+<li><a href="http://david.tribble.com/text/cdiffs.htm">Incompatibilities Between ISO C and ISO C++</a> by David R. Tribble</li>
+<li><a href="http://en.wikipedia.org/wiki/Compatibility_of_C_and_C%2B%2B">Compatibility of C and C++</a></li>
+<li><a href="http://c-faq.com/malloc/mallocnocast.html">What’s wrong with casting malloc’s return value?</a></li>
+</ul>
+
 </div>
   
   
@@ -181,15 +368,15 @@
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/static-assert/">C++11 Static Assert</a>
+    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    
+    <a class="list-group-item " href="/static-assert/">Static Assert</a>
     
     <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
     
     <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
     
     <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
-    
-    <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
     
   </div>
 </section>
@@ -201,7 +388,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">17</span>
+        <span class="badge">18</span>
         C++
       </a>
     
@@ -213,20 +400,14 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">25</span>
+        <span class="badge">26</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">2</span>
+        <span class="badge">3</span>
         C++11
-      </a>
-    
-    
-    <a class="list-group-item " href="/blog/categories/c">
-        <span class="badge">1</span>
-        C
       </a>
     
     

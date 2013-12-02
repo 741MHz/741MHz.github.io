@@ -116,73 +116,26 @@
 
 <span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
         
-           | <a href="/final-override/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/final-override/">Comments</a>
+           | <a href="/marvell-reset/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/marvell-reset/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/final-override/">C++11 Final Override</a></h1>
+      <h1 class="entry-title"><a href="/marvell-reset/">Marvell 88E1111 Reset Sequence</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><h2>Preface</h2>
+  <div class="entry-content clearfix"><p>If you are one of the lucky owners of one of the Altera’s development kits with Marvell’s software-programmable 88E1111 Ethernet PHY then you know it’s a bitch. The problem is not really in a PHY itself — it’s not a bad piece of hardware at all. The problem is that Altera provides literally zero support or documentation with it. Go figure.</p>
 
-<p>The alternative name for this article is “How to protect yourself from others when it comes to polymorphism.” That is pretty much the primary purpose of two brand new C++ keywords introduced in C++11 — the <code>override</code> and <code>final</code>.</p>
+<p>As it turns out, the PHY’s default settings after the hardware reset is to work in center-aligned mode, whereas the default mode for FPGA data-transfers is edge-aligned. On top of that, some kits have a bug and the PHY must be reset two or three times in order to become operational.</p>
 
-<p>Those who have at least some experience in team-based C++ development must be aware of at least one of many pitfalls of polymorphism and virtual methods in particular. Let’s go over some of real-world problems that could easily force developers to run a debugger or read the code over and over again trying to figure out why the program is not working as expected.</p>
+<p>The quick fix to get the I/O between FPGA and the PHY working without software-programming the PHY is to shift the clock 90°. That can be done with PLL. There are two problems with this approach however —it makes it a lot harder to time-constrain the design and it introduces an extra clock while the PHY is fully capable of working in edge-aligned mode. If only you knew how to set it up&hellip;</p>
 
-<h2>A Missing Virtual Function</h2>
+<p>As it turned out, the only way to get the documentation for the PHY is to sign an NDA with Marvell. It sounds as ridiculous as the need to sign a NDA in order to get an owner’s manual for the car you have just bought. I didn’t want to do it and &ldquo;picked the red pill.&rdquo; ¡No pasarán!</p>
 
-<p>This could happen to anyone — there was a base class with a virtual function and developer has decided to overload it for a good reason. Everything was fine and the program worked as expected. But one day after, a fresh build simply stopped working, and the reason is not obvious. After spending some time debugging the program, it turned out that a function that should have been called does not appear to be called at all. What could be wrong?</p>
-
-<p>Consider the following code where the Foo class is written by one developer while Bar was written by someone else and could even be part of another project:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">do_very_important_stuff</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">do_some_more_important_stuff</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>A few years later a new developer joins the company and accidentally removes a virtual keyword from the <code>init()</code> method’s declaration of class <em>Foo</em>. How that could even happen, you may ask? Maybe he was learning Emacs and executed a <em>replace-regexp</em> command without noticing all of the changes. Or maybe he just read the <em>Code Refactoring</em> book and decided to improve the code but couldn’t check all of the usages of class <em>Foo</em> because they were in a different repository that he didn’t have access to. Who knows? Things happen. As a result, the <code>Bar::init()</code> is no longer called because it does no longer override its base method. For example:</p>
+<p>After a few hours of searching through the darkest corners of the forum archives and reading a somewhat messy Altera’s Triple-Speed Ethernet drivers code, I finally came up with a piece of magic that properly resets the PHY and makes it use edge-aligned clock. It assumes that “base” is a memory address of the MAC’s MDIO space (see Table 6-1 of the TSE User Guides for details), a user-space Linux running on x86_64 (though can be easily ported to kernel mode):</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -212,296 +165,154 @@
 <span class='line-number'>26</span>
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#define PHY_CTRL_REG 0x00</span>
+</span><span class='line'><span class="cp">#define PHY_AUTO_NEG 0x04</span>
+</span><span class='line'><span class="cp">#define PHY_AUTO_NEG 0x04</span>
+</span><span class='line'><span class="cp">#define PHY_1000BASE_T_CONTROL 0x09</span>
+</span><span class='line'><span class="cp">#define PHY_SPEC_CONTROL 0x10</span>
+</span><span class='line'><span class="cp">#define PHY_SPEC_STATUS 0x11</span>
+</span><span class='line'><span class="cp">#define PHY_SPEC_CONTROL_EXT 0x14</span>
+</span><span class='line'><span class="cp">#define PHY_SPEC_STATUS_EXT 0x1B</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'><span class="cp">#define mb() asm volatile (&quot;&quot;: : :&quot;memory&quot;)</span>
+</span><span class='line'><span class="cp">#define rmb() mb()</span>
+</span><span class='line'><span class="cp">#define wmb() mb()</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Hello, World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="nf">phy_sw_reset</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="o">*</span><span class="n">base</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">uint32_t</span> <span class="n">ctrl</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'>    <span class="n">ctrl</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctrl</span> <span class="o">|</span> <span class="mh">0x8000</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">marvell_reset</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="o">*</span><span class="n">base</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">uint32_t</span> <span class="n">v</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
+</span><span class='line'>    <span class="cm">/* Initialize Control (REG 0) */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">v</span> <span class="o">&amp;=</span> <span class="mh">0x8EBF</span><span class="p">;</span> <span class="cm">/* Reset */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0040</span><span class="p">;</span> <span class="cm">/* Enable Speed 1000 */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0100</span><span class="p">;</span> <span class="cm">/* Enable Full Duplex Mode */</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_CTRL_REG</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* AN Advertisement Register (REG 4) */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_AUTO_NEG</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_AUTO_NEG</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&amp;</span> <span class="mh">0xFE1F</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* 1000BASE-T Control Register (REG 9) */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_1000BASE_T_CONTROL</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_1000BASE_T_CONTROL</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&amp;</span> <span class="mh">0xFCFF</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* PHYSpecific Control Register (REG 16).</span>
+</span><span class='line'><span class="cm">       Set PHY Synchronizing FIFO to maximum */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">|</span> <span class="mh">0xC000</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Extended PHYSpecific Status Register (REG 27).</span>
+</span><span class='line'><span class="cm">       Set PHY HWCFG_MODE for RGMII to Copper. */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_STATUS_EXT</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_STATUS_EXT</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">|</span> <span class="mh">0x000B</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Extended PHYSpecific Control Register (REG 20).</span>
+</span><span class='line'><span class="cm">       Enable RGMII TX and RX Timing Control. */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL_EXT</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">rmb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Bring it up */</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">&amp;=</span> <span class="mh">0xFF7D</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">v</span> <span class="o">|=</span> <span class="mh">0x0082</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">base</span><span class="p">[</span><span class="n">PHY_SPEC_CONTROL_EXT</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">wmb</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">phy_sw_reset</span><span class="p">(</span><span class="n">base</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The above program will not print an expected “The code is working!” line and someone would definitely waste some time trying to figure out why, especially if the project has a few million lines of code.</p>
+<p>Some of the logic and magic masks I dug out of the TCL script written for JTAG System Console that I stumbled upon in a <em>N647_TSE_Single_Port_RGMI_Dev_AIIGX_ACDS</em> reference design.</p>
 
-<h2>A Million Dollars Typo</h2>
-
-<p>Typos can also cause a lot of troubles. For example, developers can misspell the name of the method when overriding:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">doSomeVeryImportantWork</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">doSomeVeryInportantWork</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">doSomeVeryImportantWork</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above program prints nothing despite the expectations and the reason is not immediately obvious.</p>
-
-<h2>Signature Changes</h2>
-
-<p>Signature change is another seemingly innocent change that may potentially waste a log of valuable time when not accounted for properly. For example, the base class’s <code>init()</code> function is changed from this:</p>
-
-<pre><code>virtual void init() { }
-</code></pre>
-
-<p>… to this:</p>
-
-<pre><code>virtual void init(int x = 0) {
-}
-</code></pre>
-
-<p>The whole project still compiles just fine. Yet the program doesn’t work as expected anymore.</p>
-
-<p>It’s also possible to accidentally override someone’s virtual function, etc. The list of such gotchas can go on and on. For those who can relate to this — you must know that you are not alone! C++ developers including myself have dealt with this and similar problems for the past few decades.</p>
-
-<p>Luckily, since introduction of the C++11 the sun is shining on our side of the fence!</p>
-
-<h2>We Override!</h2>
-
-<p>Instead of using (or not using) a <code>virtual</code> keyword and assuming the base class has the method being overridden, we can now use the brand new <code>override</code> keyword. The compiler will then make sure that a method declared with that keyword really overrides the base method. And if that turns out to be not the case, the code won’t compile and the error would be caught during compilation, which is a lot better than debugging. The following is the new version of the first example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The compilation fails if the base class`s init() method is no longer there:</p>
-
-<pre><code>error: ‘int Bar::init()’ marked override, but does not override
-</code></pre>
-
-<h2>It’s Final!</h2>
-
-<p>The second keyword is <code>final</code>. It is a little bit less useful but is still a good self-defense mechanism against unintended usage and/or code changes.</p>
-
-<p>What it means is that a method marked as final is not only virtual and must override its base but that nobody else can further override it. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Hello, World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">final</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;This code works!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above code is sound and secure. But if somebody else would try to write a class like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">BetterBar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Bar</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">BetterBar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="o">~</span><span class="n">BetterBar</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Bar</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Even better init() function!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>… a compiler would tell them that they are wrong by issuing an error: </p>
-
-<pre><code>error: virtual function ‘virtual int BetterBar::init()’
-error: overriding final function ‘virtual int Bar::init()’
-</code></pre>
-
-<p>The <code>final</code> keyword can also be applied to the whole class in order to prevent further derivation from it. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="n">final</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>If anyone tries to inherit from Bar, the compiler issues an error: </p>
-
-<pre><code>error: cannot derive from ‘final’ base ‘Bar’ in derived type ‘BetterBar’
-</code></pre>
-
-<p>What is interesting is that almost the same effect can be achieved in a less obvious way by applying the <code>final</code> keyword to a virtual destructor of either base (which is not the same as <code>final</code> in this case because it introduces a virtual table) or any derived class:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span> <span class="c1">// You cannot derive from me!</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="n">final</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Template containers from the standard C++ library might be good candidates to be marked with a final keyword, as it is generally not a good idea to derive from them in almost every case.</p>
-
-<h2>Conclusion</h2>
-
-<p>C++11 introduces two important keywords in relation to polymorphism and inheritance — the <code>override</code> and <code>final</code>. Using those keywords should become a habit of any C++ developer. It is worth using every time except when writing a base class. This will make the code clear, maintainable, and potentially save hours that would have been otherwise wasted chasing an error in debugger.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">N2928</a> &ndash; Explicit Virtual Overrides</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">N3206</a> &ndash; Override control: Eliminating Attributes</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">N3272</a> &ndash; Follow-up on override control</li>
-<li><a href="http://clang.llvm.org/cxx_status.html">Clang C++11 Status Report</a></li>
-<li><a href="http://gcc.gnu.org/projects/cxx0x.html">GCC C++11 Status Report</a></li>
-</ul>
-
+<p>Hope it helps!</p>
 </div>
   
   
@@ -532,15 +343,15 @@ error: overriding final function ‘virtual int Bar::init()’
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/static-assert/">C++11 Static Assert</a>
+    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    
+    <a class="list-group-item " href="/static-assert/">Static Assert</a>
     
     <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
     
     <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
     
     <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
-    
-    <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
     
   </div>
 </section>
@@ -552,7 +363,7 @@ error: overriding final function ‘virtual int Bar::init()’
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">17</span>
+        <span class="badge">18</span>
         C++
       </a>
     
@@ -564,20 +375,14 @@ error: overriding final function ‘virtual int Bar::init()’
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">25</span>
+        <span class="badge">26</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">2</span>
+        <span class="badge">3</span>
         C++11
-      </a>
-    
-    
-    <a class="list-group-item " href="/blog/categories/c">
-        <span class="badge">1</span>
-        C
       </a>
     
     

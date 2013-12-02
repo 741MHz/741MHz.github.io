@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C++11 | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/c-plus-plus-11/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T22:53:55-05:00</updated>
+  <updated>2013-12-01T22:59:28-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -14,7 +14,148 @@
 
   
   <entry>
-    <title type="html"><![CDATA[C++11 Static Assert]]></title>
+    <title type="html"><![CDATA[C++ and Right Angle Brackets]]></title>
+    <link href="http://741MHz.com/right-angle-brackets/"/>
+    <updated>2013-11-10T00:00:00-05:00</updated>
+    <id>http://741MHz.com/right-angle-brackets</id>
+    <content type="html"><![CDATA[<p>When it comes to computers, both programming and science have a &ldquo;longest match&rdquo; principe also known as &ldquo;maximal munch&rdquo;. This principle states that when creating some construct, as much of the available input as possible should be consumed. Which in turn leads to the fact that lexical syntax of many programming languages requires that tokens be built from the maximum possible number of characters from the input stream.</p>
+
+<p>As a result of this, C++ has been suffering a minor, but persisting, annoying, and somewhat embarrassing problem that required programmers to avoid having two consecutive right angle brackets when writing templates. For example, the following code has been incorrect in C++ for decades:</p>
+
+<p>```c++</p>
+
+<pre><code>std::vector&lt;std::vector&lt;int&gt;&gt; matrix;
+</code></pre>
+
+<p>```</p>
+
+<p>This is because the longest token in this expression is <code>&gt;&gt;</code>, which is a token for <a href="http://en.wikipedia.org/wiki/Logical_shift">right logical shift</a>, and it has nothing to do with templates. So the compiler would give an error. For example:</p>
+
+<p>```</p>
+
+<h1>g++ ./matrix.cc</h1>
+
+<p>./matrix.cc:21:32: error: a space is required between consecutive right angle brackets (use &lsquo;> >&rsquo;)</p>
+
+<pre><code>std::vector&lt;std::vector&lt;int&gt;&gt; matrix;
+                           ^~
+                           &gt; &gt;
+</code></pre>
+
+<p>```</p>
+
+<p>And the programmers had to put a space between <code>&gt;</code> to fix it, like this: <code>std::vector&lt;std::vector&lt;int&gt; &gt; matrix;</code></p>
+
+<p>This is not the only example of maximal munch drawbacks. Another notable case is unintended beginning of multi-line comment as in this program:</p>
+
+<p>```c</p>
+
+<h1>include &lt;stdio.h></h1>
+
+<p>int main() {</p>
+
+<pre><code>int a;
+int *z;
+int x;
+int y;
+
+a = 2;
+z = &amp;a;
+y = 10;
+x = y/*z;
+
+printf("%d\n", x);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>For both humans and even a syntax highlighter it is clear that the intention of <code>x = y/*z</code> statement is to assigne <code>x</code> a result of dividing <code>y</code> by the value obtained through dereferencing <code>z</code> pointer. Yet <code>/*</code> is the longest match which corresponds to the beginning of the multiline comment, so the compiler would most likely fail:</p>
+
+<p>```</p>
+
+<blockquote><p>g++ ./example.cc
+./example.cc:25:10: error: unterminated /* comment</p>
+
+<pre><code>x = y/*z;
+</code></pre>
+
+<p>```</p></blockquote>
+
+<p>For the good of all C++ developers, Daveed Vandevoorde from Edison Design Group has proposed three possible ways to fix C++ grammar to eliminate the problem of two consecutive right angle brackets in templates. One of them was chosen over other two and starting with C++11, programmers can now use <code>&gt;&gt;</code> in templates like this &ndash;  <code>std::vector&lt;std::vector&lt;std::vector&lt;int&gt;&gt;&gt;</code></p>
+
+<p>It is important that this change also breaks backwards compatibility which could affect some programs. Consider the following program:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<p>template<int I> struct X {</p>
+
+<pre><code>static int const c = 2;
+</code></pre>
+
+<p>};</p>
+
+<p>template&lt;> struct X<0> {</p>
+
+<pre><code>typedef int c;
+</code></pre>
+
+<p>};</p>
+
+<p>template<typename T> struct Y {</p>
+
+<pre><code>static int const c = 3;
+</code></pre>
+
+<p>};</p>
+
+<p>static int const c = 4;</p>
+
+<p>int main() {</p>
+
+<pre><code>std::cout &lt;&lt; (Y&lt;X&lt;1&gt; &gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+std::cout &lt;&lt; (Y&lt;X&lt; 1&gt;&gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+</code></pre>
+
+<p>}
+```</p>
+
+<p>It is valid in both old and new C++. However, it would produce different results.</p>
+
+<p>This is because in the old C++ <code>&gt;&gt;</code> was treated as the right shift operator that shifted 1 by the value of global <code>c</code> as part of <code>1&gt;&gt;::c</code> expression. But with a new grammar introduced in C++ this is no longer the case and so the same program would print <code>0</code> and <code>3</code> in pre-C++11, and two zeroes in C++11.</p>
+
+<p>Some compiler developers, when started working on implementing new C++ standard, have put a special feature their compilers that would warn users about such cases. For example, clang compiler would issue a warning in case it runs into this code:</p>
+
+<p>```
+$ clang++ ./right_angle_brackets.cc &amp;&amp; ./test
+./right_angle_brackets.cc:19:25: warning: use of right-shift operator (&lsquo;>>&rsquo;) in template argument will require</p>
+
+<pre><code>  parentheses in C++11 [-Wc++11-compat]
+std::cout &lt;&lt; (Y&lt;X&lt; 1&gt;&gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+                    ^
+                   (     )
+</code></pre>
+
+<p>```</p>
+
+<p>Hopefully, not many developers have intentionally used logical shifts as part of template parameters, and the amount of those cases are far less from those when an annoying extra space was required for no good reason.</p>
+
+<p>As for the problem with comments &ndash; it still exists in both C and C++. But how much of a problem is it, really?</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Maximal_munch">Maximal much principle</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html">N1757 &ndash; Right Angle Brackets</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Static Assert]]></title>
     <link href="http://741MHz.com/static-assert/"/>
     <updated>2013-05-07T00:00:00-04:00</updated>
     <id>http://741MHz.com/static-assert</id>

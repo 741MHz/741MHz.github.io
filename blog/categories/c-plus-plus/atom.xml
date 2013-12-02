@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C++ | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T22:53:55-05:00</updated>
+  <updated>2013-12-01T22:59:28-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -14,7 +14,148 @@
 
   
   <entry>
-    <title type="html"><![CDATA[C++11 Static Assert]]></title>
+    <title type="html"><![CDATA[C++ and Right Angle Brackets]]></title>
+    <link href="http://741MHz.com/right-angle-brackets/"/>
+    <updated>2013-11-10T00:00:00-05:00</updated>
+    <id>http://741MHz.com/right-angle-brackets</id>
+    <content type="html"><![CDATA[<p>When it comes to computers, both programming and science have a &ldquo;longest match&rdquo; principe also known as &ldquo;maximal munch&rdquo;. This principle states that when creating some construct, as much of the available input as possible should be consumed. Which in turn leads to the fact that lexical syntax of many programming languages requires that tokens be built from the maximum possible number of characters from the input stream.</p>
+
+<p>As a result of this, C++ has been suffering a minor, but persisting, annoying, and somewhat embarrassing problem that required programmers to avoid having two consecutive right angle brackets when writing templates. For example, the following code has been incorrect in C++ for decades:</p>
+
+<p>```c++</p>
+
+<pre><code>std::vector&lt;std::vector&lt;int&gt;&gt; matrix;
+</code></pre>
+
+<p>```</p>
+
+<p>This is because the longest token in this expression is <code>&gt;&gt;</code>, which is a token for <a href="http://en.wikipedia.org/wiki/Logical_shift">right logical shift</a>, and it has nothing to do with templates. So the compiler would give an error. For example:</p>
+
+<p>```</p>
+
+<h1>g++ ./matrix.cc</h1>
+
+<p>./matrix.cc:21:32: error: a space is required between consecutive right angle brackets (use &lsquo;> >&rsquo;)</p>
+
+<pre><code>std::vector&lt;std::vector&lt;int&gt;&gt; matrix;
+                           ^~
+                           &gt; &gt;
+</code></pre>
+
+<p>```</p>
+
+<p>And the programmers had to put a space between <code>&gt;</code> to fix it, like this: <code>std::vector&lt;std::vector&lt;int&gt; &gt; matrix;</code></p>
+
+<p>This is not the only example of maximal munch drawbacks. Another notable case is unintended beginning of multi-line comment as in this program:</p>
+
+<p>```c</p>
+
+<h1>include &lt;stdio.h></h1>
+
+<p>int main() {</p>
+
+<pre><code>int a;
+int *z;
+int x;
+int y;
+
+a = 2;
+z = &amp;a;
+y = 10;
+x = y/*z;
+
+printf("%d\n", x);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>For both humans and even a syntax highlighter it is clear that the intention of <code>x = y/*z</code> statement is to assigne <code>x</code> a result of dividing <code>y</code> by the value obtained through dereferencing <code>z</code> pointer. Yet <code>/*</code> is the longest match which corresponds to the beginning of the multiline comment, so the compiler would most likely fail:</p>
+
+<p>```</p>
+
+<blockquote><p>g++ ./example.cc
+./example.cc:25:10: error: unterminated /* comment</p>
+
+<pre><code>x = y/*z;
+</code></pre>
+
+<p>```</p></blockquote>
+
+<p>For the good of all C++ developers, Daveed Vandevoorde from Edison Design Group has proposed three possible ways to fix C++ grammar to eliminate the problem of two consecutive right angle brackets in templates. One of them was chosen over other two and starting with C++11, programmers can now use <code>&gt;&gt;</code> in templates like this &ndash;  <code>std::vector&lt;std::vector&lt;std::vector&lt;int&gt;&gt;&gt;</code></p>
+
+<p>It is important that this change also breaks backwards compatibility which could affect some programs. Consider the following program:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<p>template<int I> struct X {</p>
+
+<pre><code>static int const c = 2;
+</code></pre>
+
+<p>};</p>
+
+<p>template&lt;> struct X<0> {</p>
+
+<pre><code>typedef int c;
+</code></pre>
+
+<p>};</p>
+
+<p>template<typename T> struct Y {</p>
+
+<pre><code>static int const c = 3;
+</code></pre>
+
+<p>};</p>
+
+<p>static int const c = 4;</p>
+
+<p>int main() {</p>
+
+<pre><code>std::cout &lt;&lt; (Y&lt;X&lt;1&gt; &gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+std::cout &lt;&lt; (Y&lt;X&lt; 1&gt;&gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+</code></pre>
+
+<p>}
+```</p>
+
+<p>It is valid in both old and new C++. However, it would produce different results.</p>
+
+<p>This is because in the old C++ <code>&gt;&gt;</code> was treated as the right shift operator that shifted 1 by the value of global <code>c</code> as part of <code>1&gt;&gt;::c</code> expression. But with a new grammar introduced in C++ this is no longer the case and so the same program would print <code>0</code> and <code>3</code> in pre-C++11, and two zeroes in C++11.</p>
+
+<p>Some compiler developers, when started working on implementing new C++ standard, have put a special feature their compilers that would warn users about such cases. For example, clang compiler would issue a warning in case it runs into this code:</p>
+
+<p>```
+$ clang++ ./right_angle_brackets.cc &amp;&amp; ./test
+./right_angle_brackets.cc:19:25: warning: use of right-shift operator (&lsquo;>>&rsquo;) in template argument will require</p>
+
+<pre><code>  parentheses in C++11 [-Wc++11-compat]
+std::cout &lt;&lt; (Y&lt;X&lt; 1&gt;&gt;::c &gt;::c&gt;::c) &lt;&lt; '\n';
+                    ^
+                   (     )
+</code></pre>
+
+<p>```</p>
+
+<p>Hopefully, not many developers have intentionally used logical shifts as part of template parameters, and the amount of those cases are far less from those when an annoying extra space was required for no good reason.</p>
+
+<p>As for the problem with comments &ndash; it still exists in both C and C++. But how much of a problem is it, really?</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Maximal_munch">Maximal much principle</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html">N1757 &ndash; Right Angle Brackets</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Static Assert]]></title>
     <link href="http://741MHz.com/static-assert/"/>
     <updated>2013-05-07T00:00:00-04:00</updated>
     <id>http://741MHz.com/static-assert</id>
@@ -914,370 +1055,6 @@ B&rsquo;s this:   0x7fff535dfb48
 ```</p>
 
 <p>Hopefully that clears things up a little bit.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[C++ Exceptions, Stack Trace and GDB Automation]]></title>
-    <link href="http://741MHz.com/throw-stacktrace/"/>
-    <updated>2013-04-16T00:00:00-04:00</updated>
-    <id>http://741MHz.com/throw-stacktrace</id>
-    <content type="html"><![CDATA[<p>The tricky part about any exception is that the stack is already unwinded by the time exception is caught and there is no easy way to figure out from which part of the code it was thrown. Have you ever caught an exception that has no information that can be used to find where the problem is? The one that says «this should never happen» or even has no text at all. Hopefully, this doesn’t happen to you very often. But if you work with a large C++ codebase with tons of different components written by different developers then sooner or later it would definitely happen. It can be quite disappointing and take a lot of time going through the pile of somebody else’s code trying to figure out what went wrong. So you must be prepared. I might be a little bit unlucky in this regard – this happened to me a lot, so I decided to share a few ways for overcoming this type of situations.</p>
-
-<h2>Backtrace API</h2>
-
-<p>Quite a few C runtime libraries provide a mechanism to examine the current thread’s call stack. It consists of three functions declared in <code>execinfo.h</code> header:</p>
-
-<p>```c
-int backtrace(void** array, int size);</p>
-
-<p>char<em><em> backtrace_symbols(void</em> const</em> array, int size);</p>
-
-<p>void backtrace_symbols_fd(void<em> const</em> array, int size, int fd);
-```</p>
-
-<p>Using those functions, one can access the stack trace at any given point of program execution. Here is a simple example that prints the stack to standard output:</p>
-
-<p>```c++</p>
-
-<h1>include &lt;execinfo.h></h1>
-
-<h1>include <iostream></h1>
-
-<p>int main()
-{</p>
-
-<pre><code>void *callstack[256];
-int frames = ::backtrace(
-    callstack, sizeof(callstack) / sizeof(callstack[0]));
-char **symbols = ::backtrace_symbols(callstack, frames);
-std::cout &lt;&lt; "Stack Trace:\n";
-for (int i = 0; i &lt; frames; ++i) {
-    std::cout &lt;&lt; '\t' &lt;&lt; symbols[i] &lt;&lt; '\n';
-}
-std::free(symbols);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>This method can be used to get the stack trace before the exception is thrown and before the stack is unwinded. In order to do that, one could define a custom exception class that grabs the stack trace in its constructor. For example:</p>
-
-<p>```c++</p>
-
-<h1>include &lt;execinfo.h></h1>
-
-<h1>include <string></h1>
-
-<h1>include <stdexcept></h1>
-
-<h1>include <cstdlib></h1>
-
-<h1>include <iostream></h1>
-
-<p>class Exception : public std::exception {
-  public:</p>
-
-<pre><code>Exception() {
-    grab_backtrace();
-}
-
-explicit Exception(const std::string &amp;reason) : reason_(reason) {
-    reason_.append(1, '\n');
-    grab_backtrace();
-}
-
-virtual ~Exception() throw() { }
-
-virtual const char *what() const throw() {
-    return reason_.c_str();
-}
-</code></pre>
-
-<p>  private:</p>
-
-<pre><code>void grab_backtrace() {
-    void *callstack[256];
-    int frames = ::backtrace(
-        callstack, sizeof(callstack) / sizeof(callstack[0]));
-    char **symbols = backtrace_symbols(callstack, frames);
-    try {
-        reason_.append("Stack Trace:");
-        for (int i = 0; i &lt; frames; ++i) {
-            reason_.append("\n\t").append(symbols[i]);
-        }
-    } catch(const std::exception &amp;) {
-        std::free(symbols);
-        throw;
-    }
-    std::free(symbols);
-}
-
-std::string reason_;
-</code></pre>
-
-<p>};</p>
-
-<p>static void do_something(int n, int i = 0)
-{</p>
-
-<pre><code>if (i &lt; n) {
-    do_something(n, ++i);
-} else {
-    throw Exception("Recursion limit exceeded");
-}
-</code></pre>
-
-<p>}</p>
-
-<p>int main(int argc, char *argv[])
-{</p>
-
-<pre><code>try {
-    do_something(argc &gt; 1 ? std::atoi(argv[1]) : 10, argc);
-} catch(const std::exception &amp;e) {
-    std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
-    return EXIT_FAILURE;
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>So far so good! Here is an example of running the above program:</p>
-
-<p>```
-$ clang++ -Wall -pedantic ./test.cpp &amp;&amp; ./a.out 3
-Recursion limit exceeded
-Stack Trace:</p>
-
-<pre><code>0   a.out                0x00000001034fa7af _ZN9Exception14grab_backtraceEv + 63
-1   a.out                0x00000001034fa6f4 _ZN9ExceptionC2ERKSs + 116
-2   a.out                0x00000001034fa56d _ZN9ExceptionC1ERKSs + 29
-3   a.out                0x00000001034fa33c _Z12do_somethingii + 140
-4   a.out                0x00000001034fa2df _Z12do_somethingii + 47
-5   a.out                0x00000001034fa42d main + 93
-6   libdyld.dylib        0x00007fff935e27e1 start + 0
-</code></pre>
-
-<p>```</p>
-
-<p>Unfortunately, there are a few problems with this approach. Firstly, there no file names and no line numbers. Secondly, this approach requires to use the “Exception” class as a base class of all exceptions in the project (well, at least for those you want to get a stack trace for), which indeed can be very problematic if not impossible. But even if all of the above is fine with you, this approach may still not work out for you because frame pointers can be omitted in optimized builds. For example, omitting frame pointers is a default behavior of recent GCC compilers for x86_64 platforms (which can also be turned on/off using <code>-fomit-frame-pointer</code> option). Our call stack becomes useless if frame pointers are omitted:</p>
-
-<p>```
-$ clang++ -Wall -fomit-frame-pointer ./test.cpp &amp;&amp; ./a.out 3
-Recursion limit exceeded
-Stack Trace:</p>
-
-<pre><code>0   a.out                0x0000000105eca82d _ZN9Exception14grab_backtraceEv + 61
-</code></pre>
-
-<p>```</p>
-
-<p>Depending on the system, there could be other requirements in order to make this API work. For example, GNU runtime requires you to specify “-rdynamic” flag to instruct the linker to add all symbols, not only used ones, to the dynamic symbol table. So don’t forget to read a manual page for this API in your system before using this.</p>
-
-<h2>__FILE__ and __LINE__</h2>
-
-<p>C++ has many <a href="http://gcc.gnu.org/onlinedocs/cpp/Standard-Predefined-Macros.html">standard predefined macros</a>. <code>__FILE__</code> and <code>__LINE__</code> macros are those two that come handy in order to identify a point in a program:</p>
-
-<p><code>__FILE__</code>  macros expands to the name of the current input file, in the form of a C string constant. This is the path by which the preprocessor opened the file, not the short name specified in ‘#include’ or as the input file name argument. For example, “/usr/local/include/myheader.h” is a possible expansion of this macros.</p>
-
-<p><code>__LINE__</code> macros expands to the current input line number, in the form of a decimal integer constant. While we call it a predefined macro, it’s a pretty strange macro, since its “definition” changes with each new line of source code.|</p>
-
-<p>Using the above macros, it is possible to include both file and line information along with exception’s text, or maybe as additional member fields of any given exception class. There are multiple choices. Here is an example of one of possible implementations:</p>
-
-<p>```c++</p>
-
-<h1>include <stdexcept></h1>
-
-<h1>include <cstdlib></h1>
-
-<h1>include <iostream></h1>
-
-<p>class Exception : public std::runtime_error {
-  public:</p>
-
-<pre><code>template &lt;unsigned int location_len&gt;
-inline Exception(const char (&amp;location)[location_len],
-                 const std::string &amp;reason)
-    : std::runtime_error(reason + location)
-{ }
-
-virtual ~Exception() throw() { }
-</code></pre>
-
-<p>};</p>
-
-<h1>define MY_THROW_STR_I(Arg) #Arg</h1>
-
-<h1>define MY_THROW_STR(Arg) MY_THROW_STR_I(Arg)</h1>
-
-<h1>define MY_THROW(Type, &hellip;)                                             \</h1>
-
-<pre><code>do {                                                                \
-    throw Type(" @ "; __FILE__ ";:" MY_THROW_STR(__LINE__), ##__VA_ARGS__); \
-} while (0)
-</code></pre>
-
-<p>static void do_something(int n, int i = 0)
-{</p>
-
-<pre><code>if (i &lt; n) {
-    do_something(n, ++i);
-} else {
-    MY_THROW(Exception, "Recursion limit exceeded");
-}
-</code></pre>
-
-<p>}</p>
-
-<p>int main(int argc, char *argv[])
-{</p>
-
-<pre><code>try {
-    do_something(argc &gt; 1 ? std::atoi(argv[1]) : 10, argc);
-} catch(const std::exception &amp;e) {
-    std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
-    return EXIT_FAILURE;
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>When the exception is caught and printed, the source file name and a line numbers are included, which makes it easy to trace the origins of such an exception:</p>
-
-<p><code>
-$ ./a.out
-Recursion limit exceeded @ ./test.cpp:26
-</code></p>
-
-<p>Of course, this does not include a stack trace. But it works if frame pointers are omitted, tail recursion optimization is applied, or even if all symbol names are stripped out of the executable. There is one problem though — it may not be useful without a stack trace in certain cases. For example, one may declare a helper function used to throw an exception, like this:</p>
-
-<p>```c++
-<strong>attribute</strong>((noreturn)) void report_error(const std::string &amp;reason) {</p>
-
-<pre><code>MY_THROW(Exception, reason);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>In that case, the file and line of the exception origins will always be the same even if it was called from different places in the program. So this approach is also not a cure for all diseases.</p>
-
-<h2>GDB Scripting: Automatic Backtrace on Exception Catchpoints</h2>
-
-<p>And the last but not least method is to use <a href="http://www.gnu.org/software/gdb/">GDB debugger</a>. If you are not familiar with this debugger, you definitely should spend some time learning it. It is one of the most powerful tools out there. And it comes extremely handy when dealing with exceptions.</p>
-
-<p><a href="http://sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html">GDB provides special catch points</a>, including those to catch exceptions being thrown, caught or even unhandled. We are interested in exceptions that are being thrown and so must use <code>catch throw</code> command. Here is an example of manually using GDB in order to examine a stack trace before the exception is thrown:</p>
-
-<p>```
-$ gdb -args ./a.out 5
-Reading symbols from /tmp/a.out&hellip;done.
-(gdb) catch throw
-Catchpoint 1 (throw)
-(gdb) run
-Starting program: /tmp/a.out 5
-Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</p>
-
-<pre><code>at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
-</code></pre>
-
-<p>70    header->exc.unexpectedHandler = __unexpected_handler;
-(gdb) backtrace</p>
-
-<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</h1>
-
-<pre><code>at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
-</code></pre>
-
-<h1>1  0x0000000000400fee in report_error (reason=&ldquo;Recursion limit exceeded&rdquo;) at ./test.cpp:25</h1>
-
-<h1>2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</h1>
-
-<h1>3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</h1>
-
-<h1>4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</h1>
-
-<h1>5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</h1>
-
-<h1>6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</h1>
-
-<p>(gdb) continue
-Continuing.
-Recursion limit exceeded @ ./test.cpp:25
-[Inferior 1 (process 3865) exited with code 01]
-(gdb) quit
-```</p>
-
-<p>At first, this might sound silly because in the real world a program may encounter a lot of exceptions and manually typing “backtrace” and “continue” every type that happens is nothing but a waste of time. But there is one trick — GDB can be automated. There are two ways of doing this — use a batch mode or a more sophisticated <a href="http://sourceware.org/gdb/wiki/PythonGdbTutorial">Python scripting</a>. For our purpose, a batch script will do just fine. Here is a simple script that turns off verbose output and paging, sets up a <code>throw</code> catch point and executes <code>backtrace</code> + <code>continue</code> commands every time the event is caught:</p>
-
-<p><code>
-set verbose off
-set pagination off
-catch throw
-commands
-backtrace
-continue
-end
-run
-quit
-</code></p>
-
-<p>Save the above script into a file, and then run GDB in batch mode telling it to use that file, which in my case is called “gdb_bt_script”:</p>
-
-<p>```
-$ gdb -n -batch -x ./gdb_bt_script &mdash;args ./a.out 5
-Catchpoint 1 (throw)
-Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
-70    header->exc.unexpectedHandler = __unexpected_handler;</p>
-
-<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</h1>
-
-<h1>1  0x0000000000400fee in report_error (reason=&ldquo;Recursion limit exceeded&rdquo;) at ./test.cpp:25</h1>
-
-<h1>2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</h1>
-
-<h1>3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</h1>
-
-<h1>4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</h1>
-
-<h1>5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</h1>
-
-<h1>6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</h1>
-
-<p>Recursion limit exceeded @ ./test.cpp:25
-[Inferior 1 (process 5849) exited with code 01]
-$
-```</p>
-
-<p>Whoala! Now we get a full stack trace including function parameters, their values, and file and line numbers. If the program is optimized and has no debug symbols, however, we get a little bit less:</p>
-
-<p>```
-$ gdb -n -batch -x ./gdb_bt_script &mdash;args ./a.out 5
-Catchpoint 1 (throw)
-Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
-70    header->exc.unexpectedHandler = __unexpected_handler;</p>
-
-<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</h1>
-
-<h1>1  0x00000000004010a8 in report_error(std::string const&amp;) ()</h1>
-
-<h1>2  0x000000000040121e in do_something(int, int) ()</h1>
-
-<h1>3  0x0000000000400ef6 in main ()</h1>
-
-<p>Recursion limit exceeded @ ./test.cpp:25
-[Inferior 1 (process 1877) exited with code 01]
-```</p>
-
-<p>Yet still a lot more than we get using backtrace API. But the most beautiful part is that this method does not require any code changes and works for pretty much any binary.</p>
-
-<h2>The End</h2>
-
-<p>Those were three fundamental methods that can help to identify a place where exception is thrown from. They are not mutually exclusive. Each has its cons and pros. I personally prefer to use GDB because it doesn’t require a code change, but use other two methods as well, depending on a situation. It is up to you to decide which one to use.</p>
-
-<p>Hope it helps and Good Luck!</p>
 ]]></content>
   </entry>
   

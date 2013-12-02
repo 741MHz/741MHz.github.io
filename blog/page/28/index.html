@@ -1,172 +1,139 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Ranting @ 741 MHz</title>
+  <meta name="author" content="741MHz.com">
 
-  <title><![CDATA[Category: Linux | Ranting @ 741 MHz]]></title>
-  <link href="http://741MHz.com/blog/categories/linux/atom.xml" rel="self"/>
-  <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T22:59:28-05:00</updated>
-  <id>http://741MHz.com/</id>
-  <author>
-    <name><![CDATA[741MHz.com]]></name>
+  
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://741MHz.com/blog/page/28">
+  <link href="/favicon.png" type="image/png" rel="icon">
+  <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
+
+  <link href="/assets/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+
+  <script src="/javascripts/libs/jquery/jquery-2.0.3.min.js"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-45575473-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+  <body   >
+    <div id="wrap">
+      <header role="banner">
+        <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ranting @ 741 MHz</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href="/">Blog</a>
+                </li>
+                <li >
+                    <a href="/blog/archives">Archives</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="subscribe-rss" href="/atom.xml" title="subscribe via RSS">
+                        <span class="visible-xs">RSS</span>
+                        <img class="hidden-xs" src="/images/rss.png" alt="RSS">
+                    </a>
+                </li>
+                
+            </ul>
+            
+                <form class="search navbar-form navbar-right" action="http://google.com/search" method="GET">
+                    <input type="hidden" name="q" value="site:741MHz.com">
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="q" placeholder="Search">
+                    </div>
+                </form>
+            
+        </div>
+    </div>
+</nav>
+
+
+      </header>
+      <div id="main" class="container">
+        <div id="content">
+          <div class="row">
+  <div class="page-content col-md-9">
+    <div class="blog-index">
+      
+      
+      
+        <article class="post">
+          
+  <header class="page-header">
     
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
+      <p class="meta text-muted text-uppercase">
+        
 
-  
-  <entry>
-    <title type="html"><![CDATA[Linux, HID and PyUSB]]></title>
-    <link href="http://741MHz.com/pyusb/"/>
-    <updated>2013-03-04T00:00:00-05:00</updated>
-    <id>http://741MHz.com/pyusb</id>
-    <content type="html"><![CDATA[<p>Today I was going through some stuff in my desk’s locker and ran into this nice toy — a big red electronic panic button. It has been there for years but I never had a chance to use it because a company making those does not have a driver for OS X, and of course I couldn’t find one for Linux either. But pushing a big red button is always fun and this time I have decided to try and make it work. So I brought it home with me into my “lab” to see what I can do.</p>
 
-<p>After plugging it into a USB port, it immediately showed up in a list of USB devices (which you can see with lsusb tool). My Linux box has identified it as a Dream Cheeky Stress/Panic Button:</p>
 
-<pre><code>Bus 007 Device 010: ID 04f3:04a0 Elan Microelectronics Corp. Dream Cheeky Stress/Panic Button
-</code></pre>
 
-<p>Meanwhile, the kernel has also logged a message saying that it has found a new USB device. So the magic button seemed somewhat operational and I already knew two important things about it — a vendor and a product IDs. They were <code>0x04f3</code> and <code>0x04a0</code> respectively.</p>
 
-<h2>Writing a USB driver</h2>
 
-<p>The only little detail missing was actually a driver. I tried to <a href="https://duckduckgo.com/">Duck Duck Go</a> it real quick but nothing showed up, and I decided to write it myself. How hard can it be, after all?</p>
 
-<h2>Reverse Engineering</h2>
 
-<p>In order to write a device driver, one must know what the device is doing. Obviously, I didn’t have any specification, neither I wanted to deal with Elan Microelectronics support department. So the only way to figure it out was reverse engineering. Luckily, Linux has <a href="https://www.kernel.org/doc/Documentation/usb/usbmon.txt"><em>usbmon</em></a> — a facility in the kernel that is used to collect traces of I/O on the USB bus. After a quick pick at its documentation, I loaded the module using <code>modprobe usbmon</code> command and the device showed up in <code>/sys/kernel/debug/usb/devices</code>. Since it was attached to bus #7, I traced the I/O by reading the <code>/sys/kernel/debug/usb/usbmon/7u</code> file and pushing my panic button a few times to see if anything shows up. And every time I hit the button, the device was sending the following data to the host:</p>
 
-<p><code>
-ffff8801b2efc9c0 1873321198 C Ii:7:010:1 0:8 8 = 02000000 00000000
-ffff8801b2efc9c0 1873457204 C Ii:7:010:1 0:8 8 = 06000000 00000000
-ffff8801b2efc9c0 1873633203 C Ii:7:010:1 0:8 8 = 06001300 00000000
-ffff8801b2efc9c0 1873801206 C Ii:7:010:1 0:8 8 = 06000000 00000000
-ffff8801b2efc9c0 1873977211 C Ii:7:010:1 0:8 8 = 02000000 00000000
-</code></p>
 
-<p>Not only this proved that button itself works, it also uncovered a pattern — the device was sending <code>02000000</code> and <code>06000000</code> twice with <code>06001300</code> in between. So <code>06001300</code> seemed like a good indication of the button being pressed.</p>
 
-<h2>Linux Kernel USB Driver</h2>
 
-<p>The next step was to write a USB Device Driver for Linux. I dealt with PCI Express, DMA and Ethernet network drivers, but never wrote a single USB driver before. So I pulled my copy of the Linux Device Drivers book off the shelf and opened it on Chapter 13 “USB Drivers”. I have to say I got surprised — that rant is about 100 pages long. I would of course suck it up, enjoy the reading and proceed to hacking. If only it was something serious. And what I had was a simple USB button that did nothing but sending two 32-bit integers, 0x06 and 0x13, every time it gets hit. Going through the hundred pages just to read 64-bit of data off the USB cable, on Monday night, after a hard 10 hours working day… Ain’t nobody got time for that?</p>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-09-29T00:00:00-04:00" pubdate data-updated="true">Sep 29<span>th</span>, 2010</time>
+        
+           | <a href="/inotify-wait/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/inotify-wait/">Comments</a>
+        
+      </p>
+    
+    
+      <h1 class="entry-title"><a href="/inotify-wait/">Wait for File With Inotify</a></h1>
+    
+  </header>
 
-<h2>PyUSB</h2>
 
-<p>A bit disappointed, I tried to find an easier way and once against ducked for a few keywords like “USB”, “driver”, “read”, “HID” and so on…</p>
-
-<blockquote><p>Ask and it will be given to you; seek and you will find; knock and the door will be opened to you.
-— Matthew 7:7</p></blockquote>
-
-<p>Turned out, it is possible to write a USB driver in just a few lines of Python. Sir <a href="http://www.micahcarrick.com/">Micah Carrick</a> have managed to make a driver for his credit card reader and wrote about his experience in <a href="http://www.micahcarrick.com/credit-card-reader-pyusb.html">this nice article</a>. Following in his footsteps, I quickly glanced at <a href="http://sourceforge.net/apps/trac/pyusb/">PyUSB</a> that he was using in his work, read a few other examples, and came up with a driver for my magic button. This is truly the shortest and simplest device driver that I have made in my life:</p>
-
-<p>```python</p>
-
-<h1>!/usr/bin/env python</h1>
-
-<p>import sys, usb.core</p>
-
-<p>dev = usb.core.find(idVendor=0x04f3, idProduct=0x04a0)
-if dev is None:</p>
-
-<pre><code>sys.exit("No Panic button found in the system");
-</code></pre>
-
-<p>try:</p>
-
-<pre><code>if dev.is_kernel_driver_active(0) is True:
-    dev.detach_kernel_driver(0)
-</code></pre>
-
-<p>except usb.core.USBError as e:</p>
-
-<pre><code>sys.exit("Kernel driver won't give up control over device: %s" % str(e))
-</code></pre>
-
-<p>try:</p>
-
-<pre><code>dev.set_configuration()
-dev.reset()
-</code></pre>
-
-<p>except usb.core.USBError as e:</p>
-
-<pre><code>sys.exit("Cannot set configuration the device: %s" % str(e))
-</code></pre>
-
-<p>endpoint = dev[0][(0,0)][0]
-while 1:</p>
-
-<pre><code>try:
-    data = dev.read(endpoint.bEndpointAddress, endpoint.wMaxPacketSize,
-                    timeout=10000)
-    if data is not None and len(data) &gt; 2:
-        if data[0] == 6 and data[2] == 19:
-            # Panic button was pressed!
-            print "OH MY GOD! OH MY GOD! DOUBLE RAINBOW!!!"
-except usb.core.USBError as e:
-    if e.errno != 110: # 110 is a timeout.
-        sys.exit("Error readin data: %s" % str(e))
-</code></pre>
-
-<p>```</p>
-
-<p>So now I have my beautiful toy working!</p>
-
-<h2>UPDATE</h2>
-
-<p><a href="https://twitter.com/pdp7">Drew Fustini</a> have hooked this up to the BeagleBone Next-Gen and made this video:</p>
-
-<p><div class="embed-video-container"><iframe src="http://www.youtube.com/embed/52b5RGd4yrE "></iframe></div></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[System Program Problem Detected]]></title>
-    <link href="http://741MHz.com/system-program-problem-detected/"/>
-    <updated>2012-12-10T00:00:00-05:00</updated>
-    <id>http://741MHz.com/system-program-problem-detected</id>
-    <content type="html"><![CDATA[<p>I have just installed Ubuntu 12.10 and the first thing I ran into is tons of annoying popup windows telling me about system program problems and asking to report them:</p>
-
-<p><img src="/images/ubuntu_system_problem/popup.png"></p>
-
-<p>Apparently, this is a common problem that drives crazy a lot of people. What happens is some of the programs crash, and those cases are being reported by the Apport application. I highly doubt that anyone at Ubuntu is actually reading these reports. Firstly, millions of Ubuntu installations constantly have programs crashing and it must take an army of developers to investigate and fix them. Secondly, these crashes are happening for many years and they don’t seem to go away. So why bother? Here is how you disable this annoying reporting facility.</p>
-
-<h3>Launch a terminal</h3>
-
-<p>First, you need to open a terminal. You can do that by clicking on “Dash Home” button (on the top left of your screen), typing “Terminal”, and clicking on a Terminal application icon in order to launch it:</p>
-
-<p><img src="/images/ubuntu_system_problem/open_terminal.png"></p>
-
-<h3>Disable Apport</h3>
-
-<p>In the terminal, type the following commands:</p>
-
-<pre><code>sudo sed -i 's;^enabled=1$;enabled=0;g' /etc/default/apport
-sudo service apport restart
-sudo rm /var/crash/*
-</code></pre>
-
-<p>The above commands will replace “enabled=1″ with “enabled=0″ in the “/etc/default/apport” configuration file, restart the Apport application and remove old reports to save you a valuable disk space. The problem should now go away.</p>
-
-<h3>Still having annoying popups?</h3>
-
-<p>Be aware that in earlier versions of Ubuntu there was a bug when restarting Apport didn’t really restart it (see <a href="https://bugs.launchpad.net/ubuntu/+source/apport/+bug/292402">Bug #292402</a>). So as the last resort, simply reboot your computer.</p>
-
-<p>Hope it helps! Good Luck!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Wait For File With Inotify]]></title>
-    <link href="http://741MHz.com/inotify-wait/"/>
-    <updated>2010-09-29T00:00:00-04:00</updated>
-    <id>http://741MHz.com/inotify-wait</id>
-    <content type="html"><![CDATA[<p>Imagine a situation where you have been asked to create a program that needs user to upload a file. It sounds easy, but there is a little problem. The program needs to wait for the file to appear, and how to do so efficiently might not be immediately obvious. The easiest and perhaps most naive implementation that comes to mind first is to check whether the file exist, wait some time using <a href="http://man7.org/linux/man-pages/man3/sleep.3.html"><code>sleep()</code></a> and repeat this loop if files still does not exist afterwards.</p>
+  <div class="entry-content clearfix"><p>Imagine a situation where you have been asked to create a program that needs user to upload a file. It sounds easy, but there is a little problem. The program needs to wait for the file to appear, and how to do so efficiently might not be immediately obvious. The easiest and perhaps most naive implementation that comes to mind first is to check whether the file exist, wait some time using <a href="http://man7.org/linux/man-pages/man3/sleep.3.html"><code>sleep()</code></a> and repeat this loop if files still does not exist afterwards.</p>
 
 <p>This approach has some problems. It is not clear what time the program needs to sleep. If the interval is too long, a second for example, then user may experience a second long delay. This might be unacceptable. On the other hand, having a sleep interval too short would put an extra load on the entire system — operating system will have to <a href="http://en.wikipedia.org/wiki/Schedule_(computer_science">schedule</a>) this program more frequently, the filesystem access will be performed on each loop cycle, etc. This might slow down other applications running on the same server. Either way there is a problem that cannot be solved without a proper support from operating system that can tell the program when the file is created.</p>
 
 <p><a href="http://en.wikipedia.org/wiki/Linux">Linux</a> has introduced the <a href="http://en.wikipedia.org/wiki/Inotify"><em>inotify</em></a> subsystem that was designed to solve this and similar problems by extending the filesystem with notifications of changes that are reported to the applications. To demonstrate how it works, I wrote a simple C++ that check if the file exists and waits for it if it doesn’t:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code panel panel-default'><figcaption class='panel-heading'><h3 class='panel-title'>Wait for file using inotify (inotify_wait.cpp)</h3> <a href='/downloads/code/inotify_wait.cpp'>download</a></figcaption>
+<figure class='code panel panel-default'><figcaption class='panel-heading'><h3 class='panel-title'>Wait for file using inotify (inotify_wait.cpp)</h3> <a href='/downloads/code/inotify_wait.cpp'>download</a></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -259,12 +226,156 @@ sudo rm /var/crash/*
 </span><span class='line'>    <span class="n">inotify_rm_watch</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">watch</span><span class="p">);</span>
 </span><span class='line'>    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>Note that we subscribe for filesystem notifications before checking if file exists. It is needed to avoid a race condition where file is created exactly after we checked for its existence and before we subscribed for notifications.</p>
 
 <p>A similar approach is used in many applications. For example, <a href="www.bittorrent.com">BitTorrent</a> application can monitor a “Downloads” directory for new torrent files and open them automatically.</p>
-]]></content>
-  </entry>
+</div>
   
-</feed>
+  
+
+
+        </article>
+      
+    </div>
+
+    <ul class="pager">
+      
+        <li class="previous disabled"><a href="#">&larr;&nbsp;Older</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+        <li class="next"><a href="/blog/page/27/">Newer&nbsp;&rarr;</a></li>
+      
+    </ul>
+  </div>
+
+  
+    <aside class="sidebar col-md-3">
+      
+        <section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Recent Posts</h3>
+  </div>
+  
+  <div id="recent_posts" class="list-group">
+    
+    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
+    
+    <a class="list-group-item " href="/static-assert/">Static Assert</a>
+    
+    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    
+    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    
+    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    
+  </div>
+</section>
+<section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Categories</h3>
+  </div>
+  <div class="list-group">
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus">
+        <span class="badge">18</span>
+        C++
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/linux">
+        <span class="badge">3</span>
+        Linux
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/tech">
+        <span class="badge">26</span>
+        Tech
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
+        <span class="badge">3</span>
+        C++11
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/life">
+        <span class="badge">2</span>
+        Life
+      </a>
+    
+  </div>
+</section>
+
+
+
+
+
+      
+    </aside>
+  
+</div>
+
+        </div>
+      </div>
+    </div>
+    <footer role="contentinfo"><div class="container">
+    <p class="text-muted credits">
+  Copyright &copy; 2010-2013 <a href="/">741MHz.com</a>
+</p>
+
+</div>
+</footer>
+    <script src="/assets/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/javascripts/modernizr-2.0.js"></script>
+
+
+<script type="text/javascript">
+      var disqus_shortname = '741mhz';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  </body>
+</html>
