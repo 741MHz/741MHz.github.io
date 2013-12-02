@@ -114,124 +114,41 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-09-29T00:00:00-04:00" pubdate data-updated="true">Sep 29<span>th</span>, 2010</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-17T00:00:00-04:00" pubdate data-updated="true">Oct 17<span>th</span>, 2010</time>
         
-           | <a href="/inotify-wait/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/inotify-wait/">Comments</a>
+           | <a href="/predefined-macros/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/predefined-macros/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/inotify-wait/">Wait for File With Inotify</a></h1>
+      <h1 class="entry-title"><a href="/predefined-macros/">Predefined Macros</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Imagine a situation where you have been asked to create a program that needs user to upload a file. It sounds easy, but there is a little problem. The program needs to wait for the file to appear, and how to do so efficiently might not be immediately obvious. The easiest and perhaps most naive implementation that comes to mind first is to check whether the file exist, wait some time using <a href="http://man7.org/linux/man-pages/man3/sleep.3.html"><code>sleep()</code></a> and repeat this loop if files still does not exist afterwards.</p>
+  <div class="entry-content clearfix"><p>Every C and C++ compiler has several object-like macros that are implicitly defined and can be used  without supplying their definitions on the command line or through including header files. Such macros are called &ldquo;predefined&rdquo; and can help figure out for what architecture you compile for, on what platform, if the source code being compiled is C or C++, and even tell the language standard of the code being used.</p>
 
-<p>This approach has some problems. It is not clear what time the program needs to sleep. If the interval is too long, a second for example, then user may experience a second long delay. This might be unacceptable. On the other hand, having a sleep interval too short would put an extra load on the entire system — operating system will have to <a href="http://en.wikipedia.org/wiki/Schedule_(computer_science">schedule</a>) this program more frequently, the filesystem access will be performed on each loop cycle, etc. This might slow down other applications running on the same server. Either way there is a problem that cannot be solved without a proper support from operating system that can tell the program when the file is created.</p>
+<p>All predefined macros are described in GCC online documentation. However, not all of them are guaranteed to be defined. Sometimes it is helpful to see a list of macros defined by the compiler with their values, if any. To do that, run a preprocessor with zero input, using the following command:</p>
 
-<p><a href="http://en.wikipedia.org/wiki/Linux">Linux</a> has introduced the <a href="http://en.wikipedia.org/wiki/Inotify"><em>inotify</em></a> subsystem that was designed to solve this and similar problems by extending the filesystem with notifications of changes that are reported to the applications. To demonstrate how it works, I wrote a simple C++ that check if the file exists and waits for it if it doesn’t:</p>
+<pre><code>cpp -dM &lt;/dev/null
+</code></pre>
 
-<figure class='code panel panel-default'><figcaption class='panel-heading'><h3 class='panel-title'>Wait for file using inotify (inotify_wait.cpp)</h3> <a href='/downloads/code/inotify_wait.cpp'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<p>This will produce the output like this:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;cstring&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;unistd.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;sys/inotify.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">directory</span> <span class="o">=</span> <span class="s">&quot;/tmp&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">filename</span> <span class="o">=</span> <span class="s">&quot;test.txt&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">fullpath</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">inotify_init</span><span class="p">();</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">watch</span> <span class="o">=</span> <span class="n">inotify_add_watch</span><span class="p">(</span>
-</span><span class='line'>        <span class="n">fd</span><span class="p">,</span> <span class="n">directory</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span>
-</span><span class='line'>        <span class="n">IN_MODIFY</span> <span class="o">|</span> <span class="n">IN_CREATE</span> <span class="o">|</span> <span class="n">IN_MOVED_TO</span>
-</span><span class='line'>    <span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">access</span><span class="p">(</span><span class="n">fullpath</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">F_OK</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;File %s exists.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">fullpath</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
-</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">char</span>    <span class="n">buf</span><span class="p">[</span><span class="mi">1024</span> <span class="o">*</span> <span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">inotify_event</span><span class="p">)</span> <span class="o">+</span> <span class="mi">16</span><span class="p">)];</span>
-</span><span class='line'>    <span class="n">ssize_t</span> <span class="n">length</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">bool</span>    <span class="n">is_created</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">is_created</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">length</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>        <span class="n">inotify_event</span> <span class="o">*</span><span class="n">event</span><span class="p">;</span>
-</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">length</span><span class="p">);</span>
-</span><span class='line'>             <span class="n">i</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inotify_event</span><span class="p">)</span> <span class="o">+</span> <span class="n">event</span><span class="o">-&gt;</span><span class="n">len</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">{</span>
-</span><span class='line'>            <span class="n">event</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">inotify_event</span> <span class="o">*&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="n">event</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">filename</span> <span class="o">==</span> <span class="n">event</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;The file %s was created.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">event</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
-</span><span class='line'>                <span class="n">is_created</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-</span><span class='line'>                <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>            <span class="p">}</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">inotify_rm_watch</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">watch</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>#define __unix__ 1
+</span><span class='line'>#define __x86_64 1
+</span><span class='line'>#define __DBL_MIN_10_EXP__ (-307)
+</span><span class='line'>#define __FINITE_MATH_ONLY__ 0
+</span><span class='line'>#define __GNUC_PATCHLEVEL__ 3</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Note that we subscribe for filesystem notifications before checking if file exists. It is needed to avoid a race condition where file is created exactly after we checked for its existence and before we subscribed for notifications.</p>
-
-<p>A similar approach is used in many applications. For example, <a href="www.bittorrent.com">BitTorrent</a> application can monitor a “Downloads” directory for new torrent files and open them automatically.</p>
+<p>From the above output we can tell that code is being compiled for x86_64 architecture. The output may change depending on the platform and/or compiler settings.</p>
 </div>
   
   
@@ -243,7 +160,7 @@
 
     <ul class="pager">
       
-        <li class="previous disabled"><a href="#">&larr;&nbsp;Older</a></li>
+        <li class="previous"><a href="/blog/page/12/">&larr;&nbsp;Older</a></li>
       
       <li><a href="/blog/archives">Blog Archives</a></li>
       
@@ -262,6 +179,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/pyusb/">Linux, HID and PyUSB</a>
+    
     <a class="list-group-item " href="/raii/">Automatic Resource Management in Programming Languages</a>
     
     <a class="list-group-item " href="/final-override/">C++11 Final Override</a>
@@ -269,8 +188,6 @@
     <a class="list-group-item " href="/signal-handler/">How Not to Write a Signal Handler</a>
     
     <a class="list-group-item " href="/vector-erase/">Erasing Vector the Smart Way</a>
-    
-    <a class="list-group-item " href="/switch/">From Switch Statement Down to Machine Code</a>
     
   </div>
 </section>
@@ -288,13 +205,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/linux">
-        <span class="badge">2</span>
+        <span class="badge">3</span>
         Linux
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">11</span>
+        <span class="badge">12</span>
         Tech
       </a>
     
