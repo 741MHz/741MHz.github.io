@@ -114,41 +114,25 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-17T00:00:00-04:00" pubdate data-updated="true">Oct 17<span>th</span>, 2010</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-23T00:00:00-04:00" pubdate data-updated="true">Oct 23<span>rd</span>, 2010</time>
         
-           | <a href="/predefined-macros/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/predefined-macros/">Comments</a>
+           | <a href="/awk-uniq/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/awk-uniq/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/predefined-macros/">Predefined Macros</a></h1>
+      <h1 class="entry-title"><a href="/awk-uniq/">Unique Lines Without Sorting</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Every C and C++ compiler has several object-like macros that are implicitly defined and can be used  without supplying their definitions on the command line or through including header files. Such macros are called &ldquo;predefined&rdquo; and can help figure out for what architecture you compile for, on what platform, if the source code being compiled is C or C++, and even tell the language standard of the code being used.</p>
+  <div class="entry-content clearfix"><p>Today I ran into a small problem where I had a set of unsorted lines of text and wanted to remove duplicate lines without sorting the data. Both <code>uniq</code> and <code>sort -u</code> commands require data to be sorted, so they won&rsquo;t work. There is a way of doing this with AWK:</p>
 
-<p>All predefined macros are described in GCC online documentation. However, not all of them are guaranteed to be defined. Sometimes it is helpful to see a list of macros defined by the compiler with their values, if any. To do that, run a preprocessor with zero input, using the following command:</p>
-
-<pre><code>cpp -dM &lt;/dev/null
+<pre><code>awk '!($0 in lines) { lines[$0]; print }'
 </code></pre>
 
-<p>This will produce the output like this:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>#define __unix__ 1
-</span><span class='line'>#define __x86_64 1
-</span><span class='line'>#define __DBL_MIN_10_EXP__ (-307)
-</span><span class='line'>#define __FINITE_MATH_ONLY__ 0
-</span><span class='line'>#define __GNUC_PATCHLEVEL__ 3</span></code></pre></td></tr></table></div></figure>
-
-
-<p>From the above output we can tell that code is being compiled for x86_64 architecture. The output may change depending on the platform and/or compiler settings.</p>
+<p>The above script will collect unique lines in order of their appearance and store them in array called lines that gets printed at the end. This probably won&rsquo;t work for huge data sets but works well on up to a few thousand lines of text.</p>
 </div>
   
   
@@ -179,6 +163,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/exceptions-performance/">C++ Exceptions Performance</a>
+    
     <a class="list-group-item " href="/awk-uniq/">Unique Lines Without Sorting</a>
     
     <a class="list-group-item " href="/predefined-macros/">Predefined Macros</a>
@@ -195,7 +181,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">2</span>
+        <span class="badge">3</span>
         C++
       </a>
     
@@ -207,7 +193,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">3</span>
+        <span class="badge">4</span>
         Tech
       </a>
     
