@@ -114,700 +114,47 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2011-07-22T00:00:00-04:00" pubdate data-updated="true">Jul 22<span>nd</span>, 2011</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2012-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2012</time>
         
-           | <a href="/exceptions-performance/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/exceptions-performance/">Comments</a>
+           | <a href="/system-program-problem-detected/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/system-program-problem-detected/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/exceptions-performance/">C++ Exceptions Performance</a></h1>
+      <h1 class="entry-title"><a href="/system-program-problem-detected/">System Program Problem Detected</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><h3>Introduction</h3>
+  <div class="entry-content clearfix"><p>I have just installed Ubuntu 12.10 and the first thing I ran into is tons of annoying popup windows telling me about system program problems and asking to report them:</p>
 
-<p>Exceptions provide a way to react to special conditions that change the normal flow of a program execution. Exception handling in general can refer to programming language construct, computer hardware mechanism, or both.</p>
+<p><img src="/images/ubuntu_system_problem/popup.png"></p>
 
-<p>Many people are concerned with performance impact introduced by using exception mechanism in C++. For example, one of my colleagues believes that using exceptions should be avoided at any cost to improve execution speed of an application. Is that true or not? Let’s find out.</p>
+<p>Apparently, this is a common problem that drives crazy a lot of people. What happens is some of the programs crash, and those cases are being reported by the Apport application. I highly doubt that anyone at Ubuntu is actually reading these reports. Firstly, millions of Ubuntu installations constantly have programs crashing and it must take an army of developers to investigate and fix them. Secondly, these crashes are happening for many years and they don’t seem to go away. So why bother? Here is how you disable this annoying reporting facility.</p>
 
-<h3>Using exceptions</h3>
+<h3>Launch a terminal</h3>
 
-<p>It is important to understand that exception is not a general case of a program execution flow but an unexpected situation. Such situation should normally not arise at all. However, errors happen and we need to check for them. A large chunk of any good program is mostly dedicated to proper error handling. There are two fundamental approaches when dealing with error handling — return codes or exceptions. For example, let’s say we have a custom function that implements division:</p>
+<p>First, you need to open a terminal. You can do that by clicking on “Dash Home” button (on the top left of your screen), typing “Terminal”, and clicking on a Terminal application icon in order to launch it:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">int</span> <span class="n">divide</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p><img src="/images/ubuntu_system_problem/open_terminal.png"></p>
 
+<h3>Disable Apport</h3>
 
-<p>We need to make sure that divisor is not zero because you cannot divide by zero (at least not with integer arithmetics). There are two ways of doing this. Let’s start from C-style error checking that will make our function look like this:</p>
+<p>In the terminal, type the following commands:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">int</span> <span class="n">divide</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="kt">int</span> <span class="o">&amp;</span> <span class="n">result</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">result</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre><code>sudo sed -i 's;^enabled=1$;enabled=0;g' /etc/default/apport
+sudo service apport restart
+sudo rm /var/crash/*
+</code></pre>
 
+<p>The above commands will replace “enabled=1″ with “enabled=0″ in the “/etc/default/apport” configuration file, restart the Apport application and remove old reports to save you a valuable disk space. The problem should now go away.</p>
 
-<p>C++ error checking using exceptions will look something like this:</p>
+<h3>Still having annoying popups?</h3>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">int</span> <span class="n">divide</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">logic_error</span> <span class="p">(</span><span class="err">“</span><span class="n">Division</span> <span class="n">by</span> <span class="n">zero</span><span class="err">”</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>Be aware that in earlier versions of Ubuntu there was a bug when restarting Apport didn’t really restart it (see <a href="https://bugs.launchpad.net/ubuntu/+source/apport/+bug/292402">Bug #292402</a>). So as the last resort, simply reboot your computer.</p>
 
-
-<p>The use cases for these two functions will be different. For C-style function, we will always have to check for return code to make sure that operation succeeded:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">foo</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">divide</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// Division was successful. Do something with “result”.</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// Error occurred!</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The C++ use case:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">foo</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">try</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">divide</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
-</span><span class='line'>        <span class="c1">// Division was successful. Do something with “result”.</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">catch</span> <span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">logic_error</span> <span class="o">&amp;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// Error occurred!</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>C++ way with exceptions is handy when program flow is somewhat more complicated. What if we need to invoke “divide” function two times? In that case we will have to check for error twice using C-style:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">foo</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">divide</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// Division was successful. Do something with “result”.</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// Error occurred!</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">divide</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// Division was successful. Do something with “result”.</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// Error occurred!</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>But in C++, one try-catch block will do:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">foo</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">try</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">divide</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
-</span><span class='line'>        <span class="c1">// Division was successful. Do something with “result”.</span>
-</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="n">divide</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
-</span><span class='line'>        <span class="c1">// Division was successful. Do something with “result”, again.</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">catch</span> <span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">logic_error</span> <span class="o">&amp;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// Error occurred!</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now, imagine that we have to invoke “divide” function ten or hundred times. And to make it even more complex, imagine that we have multiple nested functions and every function needs to check for an error. Using exception now seems to be the ideal way to go. Well, that is what exceptions were designed for — to make things easier.</p>
-
-<h3>Easy vs Fast</h3>
-
-<p>There are a lot of things that will make our lives as developers easier. But sometimes our programs should be fast. And not only fast but fastest in the world, or even the whole universe. And we have to sacrifice the ease of development to achieve that. This is the case with high-frequency trading programs, for example. So if a programmer writing code for high-frequency trading will think that wrapping invocation of “divide” function with “try-catch” block will slow down his application even by a nanosecond in comparison with C-style error checking, he will choose the hardest way and check for error code every time he invokes “divide” function. Indeed, he will spend much more time to achieve his goals, but will that be a right decision?</p>
-
-<h3>Under the hood</h3>
-
-<p>To answer the question above, we need to dive into the implementation details and figure out how exceptions are implemented. From this point, there is a huge difference between C++ and higher-level languages such as Java, C#, Python and others. In C++, there are two methods for handling exceptions at run-time — “setjmp/longjmp” (hereinafter jumping) method and “zero-cost” exception handling.</p>
-
-<p>Jumping method saves the context when entering a frame with an exception handler. Then when an exception is raised, the context can be restored immediately, without the need for tracking stack frames. This method provides very fast exception propagation, but introduces significant overhead for use of exception handlers, even if no exception is raised.</p>
-
-<p>Zero-cost method generates static tables to describe exception ranges. No dynamic code is required when entering a frame containing an exception handler. When an exception is raised, the tables are used to control a back trace of the subprogram invocation stack to locate the required exception handler. This method has considerably poorer performance for the propagation of exceptions, but there is no overhead for exception handlers if no exception is raised.</p>
-
-<p>There is always upside and downside and we have to make a choice. Taking into account that exceptions are not a part of normal execution flow, we need to optimize the most common case when exceptions are not thrown and sacrifice the speed of handling them. So many production-quality C++ compilers made that choice in favor of zero-cost method.</p>
-
-<h3>Digging into the assembler</h3>
-
-<p>So let’s get back to our “divide” function and compare C-style error checking with zero-cost exception handling. C-style error checking:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">int</span> <span class="n">divide</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="kt">int</span> <span class="o">&amp;</span> <span class="n">result</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">foo</span> <span class="p">(</span><span class="kt">int</span> <span class="o">&amp;</span> <span class="n">result</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">volatile</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">28</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">divide</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">d1</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">divide</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">d2</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="n">d1</span> <span class="o">+</span> <span class="n">d2</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span> <span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">foo</span> <span class="p">(</span><span class="n">result</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Code using exceptions:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">int</span> <span class="n">divide</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">logic_error</span> <span class="p">(</span><span class="s">&quot;Division by zero&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">foo</span> <span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">volatile</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">28</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">divide</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">divide</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span> <span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">try</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">foo</span> <span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">catch</span> <span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="o">&amp;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Here is what will actually happen for C-style example (I removed code that won’t get executed for simplicity):</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="nl">__Z6divideiiRi:</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rsp</span><span class="p">,</span> <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">edi</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">esi</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rdx</span><span class="p">,</span> <span class="o">-</span><span class="mi">16</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">cmpl</span>    <span class="err">$</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">jne</span> <span class="n">L2</span>
-</span><span class='line'><span class="p">;;</span> <span class="n">Skipped</span> <span class="k">return</span> <span class="n">of</span> <span class="o">-</span><span class="mf">1.</span> <span class="n">We</span> <span class="n">will</span> <span class="n">always</span> <span class="n">jump</span> <span class="n">to</span> <span class="n">L2</span>
-</span><span class='line'><span class="nl">L2:</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">4</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">sarl</span>    <span class="err">$</span><span class="mi">31</span><span class="p">,</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">idivl</span>   <span class="o">-</span><span class="mi">8</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">-</span><span class="mi">16</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">rax</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">edx</span><span class="p">,</span> <span class="p">(</span><span class="o">%</span><span class="n">rax</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="err">$</span><span class="mi">0</span><span class="p">,</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">popq</span>    <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">ret</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">__Z3fooRi:</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rsp</span><span class="p">,</span> <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">subq</span>    <span class="err">$</span><span class="mi">24</span><span class="p">,</span> <span class="o">%</span><span class="n">rsp</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rdi</span><span class="p">,</span> <span class="o">-</span><span class="mi">24</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="err">$</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="err">$</span><span class="mi">28</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">8</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">ecx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">4</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">leaq</span>    <span class="o">-</span><span class="mi">12</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">rdx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">ecx</span><span class="p">,</span> <span class="o">%</span><span class="n">esi</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">edi</span>
-</span><span class='line'>  <span class="n">call</span>    <span class="n">__Z6divideiiRi</span>
-</span><span class='line'>  <span class="n">cmpl</span>    <span class="err">$</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">sete</span>    <span class="o">%</span><span class="n">al</span>
-</span><span class='line'>  <span class="n">testb</span>   <span class="o">%</span><span class="n">al</span><span class="p">,</span> <span class="o">%</span><span class="n">al</span>
-</span><span class='line'>  <span class="n">je</span>  <span class="n">L5</span>
-</span><span class='line'><span class="p">;;</span> <span class="n">Skipped</span> <span class="k">return</span> <span class="n">of</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">we</span> <span class="n">will</span> <span class="n">always</span> <span class="n">jump</span> <span class="n">to</span> <span class="n">L5</span><span class="p">.</span>
-</span><span class='line'><span class="nl">L5:</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">4</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">ecx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">8</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">leaq</span>    <span class="o">-</span><span class="mi">16</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">rdx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">ecx</span><span class="p">,</span> <span class="o">%</span><span class="n">esi</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">edi</span>
-</span><span class='line'>  <span class="n">call</span>    <span class="n">__Z6divideiiRi</span>
-</span><span class='line'>  <span class="n">cmpl</span>    <span class="err">$</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">sete</span>    <span class="o">%</span><span class="n">al</span>
-</span><span class='line'>  <span class="n">testb</span>   <span class="o">%</span><span class="n">al</span><span class="p">,</span> <span class="o">%</span><span class="n">al</span>
-</span><span class='line'>  <span class="n">je</span>  <span class="n">L7</span>
-</span><span class='line'><span class="p">;;</span> <span class="n">Skipped</span> <span class="k">return</span> <span class="n">of</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">always</span> <span class="n">jumping</span> <span class="n">to</span> <span class="n">L7</span><span class="p">.</span>
-</span><span class='line'><span class="nl">L7:</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">12</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">16</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">addl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">-</span><span class="mi">24</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">rax</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">edx</span><span class="p">,</span> <span class="p">(</span><span class="o">%</span><span class="n">rax</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="err">$</span><span class="mi">0</span><span class="p">,</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">leave</span>
-</span><span class='line'>  <span class="n">ret</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">_main:</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rsp</span><span class="p">,</span> <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">subq</span>    <span class="err">$</span><span class="mi">16</span><span class="p">,</span> <span class="o">%</span><span class="n">rsp</span>
-</span><span class='line'>  <span class="n">leaq</span>    <span class="o">-</span><span class="mi">4</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">rax</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rax</span><span class="p">,</span> <span class="o">%</span><span class="n">rdi</span>
-</span><span class='line'>  <span class="n">call</span>    <span class="n">__Z3fooRi</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">4</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">leave</span>
-</span><span class='line'>  <span class="n">ret</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>That’s a lot of error checking code that gets executed assuming it doesn’t happen very often! If we need to call “divide” function more, we will have to add more checking for “-1” return result, and assembly listing will get longer and longer because of that check. Let’s see how the code will look like with exception handling:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="nl">__Z6divideii:</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rsp</span><span class="p">,</span> <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">r12</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbx</span>
-</span><span class='line'>  <span class="n">subq</span>    <span class="err">$</span><span class="mi">32</span><span class="p">,</span> <span class="o">%</span><span class="n">rsp</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">edi</span><span class="p">,</span> <span class="o">-</span><span class="mi">36</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">esi</span><span class="p">,</span> <span class="o">-</span><span class="mi">40</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">cmpl</span>    <span class="err">$</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">40</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">jne</span> <span class="n">L2</span>
-</span><span class='line'><span class="p">;;</span> <span class="n">Skipped</span> <span class="n">the</span> <span class="n">code</span> <span class="n">that</span> <span class="n">allocates</span> <span class="n">and</span> <span class="k">throws</span> <span class="n">exception</span><span class="p">.</span> <span class="n">We</span> <span class="n">will</span> <span class="n">always</span> <span class="n">jump</span> <span class="n">to</span> <span class="n">L2</span><span class="p">.</span>
-</span><span class='line'><span class="nl">L2:</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">36</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">sarl</span>    <span class="err">$</span><span class="mi">31</span><span class="p">,</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">idivl</span>   <span class="o">-</span><span class="mi">40</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">addq</span>    <span class="err">$</span><span class="mi">32</span><span class="p">,</span> <span class="o">%</span><span class="n">rsp</span>
-</span><span class='line'>  <span class="n">popq</span>    <span class="o">%</span><span class="n">rbx</span>
-</span><span class='line'>  <span class="n">popq</span>    <span class="o">%</span><span class="n">r12</span>
-</span><span class='line'>  <span class="n">popq</span>    <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">ret</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">__Z3foov:</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rsp</span><span class="p">,</span> <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbx</span>
-</span><span class='line'>  <span class="n">subq</span>    <span class="err">$</span><span class="mi">24</span><span class="p">,</span> <span class="o">%</span><span class="n">rsp</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="err">$</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="err">$</span><span class="mi">28</span><span class="p">,</span> <span class="o">-</span><span class="mi">24</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">24</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">20</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">edx</span><span class="p">,</span> <span class="o">%</span><span class="n">esi</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">edi</span>
-</span><span class='line'>  <span class="n">call</span>    <span class="n">__Z6divideii</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">ebx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">20</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">edx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">-</span><span class="mi">24</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">edx</span><span class="p">,</span> <span class="o">%</span><span class="n">esi</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">edi</span>
-</span><span class='line'>  <span class="n">call</span>    <span class="n">__Z6divideii</span>
-</span><span class='line'>  <span class="n">addl</span>    <span class="o">%</span><span class="n">ebx</span><span class="p">,</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">addq</span>    <span class="err">$</span><span class="mi">24</span><span class="p">,</span> <span class="o">%</span><span class="n">rsp</span>
-</span><span class='line'>  <span class="n">popq</span>    <span class="o">%</span><span class="n">rbx</span>
-</span><span class='line'>  <span class="n">popq</span>    <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">ret</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">_main:</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">movq</span>    <span class="o">%</span><span class="n">rsp</span><span class="p">,</span> <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">pushq</span>   <span class="o">%</span><span class="n">rbx</span>
-</span><span class='line'>  <span class="n">subq</span>    <span class="err">$</span><span class="mi">24</span><span class="p">,</span> <span class="o">%</span><span class="n">rsp</span>
-</span><span class='line'>  <span class="n">call</span>    <span class="n">__Z3foov</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">eax</span><span class="p">,</span> <span class="o">%</span><span class="n">ebx</span>
-</span><span class='line'>  <span class="n">movl</span>    <span class="o">%</span><span class="n">ebx</span><span class="p">,</span> <span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="n">addq</span>    <span class="err">$</span><span class="mi">24</span><span class="p">,</span> <span class="o">%</span><span class="n">rsp</span>
-</span><span class='line'>  <span class="n">popq</span>    <span class="o">%</span><span class="n">rbx</span>
-</span><span class='line'>  <span class="n">popq</span>    <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="n">ret</span>
-</span><span class='line'><span class="p">;;</span> <span class="n">Stack</span> <span class="n">unwinding</span> <span class="n">code</span> <span class="n">is</span> <span class="n">invoked</span> <span class="n">from</span> <span class="n">statically</span> <span class="n">generated</span> <span class="n">exception</span>
-</span><span class='line'><span class="p">;;</span> <span class="n">table</span><span class="p">.</span> <span class="n">That</span> <span class="n">code</span> <span class="n">is</span> <span class="n">stripped</span> <span class="n">out</span><span class="p">,</span> <span class="n">will</span> <span class="n">never</span> <span class="n">be</span> <span class="n">reached</span> <span class="n">in</span> <span class="n">our</span> <span class="n">example</span><span class="p">.</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>That is much better! We managed to avoid two unnecessary checks of return result. Other than that code that is being executed is exactly the same.</p>
-
-<h3>Jumping exceptions</h3>
-
-<p>Now, let’s say we have a compiler that is using “setjmp/longjmp” approach to implement exceptions. Even with that approach, exception handling could be faster than error checking. Consider the following example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">doContinue</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">try</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">doSomeWork</span> <span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">catch</span> <span class="p">(...)</span> <span class="p">{</span> <span class="cm">/* do something about it! */</span> <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>… that will be indeed slower than this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">doContinue</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">doSomeWork</span> <span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* do something about it! */</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>… but how about this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">doContinue</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">try</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">do</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">doSomeWork</span> <span class="p">();</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">doContinue</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">catch</span> <span class="p">(...)</span> <span class="p">{</span> <span class="cm">/* do something about it! */</span> <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In the example above, we set recovery point once and avoid checking return result of the function multiple times. Of course, that is the best-case scenario assuming that exceptional situation almost never happens. But that is a fair assumption. Otherwise that situation should be treated as normal execution flow and handled differently, without exceptions, which will be the same for both C-style and C++-style programmers. Please note that above optimization makes no sense in case with zero-cost exception mechanism.</p>
-
-<h3>Finding out what exception mechanism is being used</h3>
-
-<p>Unfortunately, the only way to find out what underlying mechanism is used by compiler for exception handling is to write a simple program using exceptions, compile it into assembler language and analyze results.</p>
-
-<h3>Other performance considerations</h3>
-
-<p>Using exceptions will make binary size bigger, no matter what mechanism is used to implement exception handling. So if program size is more important than execution speed, exceptions should not be used. And in those cases where you want to gain maximum execution speed with minimal impact on binary size, you have to do additional testing in order to find the best combination of C-style error checking and exception handling code that achieves your result.</p>
-
-<h3>Summary</h3>
-
-<p>Performance can mean many different things — from the speed of execution or size of the binary to the time developer spends writing code.</p>
-
-<p>In this article we have discussed execution speed of an application using exceptions vs. an application using C-style error checking, and developer’s time needed to write the same program using these two approaches.</p>
-
-<p>If binary size of the compiled program is the most important factor then exceptions should not be used.</p>
-
-<p>If execution speed or ease of development (or both!) is the most important factor then programmer deciding to give up the ease of using exceptions in favor of C-style error checking will not only spend much more time writing the code, make the code more complicated, run into the problem of actually describing the error (especially in multi-threaded environment, and especially when thread local storage cannot be used due to handling of exception in different thread in case of asynchronous programming), but will also make it slower.</p>
-
-<h3>References</h3>
-
-<ul>
-<li><a href="http://en.wikipedia.org/wiki/Exception_handling">Exception Handling – Wikipedia</a></li>
-<li><a href="http://www.boost.org/community/error_handling.html">Error and Exception Handling by Dave Abrahams</a></li>
-<li><a href="http://mentorembedded.github.io/cxx-abi/abi-eh.html">Itanium C++ ABI: Exception Handling</a></li>
-<li><a href="http://gcc.gnu.org/onlinedocs/gnat_ugn_unw/Exception-Handling-Control.html">GNAT Exception Handling Control</a></li>
-</ul>
-
+<p>Hope it helps! Good Luck!</p>
 </div>
   
   
@@ -838,6 +185,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/free-delete/">Use Free and Delete Correctly.</a>
+    
     <a class="list-group-item " href="/pyusb/">Linux, HID and PyUSB</a>
     
     <a class="list-group-item " href="/raii/">Automatic Resource Management in Programming Languages</a>
@@ -845,8 +194,6 @@
     <a class="list-group-item " href="/final-override/">C++11 Final Override</a>
     
     <a class="list-group-item " href="/signal-handler/">How Not to Write a Signal Handler</a>
-    
-    <a class="list-group-item " href="/vector-erase/">Erasing Vector the Smart Way</a>
     
   </div>
 </section>
@@ -858,7 +205,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">9</span>
+        <span class="badge">10</span>
         C++
       </a>
     
@@ -870,7 +217,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">12</span>
+        <span class="badge">13</span>
         Tech
       </a>
     

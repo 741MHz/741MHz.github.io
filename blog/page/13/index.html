@@ -4,7 +4,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Wait For File With Inotify - Ranting @ 741 MHz</title>
+  <title>Ranting @ 741 MHz</title>
   <meta name="author" content="741MHz.com">
 
   
@@ -16,7 +16,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://741MHz.com/inotify-wait">
+  <link rel="canonical" href="http://741MHz.com/blog/page/13">
   <link href="/favicon.png" type="image/png" rel="icon">
   <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
 
@@ -92,8 +92,12 @@
         <div id="content">
           <div class="row">
   <div class="page-content col-md-9">
-    <article class="hentry" role="article">
+    <div class="blog-index">
       
+      
+      
+        <article class="post">
+          
   <header class="page-header">
     
       <p class="meta text-muted text-uppercase">
@@ -112,21 +116,18 @@
 
 <span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-09-29T00:00:00-04:00" pubdate data-updated="true">Sep 29<span>th</span>, 2010</time>
         
-           | <a href="#disqus_thread"
-             data-disqus-identifier="http://741MHz.com">Comments</a>
+           | <a href="/inotify-wait/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/inotify-wait/">Comments</a>
         
       </p>
     
     
-    <h1 class="entry-title">
-        Wait for File With Inotify
-        
-    </h1>
+      <h1 class="entry-title"><a href="/inotify-wait/">Wait for File With Inotify</a></h1>
     
   </header>
 
 
-<div class="entry-content clearfix"><p>Imagine a situation where you have been asked to create a program that needs user to upload a file. It sounds easy, but there is a little problem. The program needs to wait for the file to appear, and how to do so efficiently might not be immediately obvious. The easiest and perhaps most naive implementation that comes to mind first is to check whether the file exist, wait some time using <a href="http://man7.org/linux/man-pages/man3/sleep.3.html"><code>sleep()</code></a> and repeat this loop if files still does not exist afterwards.</p>
+  <div class="entry-content clearfix"><p>Imagine a situation where you have been asked to create a program that needs user to upload a file. It sounds easy, but there is a little problem. The program needs to wait for the file to appear, and how to do so efficiently might not be immediately obvious. The easiest and perhaps most naive implementation that comes to mind first is to check whether the file exist, wait some time using <a href="http://man7.org/linux/man-pages/man3/sleep.3.html"><code>sleep()</code></a> and repeat this loop if files still does not exist afterwards.</p>
 
 <p>This approach has some problems. It is not clear what time the program needs to sleep. If the interval is too long, a second for example, then user may experience a second long delay. This might be unacceptable. On the other hand, having a sleep interval too short would put an extra load on the entire system — operating system will have to <a href="http://en.wikipedia.org/wiki/Schedule_(computer_science">schedule</a>) this program more frequently, the filesystem access will be performed on each loop cycle, etc. This might slow down other applications running on the same server. Either way there is a problem that cannot be solved without a proper support from operating system that can tell the program when the file is created.</p>
 
@@ -232,75 +233,29 @@
 
 <p>A similar approach is used in many applications. For example, <a href="www.bittorrent.com">BitTorrent</a> application can monitor a “Downloads” directory for new torrent files and open them automatically.</p>
 </div>
-
-
-      <footer>
-        <p class="meta text-muted">
-          
-  
-
-<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
-
-          
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-09-29T00:00:00-04:00" pubdate data-updated="true">Sep 29<span>th</span>, 2010</time>
-          
-
-<span class="glyphicon glyphicon-tags"></span>&nbsp;
-<span class="categories">
-  
-    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/linux/'>Linux</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
-  
-</span>
-
-
-        </p>
-        
-          <div class="sharing">
-  
-  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/inotify-wait/" data-via="" data-counturl="http://741MHz.com/inotify-wait/" >Tweet</a>
   
   
-  <div class="g-plusone" data-size="medium"></div>
-  
-  
-</div>
 
-        
-        
-          <ul class="meta text-muted pager">
-            
-            
-            <li class="next"><a href="/predefined-macros/" title="Next Post: Predefined Macros">Predefined Macros &raquo;</a></li>
-            
-          </ul>
-        
-      </footer>
-    </article>
-    
-      <section>
-        <h1>Comments</h1>
-        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
-      </section>
-    
+
+        </article>
+      
+    </div>
+
+    <ul class="pager">
+      
+        <li class="previous disabled"><a href="#">&larr;&nbsp;Older</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+        <li class="next"><a href="/blog/page/12/">Newer&nbsp;&rarr;</a></li>
+      
+    </ul>
   </div>
 
   
-  <aside class="sidebar col-md-3">
-    
-      <section class="panel panel-default">
+    <aside class="sidebar col-md-3">
+      
+        <section class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title">Recent Posts</h3>
   </div>
@@ -356,8 +311,8 @@
 
 
 
-    
-  </aside>
+      
+    </aside>
   
 </div>
 
@@ -379,10 +334,7 @@
       var disqus_shortname = '741mhz';
       
         
-        // var disqus_developer = 1;
-        var disqus_identifier = 'http://741MHz.com/inotify-wait/';
-        var disqus_url = 'http://741MHz.com/inotify-wait/';
-        var disqus_script = 'embed.js';
+        var disqus_script = 'count.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

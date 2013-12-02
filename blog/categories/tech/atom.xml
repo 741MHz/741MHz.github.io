@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Tech | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/tech/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T20:48:59-05:00</updated>
+  <updated>2013-12-01T20:57:02-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,57 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Use free and delete correctly.]]></title>
+    <link href="http://741MHz.com/free-delete/"/>
+    <updated>2013-03-13T00:00:00-04:00</updated>
+    <id>http://741MHz.com/free-delete</id>
+    <content type="html"><![CDATA[<p>The Internet is full of programming jokes <a href="http://bash.org/?946461">like this one</a>:</p>
+
+<blockquote><p>&lt;@joosa> how do you say float in java? just 1.5f?<br/>
+&lt;@Gliptic> FloatFactoryFactory.getInstance (FloatFactoryFactory.defaultInstanceDescriptionString).getFactory (Locale.getLocale (“en-US”)).createBuilder ().setString (“1.5″).getResult ()</p></blockquote>
+
+<p>Java people please read on, that’s only a joke! More often than not the jokes are directed at those using higher-level programming languages. This is a little unfair because C programmers (and C++ ones for that matter) write some funny code, too. For example:</p>
+
+<p>```c
+void foo(void *ptr) {</p>
+
+<pre><code>if (ptr)
+    free(ptr);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This perhaps could be a joke or maybe even an interview question. What’s wrong with the above C code (assuming everything else including the usage is correct)? It turns out that many can’t spot anything. If you do — congratulations! For those who don’t, let’s read the <a href="http://man7.org/linux/man-pages/man3/free.3.html">documentation of <code>free()</code> function</a>:</p>
+
+<blockquote><p>The free() function frees the memory space pointed to by ptr, which must have been returned by a previous call to malloc(), calloc() or realloc(). Otherwise, or if free(ptr) has already been called before, undefined behavior occurs. If ptr is NULL, no operation is performed.</p></blockquote>
+
+<p>In other words, there is no need to check if pointer is not NULL. The same applies to C++ programmers who often check for <strike><code>NULL</code></strike> <code>nullptr</code> before calling <code>delete</code>. If you don’t trust manual pages, check out §7.20.3/2 of the C standard that states the following:</p>
+
+<blockquote><p>The free function causes the space pointed to by ptr to be deallocated, that is, made available for further allocation. If ptr is a null pointer, no action occurs. Otherwise, if the argument does not match a pointer earlier returned by the calloc, malloc, or realloc function, or if the space has been deallocated by a call to free or realloc, the behavior is undefined.</p></blockquote>
+
+<p>For C++, see §5.3.5/2:</p>
+
+<blockquote><p>… if the value of the operand of delete is the null pointer the operation has no effect.</p></blockquote>
+
+<p>Possibly, an extra checking for NULL was a necessity some 20 years ago, according to some Internet rumors claiming that a few implementations of the standard C library had a bug back then and free() could crash the program when passed a NULL pointer. I couldn’t find any information about what it was. But no matter what was going on two decades ago — it is pretty hard to find pre-ANSI C code these days. Yet unnecessary NULL checking can be seen a lot. For example, <a href="http://krugle.org/">krugle.org</a> shows the following three projects right away:</p>
+
+<ul>
+<li><a href="http://opensearch.krugle.org/document/view_filecontent/apache_http_server1945779753/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_305/tags/1.3/djg_nspr_split/src/regex/regfree.c">Apache Web Server</a></li>
+<li><a href="http://opensearch.krugle.org/document/view_filecontent/apache_hadoop618243895/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_528/trunk/hadoop-common-project/hadoop-common/src/main/native/src/org/apache/hadoop/security/getGroup.c">Apache Hadoop</a></li>
+<li><a href="http://opensearch.krugle.org/document/view_filecontent/miranda1067994304/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_705/miranda/protocols/Gadu-Gadu/ownerinfo.c">Miranda</a> (an ICQ client popular in ex-USSR countries)</li>
+</ul>
+
+
+<p>I thought that maybe people are worrying about performance too much and don’t want to do an extra function call (extra cycles, procedure linkage tables, etc). But then using <code>malloc()</code> and <code>free()</code> in performance critical path would have been even more silly.</p>
+
+<p>So is it paranoia, a failure to read documentation, or maybe a thoughtless copy-paste that went too far?</p>
+
+<p>Who knows.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Linux, HID and PyUSB]]></title>
@@ -1106,68 +1157,6 @@ for (;;) {
 <p>Please make the world a better place by writing correct and safe signal handling code.</p>
 
 <p>Thank you very much for reading!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Erasing Vector The Smart Way]]></title>
-    <link href="http://741MHz.com/vector-erase/"/>
-    <updated>2013-01-14T00:00:00-05:00</updated>
-    <id>http://741MHz.com/vector-erase</id>
-    <content type="html"><![CDATA[<p>In the C++ world, <a href="http://en.cppreference.com/w/cpp/container/vector"><code>std::vector</code></a> is a <a href="http://en.wikipedia.org/wiki/Sequence_container_(C%2B%2B">sequence container</a>) that encapsulates <a href="http://en.wikipedia.org/wiki/Dynamic_array">dynamic size arrays</a>. One of the main perks of the vector is the fact that elements are stored <strong>contiguously</strong>. In other words, a pointer to an element of a vector may be passed to any function that expects a pointer to an element of array. Or simply put — <code>std::vector</code> is very close to a <a href="http://www.cplusplus.com/doc/tutorial/arrays/">plain old-school C-style array</a>, yet it provides developers with a lot of C++ perks like automatic memory management, bounds checking and more. Unfortunately, <code>std::vector</code> is so great that many developers are using it without really thinking too much about the underlying implementation and its downsides.</p>
-
-<h2>Erase Trap</h2>
-
-<p>A common programming task is to remove one or more elements from the vector. Luckily, <code>std::vector</code> provides a wonderful method called <code>erase()</code> that does exactly that. So what’s the big deal? It’s a trap!</p>
-
-<p>C++ is just like medicine — it is both a cure and a disease. Vector is no exception. Its contiguous memory layout may heal, or it may kill. In this case it is a serial killer. Let’s see why.</p>
-
-<h2>The Innocent Piece of Code</h2>
-
-<p>Let’s take a look at the real-world example that I ran into a few days ago. The goal was to remove all even numbers from a vector, leaving only odd ones. Here is how it was implemented:</p>
-
-<p>```c++
-std::vector<int>::iterator it = array.begin();
-while (it != array.end()) {</p>
-
-<pre><code>if (*it % 2 == 0)
-    it = array.erase(it);
-else
-    ++it;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Logically thinking, the code is very sound — every element is being checked and removed only if it matches a given criteria. Developer even took extra care not to access invalidated iterator. Sounds like a great job. Nice, simple, and it works. Or does it?</p>
-
-<h2>The Problem</h2>
-
-<p>No, it does not. There is one big problem with that code that makes it totally useless. It takes about 55 seconds to run on just one million random elements. Why does that happen, you may ask? The developer  fell into a common trap! That happened because the elements of the vector are stored contiguously, in a contiguous memory and the whole vector is shifted left every time an element is erased. In other words — one does not simply erase an element that is not at the end of the vector.</p>
-
-<h2>The Solution</h2>
-
-<p>Here is the right way of doing this:</p>
-
-<p>```c++
-array.erase(</p>
-
-<pre><code>std::remove_if(
-    array.begin(), array.end(), [](int v) {
-        return v % 2 == 0;
-    }
-),
-array.end()
-</code></pre>
-
-<p>);
-```</p>
-
-<p>The above code does the job in only 5 milliseconds. That is about eleven thousand times faster. What kind of sorcery is that? Very simple — <a href="http://en.cppreference.com/w/cpp/algorithm/remove"><code>std::remove_if()</code></a> does not erase elements from the vector. It does’t remove anything either. Just a good naming joke. So what the hell it does? It re-arranges elements in such a way that elements to be erased are moved towards the end of a vector. Once the job is done, all elements are erased from the vector with a single invocation of <code>erase()</code>. As a result, the whole vector is not shifted tens of thousands of times and runs a lot faster.</p>
-
-<h2>The Conclusion</h2>
-
-<p>There ain’t no such thing as a free lunch.</p>
 ]]></content>
   </entry>
   
