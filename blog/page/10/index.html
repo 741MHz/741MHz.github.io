@@ -114,542 +114,36 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-20T00:00:00-04:00" pubdate data-updated="true">Mar 20<span>th</span>, 2013</time>
         
-           | <a href="/raii/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/raii/">Comments</a>
+           | <a href="/c-oop/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/c-oop/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/raii/">Automatic Resource Management in Programming Languages</a></h1>
+      <h1 class="entry-title"><a href="/c-oop/">OOP With ANSI C</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Many high-level programming languages provide software developers with the ability to automatically cleanup resources — automatically closing an open file when it is no longer used, freeing dynamically allocated memory, or anything else for that matter. This article touches on automatic resource management features available in modern programming languages. It shows some examples demonstrating why having this feature make it easier to write code, or how not using this feature may lead to potentially critical failures of the program. The primary focus is on C++ and C (surprise!) languages.</p>
+  <div class="entry-content clearfix"><p>What if I told you that Linux kernel is object-oriented? Would that surprise you? Or maybe you would think I am a lunatic, and I would understand that. After all, the Linux kernel is mostly written in C, with only a few sections written in Assembly. And everybody knows that C is not an object-oriented language. It is <a href="http://en.wikipedia.org/wiki/List_of_object-oriented_programming_languages">not even listed as such</a> on Wikipedia.</p>
 
-<h2>C</h2>
+<p>But crazy sometimes is not as crazy as it seems. Did you know that <a href="http://www.youtube.com/watch?v=P8DrxzkwnmA">respected professors who taught Einstein thought he was a goof-off</a>? At a time, if you told those respected scientists that Einstein is in fact a genius who would change the history, they definitely take you for a lunatic. Who would have though, right?</p>
 
-<p>There are a few ways to automatically clean up resources in C# — a <code>finally</code> block and a <code>using</code> statement.</p>
+<p>And who would have thought that C can be a used for object-oriented programming? <a href="http://www.cs.rit.edu/~ats/">Axel-Tobias Schreiner</a> did. He even went a step further and wrote a book called «Object-Oriented Programming with ANSI C». It starts like this:</p>
 
-<p>A <code>finally</code> block is a bit lower level than a using. It guarantees that all statements inside a <code>finally</code> block will be executed when the try block exists, even if unexpected exception occurs. For example:</p>
+<blockquote><p>Object-oriented programming is the current cure-all — although it has been around for much more then ten years. At the core, there is little more to it then finally applying the good programming principles that we have been taught for more than twenty years. C++ (Eiffel, Oberon-2, Smalltalk … take your pick) is the New Language because it is object-oriented — although you need not use it that way if you do not want to (or know how to), and it turns out that you can do just as well with plain ANSI-C.</p></blockquote>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="n">ResourceType</span> <span class="n">resource</span> <span class="p">=</span> <span class="n">expression</span><span class="p">;</span> <span class="c1">// Allocate, initialize or acquire some resource.</span>
-</span><span class='line'><span class="k">try</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// Do something with it.</span>
-</span><span class='line'>    <span class="n">statement</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span> <span class="k">finally</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// Free, destroy or release a resource.</span>
-</span><span class='line'>    <span class="c1">// This is guaranteed to happen.</span>
-</span><span class='line'>    <span class="p">((</span><span class="n">IDisposable</span><span class="p">)</span><span class="n">resource</span><span class="p">).</span><span class="n">Dispose</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>This is one of the most wonderful books about programming in general, object-oriented approach, C and C++ programming languages that I have ever read. In my opinion, it hasn’t got the attention it deserves. I read it twice — the first time when I was just learning C and the second time when I was mastering C++. If you have been learning C and/or C++ — this is a must read.</p>
 
+<p>Practically, C is a very low-level language and nobody would want to spend hours writing lots of glue code in C to implement a virtual method table — something that C++ compiler does for you automatically, unless it is required. But even if taking up on that challenge is not part of the plan, the Alex’s book is still great — it teaches the fundamental core principles that all object-oriented languages are built upon. C and C++ are there almost for the sake of examples only. Delegate? Explained. Multiple inheritance? Check. Selectors? There. After reading the book, one could basically just look at any language construct, be that C#, Java, Ruby, Python or any other language, and say, — “Yeah, I know what that does and how compiler implements it. That’s easy!”</p>
 
-<p>Another and more convenient way of doing the same is to employ a <code>using</code> statement which guarantees that <code>Dispose()</code> method is called automatically upon leaving the scope of using block:</p>
+<p>As it turns out, not only you can do all of that with ANSI C, it is actually the best language to explain what is going on under the hood of other languages. And if you ever look at Linux kernel, you would see that it is one of the greatest examples object-oriented design.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="k">using</span> <span class="p">(</span><span class="n">ResourceType</span> <span class="n">resource</span> <span class="p">=</span> <span class="n">expression</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">statement</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>The book <a href="http://www.lulu.com/shop/axel-schreiner/object-oriented-programming-with-ansi-c/paperback/product-17561597.html">can be purchased for $20 from Lulu</a> and it is worth every penny. You can also <a href="http://www.cs.rit.edu/~ats/books/ooc.pdf">download a free PDF version</a> from Mr. Schreiner’s website.</p>
 
-
-<h2>Java</h2>
-
-<p>Java also provides a finally block similar to that seen in C#:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">FileReader</span> <span class="n">reader</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class='line'><span class="k">try</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">reader</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FileReader</span><span class="o">(</span><span class="s">&quot;/dev/null&quot;</span><span class="o">);</span>
-</span><span class='line'>    <span class="c1">// Do something with a file...</span>
-</span><span class='line'><span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">reader</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
-</span><span class='line'>    <span class="n">reader</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Starting from version 7 Java introduces an AutoCloseable concept along with automatic resource cleanup, which are basically the same things as IDisposable and a using statement in C#:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="k">try</span> <span class="o">(</span><span class="n">FileReader</span> <span class="n">reader</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FileReader</span><span class="o">(</span><span class="s">&quot;/dev/null&quot;</span><span class="o">))</span>
-</span><span class='line'><span class="o">{</span>
-</span><span class='line'>    <span class="c1">// Do something with a file...</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Other Languages</h2>
-
-<p>Since the concept of something being done automatically is quite popular, it is present in many other languages. Python has both a <a href="http://docs.python.org/2/reference/compound_stmts.html#finally"><code>finally</code> statement</a> and a <a href="http://docs.python.org/release/2.5.3/ref/with.html"><code>with</code> statement</a>. The same goes for Ruby. Of course, this is also available in derivative languages like Visual Basic that is built on top of .NET technology, Groovy that is built on Java, etc.</p>
-
-<h2>C++ — The King of RAII</h2>
-
-<p>As we have seen, many languages provide different syntax to do essentially the same thing. It is a great concept indeed. It changed the way programmers write code, significantly improved productivity. And behind every invention that we cannot imagine our lives without there is an author. So who is behind the automatic resource management?</p>
-
-<p>The real name of this concept is <strong>Resource Acquisition Is Initialization</strong>, or simply <strong>RAII</strong>. It was invented by Bjarne Stroustrup, the original author of C++ programming language. And of course this concept first appeared in C++, way before C# or Java were created.</p>
-
-<p>C++ is the king of RAII. Many concepts are built upon it. RAII is the reason why object destructors are called automatically. It is the reason why C++ developers don’t need to care much about freeing dynamically allocated memory or close a file descriptor that is no longer used. It is why, when handling an error, it is enough to simply throw an exception, or return an error code from a function, without writing tons of “cleanup” code or even thinking about the order in which resources must be cleaned up (which is usually done in opposite order of allocation). In fact, RAII should be used whenever possible to avoid serious errors or even cause a denial of service. For example, consider the following code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;mutex&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;vector&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Data structure that is supposed to be accessed by multiple threads.</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">shared_resource</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">mutex</span>       <span class="n">mutex</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">shared_resource</span> <span class="o">&amp;</span> <span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="c1">// Acquire an exclusive lock to protect access to</span>
-</span><span class='line'>    <span class="c1">// the object in multi-threaded environment.</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Modify the contents of the vector by adding 10 integers into it.</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">res</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Once done changing the object, release the lock so that other threads</span>
-</span><span class='line'>    <span class="c1">// can work with it. If we forget to unlock it, the process will basically</span>
-</span><span class='line'>    <span class="c1">// hang trying to lock the mutex again, rendering our program useless.</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above code is a classic example of an error that could lead to serious consequences. The problem is that anything could happen in between of <code>mutex.lock()</code> and <code>mutex.unlock()</code> statements, and the <code>mutex.unlock()</code> statement may not be executed shall <code>data.emplace_back()</code> throw an exception, leaving the program in the locked-up state.</p>
-
-<p>Taking a good care of exceptions is a concept called <strong>exception safety</strong>. The above code is indeed not exception safe. However, this is not only about exceptions. For instance, if <code>emplace_back()</code> method was not throwing an exception and return code was used to signal an error, the erroneous code could have looked like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">int</span> <span class="n">foo</span><span class="p">(</span><span class="n">shared_resource</span> <span class="o">&amp;</span> <span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Exception safety is out of the equation, yet the code is buggy. This is why RAII should (almost) always be used. The correct code should look like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">shared_resource</span> <span class="o">&amp;</span> <span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">res</span><span class="p">.</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">res</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In the above example, <a href="http://en.cppreference.com/w/cpp/thread/lock_guard"><code>std::lock_guard</code></a> object is locking a mutex in its constructor and unlocks it in its destructor. Thanks to RAII, the destructor is guaranteed to be called when the object goes out of scope no matter what. C++ is full of such “guard” objects. Many of them are part of the standard library, but developers can always create their own.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cctype&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;fstream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">file</span><span class="p">(</span><span class="s">&quot;test.txt&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">((</span><span class="n">file</span> <span class="o">&gt;&gt;</span> <span class="n">c</span><span class="p">))</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">isalpha</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">?</span> <span class="n">c</span> <span class="o">:</span> <span class="sc">&#39;*&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In the above example, the file object will automatically close the file. In other words, C++ clearly wins this battle over RAII with all other languages since there is no need for any finally blocks, using statements or event Java’s new <code>try()</code> blocks.</p>
-
-<p>What is interesting is that C#, Java, Python and other similar languages did not even have “using”-like statements for a long time. There was only <em>try-catch-finally</em> construct and programmers had no choice but to write a lot of boilerplate code. Albeit some programmers have consciously suffered from the lack of proper RAII support, many didn’t know that C++ not only supports RAII but also is the only language that does it properly. One day those guys wanted to write something in C++ and of course started to look for similar self-torture methods. Not able to find it, they asked Bjarne Stroustrup why doesn’t C++ provide a <code>finally</code> construct, and <a href="http://www.stroustrup.com/bs_faq2.html#finally">here is what he had to say</a>:</p>
-
-<blockquote><p>Because C++ supports an alternative that is almost always better: The “resource acquisition is initialization” technique (TC++PL3 section 14.4). The basic idea is to represent a resource by a local object, so that the local object’s destructor will release the resource. That way, the programmer cannot forget to release the resource.
-…
-In a system, we need a “resource handle” class for each resource. However, we don’t have to have an “finally” clause for each acquisition of a resource. In realistic systems, there are far more resource acquisitions than kinds of resources, so the “resource acquisition is initialization” technique leads to less code than use of a “finally” construct.</p></blockquote>
-
-<p>Boy was he right. Most today’s languages are now trying to resemble the same.</p>
-
-<h2>RAII in C</h2>
-
-<p>Everyone knows that C neither support exceptions nor it has a concept of RAII. That is not entirely true, but for the most part it is. You will not find anything about those features in C89, C99 or even C11 language standard specifications. Therefore, C developers have to be careful, disciplined, and clean up after themselves. Oftentimes, especially in somewhat low-level code like device driver, we can run into the code like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="nf">pci_probe</span><span class="p">(</span><span class="k">struct</span> <span class="n">pci_dev</span> <span class="o">*</span><span class="n">pci_dev</span><span class="p">,</span>
-</span><span class='line'>                     <span class="k">const</span> <span class="k">struct</span> <span class="n">pci_device_id</span> <span class="o">*</span><span class="n">dev_id</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">my_dev</span> <span class="o">*</span><span class="n">dev</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">dev</span> <span class="o">=</span> <span class="n">kzalloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">my_dev</span><span class="p">),</span> <span class="n">GFP_KERNEL</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">unlikely</span><span class="p">(</span><span class="o">!</span><span class="n">dev</span><span class="p">))</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">pci_set_drvdata</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="n">dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">dev</span><span class="o">-&gt;</span><span class="n">pci_dev</span> <span class="o">=</span> <span class="n">pci_dev</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">r</span> <span class="o">=</span> <span class="n">pci_enable_device</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">unlikely</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_enable_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">pci_set_master</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">pci_try_set_mwi</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar0</span> <span class="o">=</span> <span class="n">ioremap_nocache</span><span class="p">(</span><span class="n">pci_resource_start</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-</span><span class='line'>                                <span class="n">pci_resource_len</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="mi">0</span><span class="p">));</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">unlikely</span><span class="p">(</span><span class="o">!</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar0</span><span class="p">))</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_bar0_map_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar2</span> <span class="o">=</span> <span class="n">ioremap_nocache</span><span class="p">(</span><span class="n">pci_resource_start</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-</span><span class='line'>                                <span class="n">pci_resource_len</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">,</span> <span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">unlikely</span><span class="p">(</span><span class="o">!</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar2</span><span class="p">))</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_bar2_map_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">r</span> <span class="o">=</span> <span class="n">a2gx_add_cdev</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">on_cdev_err</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nl">on_cdev_err:</span>
-</span><span class='line'>    <span class="n">iounmap</span><span class="p">(</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar2</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">on_bar2_map_err:</span>
-</span><span class='line'>    <span class="n">iounmap</span><span class="p">(</span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">bar0</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">on_bar0_map_err:</span>
-</span><span class='line'>    <span class="n">pci_disable_device</span><span class="p">(</span><span class="n">pci_dev</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">on_enable_err:</span>
-</span><span class='line'>    <span class="n">kfree</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">on_err:</span>
-</span><span class='line'>    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Many will find the above code difficult to read, hard to write, or both. Some would love to punch the author in the face for using goto. Others may not understand what is going on in there at all. But C is not just a programming language. C is a religion. For some, C code is a lot cleaner than anything else — nothing is hiding behind the scenes, what you see is what you get. The C code is usually thought trough — you have to think twice before you write it. In fact, some wouldn’t substitute it for anything else. At any rate, C developers usually cleanup after themselves.</p>
-
-<p>On the other hand, the benefits or RAII are also obvious and there are people who would love to see a concept of RAII in C. But it is not a part of the language specification. However, imagine a world when programmers were not using things that are not standard. That world would have been terrible. Just imagine for a second that C++ developers wouldn’t have multi-threaded programs until C++11 standard was ratified with all of its quirks and perks like <code>std::thread</code>, <code>std::mutex</code>, <em>thread local storage</em> and so on.</p>
-
-<p>Or how about not being able to specify symbol’s visibility or use other attributes? Luckily, being a non-standard feature doesn’t restrain people from using it. And as more people use some feature, more chances it has to be standardized. That said, C++11 now allows for generalized yet compiler-specific attributes, threading, static assertions, and tons of other stuff that was available before, was used before, too, but wasn’t a part of the standard. Well, now it is.</p>
-
-<p>That being said, C also supports RAII. However, it is not part of the standard, at least not yet. Here is how it works — it is possible to specify a cleanup function for any auto function scope variable. In order to do that, a non-standard cleanup attribute must be specified. If you remember the example of a buggy non-exception-safe C++ function that uses a <em>mutex</em>, that code would look something like this in C:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">struct</span> <span class="n">shared_resource</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">pthread_mutex_t</span>   <span class="n">mutex</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">int_vector</span> <span class="n">data</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">shared_resource</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">pthread_mutex_t</span>   <span class="n">mutex</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">int_vector</span> <span class="n">data</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">int_vector_push_back</span><span class="p">(</span><span class="k">struct</span> <span class="n">int_vector</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">int</span> <span class="n">value</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">(</span><span class="k">struct</span> <span class="n">shared_resource</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="cm">/* Oops, cannot lock the mutex. */</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">int_vector_push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="cm">/* Oops, cannot add data into the vector! */</span>
-</span><span class='line'>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="cm">/* All is good */</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Though it is a little bit hard to imagine that C programmer could write code like that. The code would probably look more like this (which is also functionally correct this time):</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">test</span><span class="p">(</span><span class="k">struct</span> <span class="n">shared_resource</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">r</span> <span class="o">=</span> <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">r</span> <span class="o">=</span> <span class="n">int_vector_push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>  <span class="nl">out:</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">r</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Below is a RAII-like version of the code where mutex is guaranteed to be unlocked automatically, so it is possible to simply return from the function at any given point without worrying about it. This code closely resembles the behavior of a C++ example using <code>std::lock_guard</code> where <code>lock_guard_ctor</code> mimics <code>std::lock_guard::lock_guard</code> constructor that locks a <em>mutex</em>, and the <code>lock_guard_dtor</code> function is like <code>std::lock_guard::~lock_guard</code> destructor that unlocks the <em>mutex</em> (if it was locked) and is guaranteed to be called automatically:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="nf">lock_guard_ctor</span><span class="p">(</span><span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="n">mutex</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="n">mutex</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">mutex</span> <span class="o">:</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">lock_guard_dtor</span><span class="p">(</span><span class="n">pthread_mutex_t</span> <span class="o">**</span><span class="n">mutex_ptr</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="n">mutex</span> <span class="o">=</span> <span class="o">*</span><span class="n">mutex_ptr</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">mutex</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">(</span><span class="k">struct</span> <span class="n">shared_resource</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="n">lock_guard</span>
-</span><span class='line'>        <span class="n">__attribute__</span><span class="p">((</span><span class="n">cleanup</span><span class="p">(</span><span class="n">lock_guard_dtor</span><span class="p">)))</span>
-</span><span class='line'>        <span class="o">=</span> <span class="n">lock_guard_ctor</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">lock_guard</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">int_vector_push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above code can also be simplified a bit with two simple steps. Step one is to have <code>lock_guard_ctor</code> and <code>lock_guard_dtor</code> functions defined somewhere else and be reusable. Because nobody writes custom constructors and destructor for a class every time they use it. Step number two is to get rid of a lot of typing by having a macro. For example, the common code that is written once could be:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;pthread.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">extern</span> <span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="nf">lock_guard_ctor</span><span class="p">(</span><span class="n">pthread_mutex_t</span> <span class="o">*</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'><span class="k">extern</span> <span class="kt">void</span> <span class="nf">lock_guard_dtor</span><span class="p">(</span><span class="n">pthread_mutex_t</span> <span class="o">**</span><span class="n">mutex_ptr</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#define LOCK_GUARD(name, mutex)                   \</span>
-</span><span class='line'><span class="cp">    pthread_mutex_t * name                        \</span>
-</span><span class='line'><span class="cp">        __attribute__((cleanup(lock_guard_dtor))) \</span>
-</span><span class='line'><span class="cp">        = lock_guard_ctor((mutex))</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>And the code using this feature becomes a lot simpler:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">(</span><span class="k">struct</span> <span class="n">shared_resource</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">LOCK_GUARD</span><span class="p">(</span><span class="n">lock</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">lock</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">int_vector_push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class='line'>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>There are two possible ways for a compiler to implement a cleanup attribute. If exceptions are not enabled, it would generate the boilerplate code similar to that otherwise written by the programmer manually. If exceptions are enabled then compiler would generate the code that executes a cleanup function during the stack unwinding (yes, there are exceptions in C, too).</p>
-
-<p>Note that cleanup attribute cannot be used for global variables. constructor and destructor attributes should be used instead. The constructor attribute causes the function to be called automatically before execution enters <code>main()</code>. Similarly, the destructor attribute causes the function to be called automatically after <code>main()</code> completes or <code>exit()</code> is called. Functions with these attributes are useful for initializing data that is used implicitly during the execution of the program. It is also possible to manually control the order of execution by specifying priority number (optional).</p>
-
-<p>The techniques described above are available at least in today’s leading C compilers — GCC and Clang. Remember, the future of the language is in hands of its users. If you really like the feature and it is not standard — use it, spread the world, write a feedback to compiler developers and language standard committee. It will definitely help to make it into the next standard revision.</p>
-
-<p>Let the force be with you!</p>
+<p>Axel-Tobias Schreiner, Thank You!</p>
 </div>
   
   
@@ -680,15 +174,15 @@ In a system, we need a “resource handle” class for each resource. However, w
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    
+    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    
+    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    
+    <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
+    
     <a class="list-group-item " href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a>
-    
-    <a class="list-group-item " href="/c-vs-cxx/">Two Different Languages - C and C++</a>
-    
-    <a class="list-group-item " href="/ask-smart/">Ask Smart Questions and You Will Succeed</a>
-    
-    <a class="list-group-item " href="/network-evolution/">The Evolution of Computer Networking</a>
-    
-    <a class="list-group-item " href="/stranded/">Stranded</a>
     
   </div>
 </section>
@@ -700,7 +194,7 @@ In a system, we need a “resource handle” class for each resource. However, w
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">12</span>
+        <span class="badge">15</span>
         C++
       </a>
     
@@ -712,13 +206,13 @@ In a system, we need a “resource handle” class for each resource. However, w
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">18</span>
+        <span class="badge">22</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">2</span>
+        <span class="badge">1</span>
         C++11
       </a>
     

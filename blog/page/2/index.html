@@ -114,24 +114,20 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-04-15T00:00:00-04:00" pubdate data-updated="true">Apr 15<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-06T00:00:00-04:00" pubdate data-updated="true">May 6<span>th</span>, 2013</time>
         
-           | <a href="/c-vs-cxx/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/c-vs-cxx/">Comments</a>
+           | <a href="/cpp-like-python/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/cpp-like-python/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/c-vs-cxx/">Two Different Languages - C and C++</a></h1>
+      <h1 class="entry-title"><a href="/cpp-like-python/">C++ Like Python</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Good news everyone, we are looking for a C/C++ developer! Wait, that’s not good news at all!</p>
-
-<p>You see, the term «C/C++» is likely to piss off those who actually know both C and C++. On the other hand, majority of C++ developers mistakenly think they know C. And it would take at least a year or two for a C developer to learn C++. Yet «C/C++» is mentioned in way too many job postings. So who exactly are we looking for?</p>
-
-<p>Let’s start by asking a simple question — what would the main() function return in the below C/C++ program?</p>
+  <div class="entry-content clearfix"><p>Today I ran into a somewhat classy piece of code that was analyzing user’s answer to a <a href="https://en.wikipedia.org/wiki/Yes%E2%80%93no_question">Yes or No question</a>. The idea was to compare input to various possible answers disregarding the case. The code looked something like this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -140,72 +136,65 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="n">T</span><span class="p">;</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;strings.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">positive</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Y&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;OK&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;True&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Sure&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Of Course&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
+</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Why not?&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">struct</span> <span class="n">T</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">a</span><span class="p">;</span> <span class="kt">int</span> <span class="n">b</span><span class="p">;</span> <span class="p">};</span>
-</span><span class='line'>    <span class="k">return</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="sc">&#39;T&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Of course it depends on architecture. But let’s assume that size of int is 4 bytes and structure T has no extra padding. The code is legal in both C and C++. Yet the correct answer depends on whether this is a C or C++ program. If it is a C program then the correct answer is 8. In case of C++ the answer is 9.</p>
-
-<h2>C is not C++</h2>
-
-<p>C++ originated back in 1979 and at that time it was based on C. It wasn’t even called C++ — its first name was «C with Classes». The language was renamed to «C++» only in 1983. At that time, both languages were closely related. However, from that point both C and C++ took a different evolution path and today, some 30+ years later, both languages are as different as Objective-C and C++, Java and C#, Python and Ruby, OCaml and F#. There is only one catch — the basic syntax of both is very similar to such a degree that it is possible to have a program that is both legal C and legal C++, which may or may not behave differently. Generally, everyone knows that C++ has tons of features that are not available in C but any C code can be compiled as C++. Therefore, C++ developers also think that they know C. And in most cases they are dangerously mistaken. Below is a list of the most common features of C language serving as traps for C++ fellows.</p>
-
-<h3>Casting void pointer</h3>
-
-<p>In C, void pointer can be implicitly casted to a pointer of any other type. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="mh">0xDEADDEAD</span><span class="p">;</span>
-</span><span class='line'><span class="kt">int</span> <span class="o">*</span><span class="n">i</span> <span class="o">=</span> <span class="n">ptr</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>C developers use this convenient feature all the time. However, any C++ compiler would choke on that and die.</p>
-
-<h3>Implicit function declaration</h3>
-
-<p>In C, it is not always necessary to declare a function before using it. Using an undeclared function implicitly declares it. This feature has been declared deprecated since 1999 but is still used here and there. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">foo</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Could you please give me $100? &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">flush</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">positive</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">c_str</span><span class="p">()))</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
+</span><span class='line'>                      <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>A perfectly legal C program that is illegal C++:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">gcc</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">c</span>
-</span><span class='line'><span class="err">$</span> <span class="n">g</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span> <span class="n">In</span> <span class="n">function</span> <span class="err">‘</span><span class="kt">int</span> <span class="n">main</span><span class="p">()</span><span class="err">’</span><span class="o">:</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="err">‘</span><span class="n">foo</span><span class="err">’</span> <span class="n">was</span> <span class="n">not</span> <span class="n">declared</span> <span class="n">in</span> <span class="n">this</span> <span class="n">scope</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>No arguments vs any arguments</h3>
-
-<p>In C, function prototype without parameters imply that function accepts any number of arguments and it is legal to call such a function with one or more arguments. In C++, function prototype without parameters means that function accepts no arguments and it is illegal to call such function with arguments. For example:</p>
+<p>What I wanted was to extend that funky <code>positive()</code> function to add more possibilities and it made me sad a little. Since I am writing Python scripts once in a while, I remembered about Python’s “in” statement. If I were to write this in Python, I’d do something like this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -215,20 +204,35 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">();</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
+</span><span class='line'><span class="c"># -*- coding: utf-8 -*-</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;hello&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">answer</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s">&#39;Could you please give me $100? &#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;yes&#39;</span><span class="p">,</span> <span class="s">&#39;ok&#39;</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;sure&#39;</span><span class="p">,</span> <span class="s">&#39;of course&#39;</span><span class="p">,</span> <span class="s">&#39;why not?&#39;</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;Thank You!&quot;</span>
+</span><span class='line'>        <span class="k">break</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The above is absolutely legal C code that won’t compile as C++. As a matter of fact, I haven’t seen many C++ developers who can tell the difference between <code>void foo();</code> and <code>void foo(void);</code></p>
+<p>Then I though, “Hey, C++ is by far a lot more powerful than Python syntax-wise, does this program really have to be that long and ugly?” Challenge accepted. A minute later, it looked even shorter than my Python version:</p>
 
-<h3>Crossing initialization with goto or switch</h3>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">in</span><span class="p">(</span><span class="n">lower</span><span class="p">(</span><span class="n">raw_input</span><span class="p">(</span><span class="s">&quot;Could you please give me $100? &quot;</span><span class="p">)),</span>
+</span><span class='line'>           <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">,</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;true&quot;</span><span class="p">,</span> <span class="s">&quot;sure&quot;</span><span class="p">,</span> <span class="s">&quot;of course&quot;</span><span class="p">,</span> <span class="s">&quot;why not?&quot;</span><span class="p">))</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Well, of course this took some “magic” to work, which went to a reusable header. The complete program is a bit larger if put into a single source file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -237,107 +241,81 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cctype&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">raw_input</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">prompt</span><span class="p">)</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>  <span class="nl">out:</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">answer</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">prompt</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">flush</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">answer</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">answer</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;&amp;</span><span class="n">lower</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;&amp;</span><span class="n">s</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">c</span> <span class="o">:</span> <span class="n">s</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">c</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">in</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="n">size_t</span> <span class="n">N</span><span class="p">,</span> <span class="k">typename</span> <span class="p">...</span><span class="n">Args</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">in</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">arg0</span><span class="p">)[</span><span class="n">N</span><span class="p">],</span> <span class="n">Args</span> <span class="o">&amp;&amp;</span> <span class="p">...</span><span class="n">argN</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">s</span> <span class="o">==</span> <span class="n">arg0</span> <span class="o">||</span> <span class="n">in</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">argN</span><span class="p">)...);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">in</span><span class="p">(</span><span class="n">lower</span><span class="p">(</span><span class="n">raw_input</span><span class="p">(</span><span class="s">&quot;Could you please give me $100? &quot;</span><span class="p">)),</span>
+</span><span class='line'>               <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">,</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;true&quot;</span><span class="p">,</span> <span class="s">&quot;sure&quot;</span><span class="p">,</span> <span class="s">&quot;of course&quot;</span><span class="p">,</span> <span class="s">&quot;why not?&quot;</span><span class="p">))</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
+</span><span class='line'>                  <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The above is a perfectly legal C code but is rejected by C++ compiler as C++ does not allow to cross initialization:</p>
+<p><a href="http://en.wikipedia.org/wiki/Variadic_templates">Variadic templates</a> and <a href="http://en.wikipedia.org/wiki/Tail_call">tail recursion</a> can do magic (and compiler unrolls everything, I’ve checked).</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span><span class="mi">5</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="k">goto</span> <span class="n">into</span> <span class="n">protected</span> <span class="n">scope</span>
-</span><span class='line'>    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
-</span><span class='line'>    <span class="o">^</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span><span class="o">:</span><span class="mi">4</span><span class="o">:</span><span class="mi">9</span><span class="o">:</span> <span class="n">note</span><span class="o">:</span> <span class="n">jump</span> <span class="n">bypasses</span> <span class="n">variable</span> <span class="n">initialization</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>        <span class="o">^</span>
-</span><span class='line'><span class="mi">1</span> <span class="n">error</span> <span class="n">generated</span><span class="p">.</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Keywords clash</h3>
-
-<p>C++ would fail to compile any legal C code that happen to use C++ keywords:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">old</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">new</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>More! More! More!</h2>
-
-<p>Oh, you knew that? If you knew all of the above and still consider yourself a “C/C++” developer, hold on a second. Name at least 10 more differences. Huh?</p>
-
-<ul>
-<li>In C++, comma operator can yield an l-value. In C it cannot.</li>
-<li>C does not allow duplicate typedefs while C++ does.</li>
-<li>C++ does not allow non-prototype function declarations while C does.</li>
-<li>C allows struct, union and enum to be declared in function prototypes, C++ doesn’t.</li>
-<li>C allows for implicit discard of pointer const qualifiers. This trick won’t work in C++.</li>
-<li>In C++, struct, union and enum declarations automatically imply a typedef with the same name. This is not the case in C.</li>
-<li>Character literals in C are of type int. In C++ they are of type char.</li>
-<li>C++ implicitly treats any const global as file scope unless it is explicitly declared extern, unlike C in which extern is the default.</li>
-<li>Functions market as “inline” in C are of file scope whereas they have external linkage by default in C++.</li>
-<li>C has VLA (Variable Length Arrays) support whereas C++ does not (until C++14).</li>
-</ul>
-
-
-<p>And the list of technical differences/incompatibilities of C and C++ can go on and on. The list is so big that it is impossible to fit it into a blog post. But if you are interested, check out References section in the bottom of this post.</p>
-
-<p>Aside of technical differences, it would also be a mistake not to mention the coding style. Not a formatting style or using tabs versus spaces, but coding style. For example, C++ developers would always cast a result of <code>malloc()</code> whereas C developers would almost never do that.</p>
-
-<h2>Grammar of «C/C++»</h2>
-
-<p>Trying to figure out the meaning behind «C/C++», I dug the usage of slash as a punctuation sign in English text. I have never learn English grammar in school so you may want to check me on this one. Anyhow, according to Wikipedia the slash is most commonly used as the word substitute for “or” which indicates a choice (often mutually-exclusive) is present.</p>
-
-<p>If that is the case, then companies are actually looking for either C or C++ developers, not both. Which doesn’t make any sense at all. Why nobody is looking for “Cobol/Ada” or “Lisp/Verilog” developers? Looking at other industries, there seem to be no companies searching for “Linguist/Plumber”-like people.</p>
-
-<p>So the grammar doesn’t seem to back up the usage of «C/C++» term. This leaves everyone guessing as to what it actually means and the only way to figure out is from the context.</p>
-
-<h2>What it actually means</h2>
-
-<p>The actual meaning of «C/C++» depends. Here are some examples of what this means according to my observations.</p>
-
-<p>In job postings, “We are looking for C/C++ developers” generally means “We are looking for C++ developers, nobody knows C here but why not put that in a title, too?”</p>
-
-<p>When somebody brags about being a “C/C++” developers it means they don’t really know any of those languages but learned to write a “Hello, World!” application using printf() and compile it with C++ compiler.</p>
-
-<p>In forums, «C/C++» section is usually dedicated for C++ crowd that might as well be able to answer some C-related questions if you get lucky.</p>
-
-<h2>Tip: Don’t Use «C/C++»</h2>
-
-<p>If you are looking for a developer, make sure you clearly specify requirements and avoid the use of «C/C++». If it so happens that you are actually looking for someone who knows both, say «C and C++». If you are willing to spend a few years teaching C developer C++ language, say «C++ developer or C developer willing to learn C++». Using «C/C++» will only bring confusion to those reading the job posting.</p>
-
-<p>End of rant.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="http://en.wikipedia.org/wiki/Slash_(punctuation">Slash in English text.</a></li>
-<li><a href="http://david.tribble.com/text/cdiffs.htm">Incompatibilities Between ISO C and ISO C++</a> by David R. Tribble</li>
-<li><a href="http://en.wikipedia.org/wiki/Compatibility_of_C_and_C%2B%2B">Compatibility of C and C++</a></li>
-<li><a href="http://c-faq.com/malloc/mallocnocast.html">What’s wrong with casting malloc’s return value?</a></li>
-</ul>
-
+<p>I don’t want to start a language war or anything, but my opinion is that Python’s beauty is not in its simple or powerful syntax. Not at all.</p>
 </div>
   
   
@@ -368,15 +346,15 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    
+    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    
+    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    
+    <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
+    
     <a class="list-group-item " href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a>
-    
-    <a class="list-group-item " href="/c-vs-cxx/">Two Different Languages - C and C++</a>
-    
-    <a class="list-group-item " href="/ask-smart/">Ask Smart Questions and You Will Succeed</a>
-    
-    <a class="list-group-item " href="/network-evolution/">The Evolution of Computer Networking</a>
-    
-    <a class="list-group-item " href="/stranded/">Stranded</a>
     
   </div>
 </section>
@@ -388,7 +366,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">12</span>
+        <span class="badge">15</span>
         C++
       </a>
     
@@ -400,13 +378,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">18</span>
+        <span class="badge">22</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">2</span>
+        <span class="badge">1</span>
         C++11
       </a>
     

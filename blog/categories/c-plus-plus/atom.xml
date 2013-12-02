@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C++ | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T22:07:58-05:00</updated>
+  <updated>2013-12-01T22:33:13-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,627 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Read it Aloud to Yourself]]></title>
+    <link href="http://741MHz.com/read-it-aloud/"/>
+    <updated>2013-05-07T00:00:00-04:00</updated>
+    <id>http://741MHz.com/read-it-aloud</id>
+    <content type="html"><![CDATA[<p>Once in a while I like to learn a new technology, a programming language or a trick to entertain myself and, hopefully, keep the mind open. To shift the perception on programming languages a little, I’ve decided to code some Ruby. The mind shift attempt was not successful this time. The language itself didn’t really impress me a lot — it is nice, well designed, has quite a community and a lot of stuff is built around it. But that’s about all there is in it for me. Almost. One of the books about Ruby that I stumbled upon is too damn good. It is the most entertaining and interesting read about programming language that I had in quite some time. It is called “<a href="http://mislav.uniqpath.com/poignant-guide/book/">Why’s (poignant) Guide to Ruby</a>” and is freely available online under the <a href="http://creativecommons.org/licenses/by-sa/2.5/">Attribution-ShareAlike license</a>. Here is an excerpt from a beautiful introduction to Ruby on Chapter 3:</p>
+
+<blockquote><p>My conscience won’t let me call Ruby a computer language. That would imply that the language works primarily on the computer’s terms. That the language is designed to accommodate the computer, first and foremost. That therefore, we, the coders, are foreigners, seeking citizenship in the computer’s locale. It’s the computer’s language and we are translators for the world.
+But what do you call the language when your brain begins to think in that language? When you start to use the language’s own words and colloquialisms to express yourself. Say, the computer can’t do that. How can it be the computer’s language? It is ours, we speak it natively!
+We can no longer truthfully call it a computer language. It is coderspeak. It is the language of our thoughts.
+Read the following aloud to yourself:
+5.times { print &ldquo;Odelay!&rdquo; }
+In English sentences, punctuation (such as periods, exclamations, parentheses) are silent. Punctuation adds meaning to words, helps give cues as to what the author intended by a sentence. So let’s read the above as: Five times print “Odelay!”</p></blockquote>
+
+<p>There were more examples that, if you read them aloud to yourself, totally make sense to any person:</p>
+
+<p><code>ruby Exit unless the word restaurant includes the word aura:
+exit unless "restaurant".include? "aura"
+</code></p>
+
+<p><code>ruby With the words ‘toast’, ‘cheese’, and ‘wine’: take each food and print it capitalized:
+['toast', 'cheese', 'wine'].each { |food| print food.capitalize  }
+</code></p>
+
+<p>This is not to mention beautiful Cartoon Foxes:</p>
+
+<p><img class="<a" src="href="http://mislav.uniqpath.com/poignant-guide/images/the.foxes-3.png">http://mislav.uniqpath.com/poignant-guide/images/the.foxes-3.png</a>"></p>
+
+<p>For a moment I thought it was pretty cool. But then I got back to earth. You see, programming in a human language is not fun at all and we all know it. There is a good non-programming life analogy to programming in a human language. It is called “The Law”. If you don’t believe me, go read your country’s tax, labor, criminal or any other law. You could read it as much as you want but chances are that you would either not understand it at all or misinterpret it unless you have a degree from a good law school. And those laws are written in proper English that you can read aloud to yourself. The point is that when it comes to precisely describing what should happen under what circumstances, there will be a domain specific language for it, and you will have to either master it yourself or hire a professional. The language itself doesn’t make things simpler and I would probably get around the law much better if it was written in a formal <a href="http://en.wikipedia.org/wiki/Turing_completeness">Turing-complete</a> language. And after all, I don’t really think like Ruby. Perhaps I’ve been doing low-level programming for too long now, I don’t know. It is definitely not the language of my thoughts. Not even close.</p>
+
+<p>At any rate, Ruby is still a programming language that leaves a good impression as simple, fun and powerful tool that gets a lot of things done. I really enjoyed it during my crash course and thought it would be cool to write a C++ program in a way that you could read it aloud to your friends who are not programmers and have them understand what it does. Here is what I came up with for those first three Ruby examples:</p>
+
+<p>```c++</p>
+
+<h1>include &ldquo;ruby.hh&rdquo;</h1>
+
+<p>int main() {</p>
+
+<pre><code>// 5.times { print "Odelay!" }
+5_times ^ print("Odelay!");
+
+// exit unless "restaurant".include? "aura"
+exit_unless ^ "restaurant"_includes("aura");
+
+// ['toast', 'cheese', 'wine'].each { |food| print food.capitalize  }
+each({ "toast", "cheese", "wine" }) ^ (print | capitalized);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>And as it often happens, C++ did not come with batteries included this time, so I had to come up with a little mess consisting of lambdas, function objects, user-defined literals and initializer lists in order for this mambo-jumbo to work. Most of those are part of C++11 and without them it would have been a lot worse. Here is my terrible code turning C++ into a crazy Ruby-like thing:</p>
+
+<p>```c++</p>
+
+<h1>ifndef RUBY_HH</h1>
+
+<h1>define RUBY_HH</h1>
+
+<h1>include <cstdlib></h1>
+
+<h1>include <string></h1>
+
+<h1>include &lt;initializer_list></h1>
+
+<p>enum fmt_flags {</p>
+
+<pre><code>none,
+capitalized
+</code></pre>
+
+<p>};</p>
+
+<p>struct Repeater {</p>
+
+<pre><code>unsigned long long n;
+
+explicit inline Repeater(unsigned long long n) : n(n) {}
+
+template &lt;typename F&gt;
+void operator ^ (const F &amp;f) const {
+    for (unsigned long long i = 0; i &lt; n; ++i)
+        f();
+}
+</code></pre>
+
+<p>};</p>
+
+<p>inline Repeater operator"&ldquo; _times (unsigned long long n) {</p>
+
+<pre><code>return Repeater(n);
+</code></pre>
+
+<p>}</p>
+
+<p>struct printer {</p>
+
+<pre><code>std::string s;
+
+explicit printer(const std::string &amp;s) : s(s) { }
+
+inline void operator()() const {
+    std::puts(s.c_str());
+}
+</code></pre>
+
+<p>};</p>
+
+<p>struct fmt_printer {</p>
+
+<pre><code>fmt_flags f;
+
+explicit fmt_printer(fmt_flags f) : f(f) {
+}
+
+inline void operator()(const std::string &amp;x) const {
+    auto s = x;
+    switch (f) {
+      case capitalized:
+          for (auto &amp;c : s)
+              c = std::toupper(c);
+      case none:
+          break;
+    }
+    std::puts(s.c_str());
+}
+</code></pre>
+
+<p>};</p>
+
+<p>auto print = <a href="const%20std::string%20&amp;s"></a> {</p>
+
+<pre><code>return printer(s);
+</code></pre>
+
+<p>};</p>
+
+<p>struct StringIncludesCheck {</p>
+
+<pre><code>const char *haystack;
+explicit StringIncludesCheck(const char *haystack)
+    : haystack(haystack) { }
+
+inline bool operator()(const char *needle) const {
+    return std::strstr(haystack, needle) != nullptr;
+}
+</code></pre>
+
+<p>};</p>
+
+<p>inline StringIncludesCheck operator"&ldquo;
+_includes(const char *haystack, long unsigned int) {</p>
+
+<pre><code>return StringIncludesCheck(haystack);
+</code></pre>
+
+<p>}</p>
+
+<p>struct ExiterUnless {</p>
+
+<pre><code>inline void operator ^ (bool v) const {
+    if (!v)
+        std::exit(0);
+}
+</code></pre>
+
+<p>};</p>
+
+<p>static ExiterUnless exit_unless;</p>
+
+<p>template <typename T>
+struct EachFunc {</p>
+
+<pre><code>std::initializer_list&lt;T&gt; elems;
+explicit EachFunc(std::initializer_list&lt;T&gt; elems) : elems(elems) {}
+template &lt;typename F&gt;
+void operator^(F &amp;&amp;f) const {
+    for (auto &amp;x : elems)
+        f(x);
+}
+</code></pre>
+
+<p>};</p>
+
+<p>template <typename T>
+EachFunc<T> each(std::initializer_list<T> elems) {</p>
+
+<pre><code>return EachFunc&lt;T&gt;(elems);
+</code></pre>
+
+<p>}</p>
+
+<p>fmt_printer operator|(decltype(print) printer, fmt_flags flags)
+{</p>
+
+<pre><code>return fmt_printer(flags);
+</code></pre>
+
+<p>}</p>
+
+<h1>endif</h1>
+
+<p>```</p>
+
+<p>Luckily, this kind of stuff is rarely needed in the real world C++ programming. Most folks simply code up a few classes, throw a few virtual functions on top and get the job done. But there are some good cases when such a mind-blowing complexity comes handy. <a href="http://www.boost.org/doc/libs/release/doc/html/xpressive.html">Xpressive</a> is an excellent examples — it is a template regular-expression library that pretty much builds regular expressions in compile-time. Just check this beautiful usage example:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<h1>include &lt;boost/xpressive/xpressive.hpp></h1>
+
+<p>using namespace boost::xpressive;</p>
+
+<p>int main()
+{</p>
+
+<pre><code>char const *str = "I was born on 5/30/1973 at 7am.";
+
+// define some custom mark_tags with names more meaningful than s1, s2, etc.
+mark_tag day(1), month(2), year(3), delim(4);
+
+// this regex finds a date
+cregex date = (month= repeat&lt;1,2&gt;(_d))           // find the month ...
+           &gt;&gt; (delim= (set= '/','-'))            // followed by a delimiter ...
+           &gt;&gt; (day=   repeat&lt;1,2&gt;(_d)) &gt;&gt; delim  // and a day followed by the same delimiter ...
+           &gt;&gt; (year=  repeat&lt;1,2&gt;(_d &gt;&gt; _d));    // and the year.
+
+cmatch what;
+
+if( regex_search( str, what, date ) )
+{
+    std::cout &lt;&lt; what[0]     &lt;&lt; '\n'; // whole match
+    std::cout &lt;&lt; what[day]   &lt;&lt; '\n'; // the day
+    std::cout &lt;&lt; what[month] &lt;&lt; '\n'; // the month
+    std::cout &lt;&lt; what[year]  &lt;&lt; '\n'; // the year
+    std::cout &lt;&lt; what[delim] &lt;&lt; '\n'; // the delimiter
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Either way, I don’t think I can make a good Ruby programmer because I tend to write my C++ as if it was C with code-generation built into the compiler and stick to dataflow programming model rather than object-oriented one. And I love it. As my buddy often say, «Cobol programmer could write a Cobol program in pretty much any programming language.»</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[C++ Like Python]]></title>
+    <link href="http://741MHz.com/cpp-like-python/"/>
+    <updated>2013-05-06T00:00:00-04:00</updated>
+    <id>http://741MHz.com/cpp-like-python</id>
+    <content type="html"><![CDATA[<p>Today I ran into a somewhat classy piece of code that was analyzing user’s answer to a <a href="https://en.wikipedia.org/wiki/Yes%E2%80%93no_question">Yes or No question</a>. The idea was to compare input to various possible answers disregarding the case. The code looked something like this:</p>
+
+<p>```c++</p>
+
+<h1>include <string></h1>
+
+<h1>include &lt;strings.h></h1>
+
+<h1>include <iostream></h1>
+
+<p>static bool positive(const char *s)
+{</p>
+
+<pre><code>return (strcasecmp(s, "Y") == 0 ||
+        strcasecmp(s, "Yes") == 0 ||
+        strcasecmp(s, "OK") == 0 ||
+        strcasecmp(s, "True") == 0 ||
+        strcasecmp(s, "Sure") == 0 ||
+        strcasecmp(s, "Of Course") == 0 ||
+        strcasecmp(s, "Why not?") == 0);
+</code></pre>
+
+<p>}</p>
+
+<p>int main()
+{</p>
+
+<pre><code>std::string s;
+
+for (;;) {
+    std::cout &lt;&lt; "Could you please give me $100? " &lt;&lt; std::flush;
+    std::getline(std::cin, s);
+    if (positive(s.c_str())) {
+        std::cout &lt;&lt; "Thank you!" &lt;&lt; std::endl;
+        break;
+    } else {
+        std::cout &lt;&lt; "We don't take «No» for an answer. Did you mean «Yes»?"
+                  &lt;&lt; std::endl;
+    }
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>What I wanted was to extend that funky <code>positive()</code> function to add more possibilities and it made me sad a little. Since I am writing Python scripts once in a while, I remembered about Python’s “in” statement. If I were to write this in Python, I’d do something like this:</p>
+
+<p>```python</p>
+
+<h1>!/usr/bin/env python</h1>
+
+<h1>&ndash;<em>&ndash; coding: utf-8 &ndash;</em>&ndash;</h1>
+
+<p>while True:</p>
+
+<pre><code>answer = raw_input('Could you please give me $100? ')
+if answer.lower() in ('y', 'yes', 'ok', 'true', 'sure', 'of course', 'why not?'):
+    print "Thank You!"
+    break
+else:
+    print "We don't take «No» for an answer. Did you mean «Yes»?"
+</code></pre>
+
+<p>```</p>
+
+<p>Then I though, “Hey, C++ is by far a lot more powerful than Python syntax-wise, does this program really have to be that long and ugly?” Challenge accepted. A minute later, it looked even shorter than my Python version:</p>
+
+<p>```c++
+while (!in(lower(raw_input(&ldquo;Could you please give me $100? &rdquo;)),</p>
+
+<pre><code>       "y", "yes", "ok", "true", "sure", "of course", "why not?"))
+std::cout &lt;&lt; "We don't take «No» for an answer. Did you mean «Yes»?" &lt;&lt; std::endl;
+</code></pre>
+
+<p>std::cout &lt;&lt; &ldquo;Thank you!&rdquo; &lt;&lt; std::endl;
+```</p>
+
+<p>Well, of course this took some “magic” to work, which went to a reusable header. The complete program is a bit larger if put into a single source file:</p>
+
+<p>```c++</p>
+
+<h1>include <string></h1>
+
+<h1>include <cctype></h1>
+
+<h1>include <iostream></h1>
+
+<p>static std::string raw_input(const char *prompt)
+{</p>
+
+<pre><code>std::string answer;
+std::cout &lt;&lt; prompt &lt;&lt; std::flush;
+std::getline(std::cin, answer);
+return answer;
+</code></pre>
+
+<p>}</p>
+
+<p>static std::string &amp;&amp;lower(std::string &amp;&amp;s)
+{</p>
+
+<pre><code>for (auto &amp;c : s)
+    c = std::tolower(c);
+return std::forward&lt;std::string&gt;(s);
+</code></pre>
+
+<p>}</p>
+
+<p>static bool in(const std::string &amp;)
+{</p>
+
+<pre><code>return false;
+</code></pre>
+
+<p>}</p>
+
+<p>template &lt;size_t N, typename &hellip;Args>
+static bool in(const std::string &amp;s, const char (&amp;arg0)[N], Args &amp;&amp; &hellip;argN)
+{</p>
+
+<pre><code>return s == arg0 || in(s, std::forward&lt;Args&gt;(argN)...);
+</code></pre>
+
+<p>}</p>
+
+<p>int main()
+{</p>
+
+<pre><code>while (!in(lower(raw_input("Could you please give me $100? ")),
+           "y", "yes", "ok", "true", "sure", "of course", "why not?"))
+    std::cout &lt;&lt; "We don't take «No» for an answer. Did you mean «Yes»?"
+              &lt;&lt; std::endl;
+std::cout &lt;&lt; "Thank you!" &lt;&lt; std::endl;
+</code></pre>
+
+<p>}
+```</p>
+
+<p><a href="http://en.wikipedia.org/wiki/Variadic_templates">Variadic templates</a> and <a href="http://en.wikipedia.org/wiki/Tail_call">tail recursion</a> can do magic (and compiler unrolls everything, I’ve checked).</p>
+
+<p>I don’t want to start a language war or anything, but my opinion is that Python’s beauty is not in its simple or powerful syntax. Not at all.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Why C++ Member Function Pointers Are 16 Bytes Wide]]></title>
+    <link href="http://741MHz.com/wide-pointers/"/>
+    <updated>2013-04-28T00:00:00-04:00</updated>
+    <id>http://741MHz.com/wide-pointers</id>
+    <content type="html"><![CDATA[<p>When talking about pointers, we generally assume it is something that can be represented by <code>void*</code> pointer which has a size of 8 bytes on the x86_64 architecture. For instance, here is an excerpt from a <a href="http://en.wikipedia.org/wiki/X86-64#Architectural_features">Wikipedia article about x86_64</a>:</p>
+
+<blockquote><p>Pushes and pops on the stack are always in 8-byte strides, and <strong>pointers are 8 bytes wide</strong>.</p></blockquote>
+
+<p>From the CPU point of view, pointer is nothing but a memory address, and all memory addresses are represented by 64-bit on the x86_64, so the assumption about 8 bytes is correct. It is also not that hard to verify this by simply printing sizes of pointers of different types:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<p>int main() {</p>
+
+<pre><code>std::cout &lt;&lt;
+    "sizeof(int*)      == " &lt;&lt; sizeof(int*) &lt;&lt; "\n"
+    "sizeof(double*)   == " &lt;&lt; sizeof(double*) &lt;&lt; "\n"
+    "sizeof(void(*)()) == " &lt;&lt; sizeof(void(*)()) &lt;&lt; std::endl;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Compile and run the above program, and it will tell that all pointers are of size 8:</p>
+
+<p><code>
+$ uname -i
+x86_64
+$ g++ -Wall ./example.cc
+$ ./a.out
+sizeof(int*)      == 8
+sizeof(double*)   == 8
+sizeof(void(*)()) == 8
+</code></p>
+
+<p>In C++, however, there is one exception — pointer to a member function. Interestingly enough, the size of a pointer to a member function is twice the size of any other pointer. This can be easily verified with this simple program which would print “16”:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<p>struct Foo {</p>
+
+<pre><code>void bar() const { }
+</code></pre>
+
+<p>};</p>
+
+<p>int main() {</p>
+
+<pre><code>std::cout &lt;&lt; sizeof(&amp;Foo::bar) &lt;&lt; std::endl;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Does this mean that Wikipedia is wrong? No, not at all. From the hardware point of view all pointers are still 8 bytes wide. So what is a pointer to a member function then? It is a feature of the C++ language, a concept that does not map directly to hardware and is being implemented in runtime (by compilers) resulting in a slight overhead that oftentimes incurs a performance penalty. The C++ language specification is not concerned with implementation details very much and there is nothing explaining this type of pointers. Luckily, there is Itanium C++ ABI specification that devotes itself to standardizing implementation details of the C++ runtime — it explains, for example, how virtual tables, RTTI and exceptions are implemented, and it also explains member pointers in §2.3:</p>
+
+<blockquote><p>A pointer to member function is a pair as follows:</p>
+
+<p>ptr:</p>
+
+<p>For a non-virtual function, this field is a simple function pointer. For a virtual function, it is 1 plus the virtual table offset (in bytes) of the function, represented as a ptrdiff_t. The value zero represents a NULL pointer, independent of the adjustment field value below.</p>
+
+<p>adj:</p>
+
+<p>The required adjustment to this, represented as a ptrdiff_t.</p></blockquote>
+
+<p>So a member function pointer is 16 bytes instead of 8 because along with a simple function pointer it also must store the information about how to adjust “this” pointer (something that is always passed to non-static member functions implicitly). What ABI spec does not say is why and when such an adjustment is required. It might not be that obvious at first. Let’s take a look at the following class hierarchy:</p>
+
+<p>```c++
+struct A {</p>
+
+<pre><code>void foo() const { }
+char pad0[32];
+</code></pre>
+
+<p>};</p>
+
+<p>struct B {</p>
+
+<pre><code>void bar() const { }
+char pad2[64];
+</code></pre>
+
+<p>};</p>
+
+<p>struct C : A, B
+{ };
+```</p>
+
+<p>Both A and B have a non-static member functions and a data member. Both of those methods can access data member of their class through an implicitly passed “this” pointer. In order to access any data member, the offset from the base address of the class object containing it, represented as a ptrdiff_t, is applied to “this” pointer. Things start to get complicated with multiple inheritance. What happens when we have a class C inherit both A and B? The compiler would take A and B and place them together in memory, where B comes after A. Therefore, methods of class A and methods of class B would “see” a different value of “this” pointer. This can be easily verified in practice, for example:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<p>struct A {</p>
+
+<pre><code>void foo() const {
+    std::cout &lt;&lt; "A's this: " &lt;&lt; this &lt;&lt; std::endl;
+}
+char pad0[32];
+</code></pre>
+
+<p>};</p>
+
+<p>struct B {</p>
+
+<pre><code>void bar() const {
+    std::cout &lt;&lt; "B's this: " &lt;&lt; this &lt;&lt; std::endl;
+}
+char pad2[64];
+</code></pre>
+
+<p>};</p>
+
+<p>struct C : A, B
+{ };</p>
+
+<p>int main()
+{</p>
+
+<pre><code>C obj;
+obj.foo();
+obj.bar();
+</code></pre>
+
+<p>}
+```</p>
+
+<p><code>
+$ g++ -Wall -o test ./test.cc &amp;&amp; ./test
+A's this: 0x7fff57ddfb48
+B's this: 0x7fff57ddfb68
+</code></p>
+
+<p>As you can see, “this” pointer’s value passed to B’s method is greater than one passed to A’s method by 32 bytes – an exact size of class A. But what happens when we have the following function that calls a method of class C by pointer?</p>
+
+<p>```c++
+void call_by_ptr(const C &amp;obj, void (C::*mem_func)() const) {</p>
+
+<pre><code>(obj.*mem_func)();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Depending on what method is being called, a different value of “this” must be passed. But the “call_by_ptr” function doesn’t know whether it got a pointer to “foo()” or a pointer to “bar()”. The only time when this information is available is when address of either of those methods is taken. And that’s why a pointer to a member function also has information about how to adjust “this” before calling a method. Now, let’s put all of that together into a simple program that demonstrates what is going on “under the hood”:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<p>struct A {</p>
+
+<pre><code>void foo() const {
+    std::cout &lt;&lt; "A's this:\t" &lt;&lt; this &lt;&lt; std::endl;
+}
+char pad0[32];
+</code></pre>
+
+<p>};</p>
+
+<p>struct B {</p>
+
+<pre><code>void bar() const {
+    std::cout &lt;&lt; "B's this:\t" &lt;&lt; this &lt;&lt; std::endl;
+}
+char pad2[64];
+</code></pre>
+
+<p>};</p>
+
+<p>struct C : A, B
+{ };</p>
+
+<p>void call_by_ptr(const C &amp;obj, void (C::*mem_func)() const)
+{</p>
+
+<pre><code>void *data[2];
+std::memcpy(data, &amp;mem_func, sizeof(mem_func));
+std::cout &lt;&lt; "------------------------------\n"
+    "Object ptr:\t" &lt;&lt; &amp;obj &lt;&lt;
+    "\nFunction ptr:\t" &lt;&lt; data[0] &lt;&lt;
+    "\nPointer adj:\t" &lt;&lt; data[1] &lt;&lt; std::endl;
+(obj.*mem_func)();
+</code></pre>
+
+<p>}</p>
+
+<p>int main()
+{</p>
+
+<pre><code>C obj;
+call_by_ptr(obj, &amp;C::foo);
+call_by_ptr(obj, &amp;C::bar);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>The above program prints the following:</p>
+
+<h2>```</h2>
+
+<p>Object ptr: 0x7fff535dfb28
+Function ptr:   0x10c620cac
+Pointer adj:    0</p>
+
+<h2>A&rsquo;s this:   0x7fff535dfb28</h2>
+
+<p>Object ptr: 0x7fff535dfb28
+Function ptr:   0x10c620cfe
+Pointer adj:    0x20
+B&rsquo;s this:   0x7fff535dfb48
+```</p>
+
+<p>Hopefully that clears things up a little bit.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[C++ Exceptions, Stack Trace and GDB Automation]]></title>
@@ -571,776 +1192,6 @@ int new;
 <li><a href="http://david.tribble.com/text/cdiffs.htm">Incompatibilities Between ISO C and ISO C++</a> by David R. Tribble</li>
 <li><a href="http://en.wikipedia.org/wiki/Compatibility_of_C_and_C%2B%2B">Compatibility of C and C++</a></li>
 <li><a href="http://c-faq.com/malloc/mallocnocast.html">What’s wrong with casting malloc’s return value?</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Use free and delete correctly.]]></title>
-    <link href="http://741MHz.com/free-delete/"/>
-    <updated>2013-03-13T00:00:00-04:00</updated>
-    <id>http://741MHz.com/free-delete</id>
-    <content type="html"><![CDATA[<p>The Internet is full of programming jokes <a href="http://bash.org/?946461">like this one</a>:</p>
-
-<blockquote><p>&lt;@joosa> how do you say float in java? just 1.5f?<br/>
-&lt;@Gliptic> FloatFactoryFactory.getInstance (FloatFactoryFactory.defaultInstanceDescriptionString).getFactory (Locale.getLocale (“en-US”)).createBuilder ().setString (“1.5″).getResult ()</p></blockquote>
-
-<p>Java people please read on, that’s only a joke! More often than not the jokes are directed at those using higher-level programming languages. This is a little unfair because C programmers (and C++ ones for that matter) write some funny code, too. For example:</p>
-
-<p>```c
-void foo(void *ptr) {</p>
-
-<pre><code>if (ptr)
-    free(ptr);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>This perhaps could be a joke or maybe even an interview question. What’s wrong with the above C code (assuming everything else including the usage is correct)? It turns out that many can’t spot anything. If you do — congratulations! For those who don’t, let’s read the <a href="http://man7.org/linux/man-pages/man3/free.3.html">documentation of <code>free()</code> function</a>:</p>
-
-<blockquote><p>The free() function frees the memory space pointed to by ptr, which must have been returned by a previous call to malloc(), calloc() or realloc(). Otherwise, or if free(ptr) has already been called before, undefined behavior occurs. If ptr is NULL, no operation is performed.</p></blockquote>
-
-<p>In other words, there is no need to check if pointer is not NULL. The same applies to C++ programmers who often check for <strike><code>NULL</code></strike> <code>nullptr</code> before calling <code>delete</code>. If you don’t trust manual pages, check out §7.20.3/2 of the C standard that states the following:</p>
-
-<blockquote><p>The free function causes the space pointed to by ptr to be deallocated, that is, made available for further allocation. If ptr is a null pointer, no action occurs. Otherwise, if the argument does not match a pointer earlier returned by the calloc, malloc, or realloc function, or if the space has been deallocated by a call to free or realloc, the behavior is undefined.</p></blockquote>
-
-<p>For C++, see §5.3.5/2:</p>
-
-<blockquote><p>… if the value of the operand of delete is the null pointer the operation has no effect.</p></blockquote>
-
-<p>Possibly, an extra checking for NULL was a necessity some 20 years ago, according to some Internet rumors claiming that a few implementations of the standard C library had a bug back then and free() could crash the program when passed a NULL pointer. I couldn’t find any information about what it was. But no matter what was going on two decades ago — it is pretty hard to find pre-ANSI C code these days. Yet unnecessary NULL checking can be seen a lot. For example, <a href="http://krugle.org/">krugle.org</a> shows the following three projects right away:</p>
-
-<ul>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/apache_http_server1945779753/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_305/tags/1.3/djg_nspr_split/src/regex/regfree.c">Apache Web Server</a></li>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/apache_hadoop618243895/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_528/trunk/hadoop-common-project/hadoop-common/src/main/native/src/org/apache/hadoop/security/getGroup.c">Apache Hadoop</a></li>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/miranda1067994304/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_705/miranda/protocols/Gadu-Gadu/ownerinfo.c">Miranda</a> (an ICQ client popular in ex-USSR countries)</li>
-</ul>
-
-
-<p>I thought that maybe people are worrying about performance too much and don’t want to do an extra function call (extra cycles, procedure linkage tables, etc). But then using <code>malloc()</code> and <code>free()</code> in performance critical path would have been even more silly.</p>
-
-<p>So is it paranoia, a failure to read documentation, or maybe a thoughtless copy-paste that went too far?</p>
-
-<p>Who knows.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Automatic Resource Management in Programming Languages]]></title>
-    <link href="http://741MHz.com/raii/"/>
-    <updated>2013-02-27T00:00:00-05:00</updated>
-    <id>http://741MHz.com/raii</id>
-    <content type="html"><![CDATA[<p>Many high-level programming languages provide software developers with the ability to automatically cleanup resources — automatically closing an open file when it is no longer used, freeing dynamically allocated memory, or anything else for that matter. This article touches on automatic resource management features available in modern programming languages. It shows some examples demonstrating why having this feature make it easier to write code, or how not using this feature may lead to potentially critical failures of the program. The primary focus is on C++ and C (surprise!) languages.</p>
-
-<h2>C</h2>
-
-<p>There are a few ways to automatically clean up resources in C# — a <code>finally</code> block and a <code>using</code> statement.</p>
-
-<p>A <code>finally</code> block is a bit lower level than a using. It guarantees that all statements inside a <code>finally</code> block will be executed when the try block exists, even if unexpected exception occurs. For example:</p>
-
-<p>```c#
-ResourceType resource = expression; // Allocate, initialize or acquire some resource.
-try {</p>
-
-<pre><code>// Do something with it.
-statement;
-</code></pre>
-
-<p>} finally {</p>
-
-<pre><code>// Free, destroy or release a resource.
-// This is guaranteed to happen.
-((IDisposable)resource).Dispose();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Another and more convenient way of doing the same is to employ a <code>using</code> statement which guarantees that <code>Dispose()</code> method is called automatically upon leaving the scope of using block:</p>
-
-<p>```c#
-using (ResourceType resource = expression) {</p>
-
-<pre><code>statement;
-</code></pre>
-
-<p>}
-```</p>
-
-<h2>Java</h2>
-
-<p>Java also provides a finally block similar to that seen in C#:</p>
-
-<p>```java
-FileReader reader = null;
-try {</p>
-
-<pre><code>reader = new FileReader("/dev/null");
-// Do something with a file...
-</code></pre>
-
-<p>} finally {</p>
-
-<pre><code>if (reader != null)
-reader.close();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Starting from version 7 Java introduces an AutoCloseable concept along with automatic resource cleanup, which are basically the same things as IDisposable and a using statement in C#:</p>
-
-<p>```java
-try (FileReader reader = new FileReader(&ldquo;/dev/null&rdquo;))
-{</p>
-
-<pre><code>// Do something with a file...
-</code></pre>
-
-<p>}
-```</p>
-
-<h2>Other Languages</h2>
-
-<p>Since the concept of something being done automatically is quite popular, it is present in many other languages. Python has both a <a href="http://docs.python.org/2/reference/compound_stmts.html#finally"><code>finally</code> statement</a> and a <a href="http://docs.python.org/release/2.5.3/ref/with.html"><code>with</code> statement</a>. The same goes for Ruby. Of course, this is also available in derivative languages like Visual Basic that is built on top of .NET technology, Groovy that is built on Java, etc.</p>
-
-<h2>C++ — The King of RAII</h2>
-
-<p>As we have seen, many languages provide different syntax to do essentially the same thing. It is a great concept indeed. It changed the way programmers write code, significantly improved productivity. And behind every invention that we cannot imagine our lives without there is an author. So who is behind the automatic resource management?</p>
-
-<p>The real name of this concept is <strong>Resource Acquisition Is Initialization</strong>, or simply <strong>RAII</strong>. It was invented by Bjarne Stroustrup, the original author of C++ programming language. And of course this concept first appeared in C++, way before C# or Java were created.</p>
-
-<p>C++ is the king of RAII. Many concepts are built upon it. RAII is the reason why object destructors are called automatically. It is the reason why C++ developers don’t need to care much about freeing dynamically allocated memory or close a file descriptor that is no longer used. It is why, when handling an error, it is enough to simply throw an exception, or return an error code from a function, without writing tons of “cleanup” code or even thinking about the order in which resources must be cleaned up (which is usually done in opposite order of allocation). In fact, RAII should be used whenever possible to avoid serious errors or even cause a denial of service. For example, consider the following code:</p>
-
-<p>```c++</p>
-
-<h1>include <mutex></h1>
-
-<h1>include <vector></h1>
-
-<p>// Data structure that is supposed to be accessed by multiple threads.
-struct shared_resource {</p>
-
-<pre><code>std::mutex       mutex;
-std::vector&lt;int&gt; data;
-</code></pre>
-
-<p>};</p>
-
-<p>void foo(shared_resource &amp; res)
-{</p>
-
-<pre><code>// Acquire an exclusive lock to protect access to
-// the object in multi-threaded environment.
-res.mutex.lock();
-
-// Modify the contents of the vector by adding 10 integers into it.
-for (int i = 0; i &lt; 10; ++i)
-    res.data.emplace_back(i);
-
-// Once done changing the object, release the lock so that other threads
-// can work with it. If we forget to unlock it, the process will basically
-// hang trying to lock the mutex again, rendering our program useless.
-res.mutex.unlock();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above code is a classic example of an error that could lead to serious consequences. The problem is that anything could happen in between of <code>mutex.lock()</code> and <code>mutex.unlock()</code> statements, and the <code>mutex.unlock()</code> statement may not be executed shall <code>data.emplace_back()</code> throw an exception, leaving the program in the locked-up state.</p>
-
-<p>Taking a good care of exceptions is a concept called <strong>exception safety</strong>. The above code is indeed not exception safe. However, this is not only about exceptions. For instance, if <code>emplace_back()</code> method was not throwing an exception and return code was used to signal an error, the erroneous code could have looked like this:</p>
-
-<p>```c++
-int foo(shared_resource &amp; res)
-{</p>
-
-<pre><code>res.mutex.lock();
-for (int i = 0; i &lt; 10; ++i) {
-    if (res.data.emplace_back(i) != 0) {
-        return -1;
-    }
-}
-res.mutex.unlock();
-return 0;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Exception safety is out of the equation, yet the code is buggy. This is why RAII should (almost) always be used. The correct code should look like this:</p>
-
-<p>```c++
-void foo(shared_resource &amp; res)
-{</p>
-
-<pre><code>std::lock_guard&lt;std::mutex&gt; lock(res.mutex);
-for (int i = 0; i &lt; 10; ++i)
-    res.data.emplace_back(i);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>In the above example, <a href="http://en.cppreference.com/w/cpp/thread/lock_guard"><code>std::lock_guard</code></a> object is locking a mutex in its constructor and unlocks it in its destructor. Thanks to RAII, the destructor is guaranteed to be called when the object goes out of scope no matter what. C++ is full of such “guard” objects. Many of them are part of the standard library, but developers can always create their own.</p>
-
-<p>```c++</p>
-
-<h1>include <cctype></h1>
-
-<h1>include <fstream></h1>
-
-<h1>include <iostream></h1>
-
-<p>int main()
-{</p>
-
-<pre><code>std::ifstream file("test.txt");
-char c;
-while ((file &gt;&gt; c))
-    std::cout &lt;&lt; (std::isalpha(c) ? c : '*');
-</code></pre>
-
-<p>}
-```</p>
-
-<p>In the above example, the file object will automatically close the file. In other words, C++ clearly wins this battle over RAII with all other languages since there is no need for any finally blocks, using statements or event Java’s new <code>try()</code> blocks.</p>
-
-<p>What is interesting is that C#, Java, Python and other similar languages did not even have “using”-like statements for a long time. There was only <em>try-catch-finally</em> construct and programmers had no choice but to write a lot of boilerplate code. Albeit some programmers have consciously suffered from the lack of proper RAII support, many didn’t know that C++ not only supports RAII but also is the only language that does it properly. One day those guys wanted to write something in C++ and of course started to look for similar self-torture methods. Not able to find it, they asked Bjarne Stroustrup why doesn’t C++ provide a <code>finally</code> construct, and <a href="http://www.stroustrup.com/bs_faq2.html#finally">here is what he had to say</a>:</p>
-
-<blockquote><p>Because C++ supports an alternative that is almost always better: The “resource acquisition is initialization” technique (TC++PL3 section 14.4). The basic idea is to represent a resource by a local object, so that the local object’s destructor will release the resource. That way, the programmer cannot forget to release the resource.
-…
-In a system, we need a “resource handle” class for each resource. However, we don’t have to have an “finally” clause for each acquisition of a resource. In realistic systems, there are far more resource acquisitions than kinds of resources, so the “resource acquisition is initialization” technique leads to less code than use of a “finally” construct.</p></blockquote>
-
-<p>Boy was he right. Most today’s languages are now trying to resemble the same.</p>
-
-<h2>RAII in C</h2>
-
-<p>Everyone knows that C neither support exceptions nor it has a concept of RAII. That is not entirely true, but for the most part it is. You will not find anything about those features in C89, C99 or even C11 language standard specifications. Therefore, C developers have to be careful, disciplined, and clean up after themselves. Oftentimes, especially in somewhat low-level code like device driver, we can run into the code like this:</p>
-
-<p>```c
-static int pci_probe(struct pci_dev *pci_dev,</p>
-
-<pre><code>                 const struct pci_device_id *dev_id)
-</code></pre>
-
-<p>{</p>
-
-<pre><code>struct my_dev *dev;
-int r;
-
-dev = kzalloc(sizeof(struct my_dev), GFP_KERNEL);
-if (unlikely(!dev))
-    goto on_err;
-pci_set_drvdata(pci_dev, dev);
-dev-&gt;pci_dev = pci_dev;
-r = pci_enable_device(pci_dev);
-if (unlikely(r))
-    goto on_enable_err;
-pci_set_master(pci_dev);
-pci_try_set_mwi(pci_dev);
-dev-&gt;bar0 = ioremap_nocache(pci_resource_start(pci_dev, 0),
-                            pci_resource_len(pci_dev, 0));
-if (unlikely(!dev-&gt;bar0))
-    goto on_bar0_map_err;
-dev-&gt;bar2 = ioremap_nocache(pci_resource_start(pci_dev, 2),
-                            pci_resource_len(pci_dev, 2));
-if (unlikely(!dev-&gt;bar2))
-    goto on_bar2_map_err;
-r = a2gx_add_cdev(dev);
-if (r)
-    goto on_cdev_err;
-return 0;
-</code></pre>
-
-<p>  on_cdev_err:</p>
-
-<pre><code>iounmap(dev-&gt;bar2);
-</code></pre>
-
-<p>  on_bar2_map_err:</p>
-
-<pre><code>iounmap(dev-&gt;bar0);
-</code></pre>
-
-<p>  on_bar0_map_err:</p>
-
-<pre><code>pci_disable_device(pci_dev);
-</code></pre>
-
-<p>  on_enable_err:</p>
-
-<pre><code>kfree(dev);
-</code></pre>
-
-<p>  on_err:</p>
-
-<pre><code>return -1;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Many will find the above code difficult to read, hard to write, or both. Some would love to punch the author in the face for using goto. Others may not understand what is going on in there at all. But C is not just a programming language. C is a religion. For some, C code is a lot cleaner than anything else — nothing is hiding behind the scenes, what you see is what you get. The C code is usually thought trough — you have to think twice before you write it. In fact, some wouldn’t substitute it for anything else. At any rate, C developers usually cleanup after themselves.</p>
-
-<p>On the other hand, the benefits or RAII are also obvious and there are people who would love to see a concept of RAII in C. But it is not a part of the language specification. However, imagine a world when programmers were not using things that are not standard. That world would have been terrible. Just imagine for a second that C++ developers wouldn’t have multi-threaded programs until C++11 standard was ratified with all of its quirks and perks like <code>std::thread</code>, <code>std::mutex</code>, <em>thread local storage</em> and so on.</p>
-
-<p>Or how about not being able to specify symbol’s visibility or use other attributes? Luckily, being a non-standard feature doesn’t restrain people from using it. And as more people use some feature, more chances it has to be standardized. That said, C++11 now allows for generalized yet compiler-specific attributes, threading, static assertions, and tons of other stuff that was available before, was used before, too, but wasn’t a part of the standard. Well, now it is.</p>
-
-<p>That being said, C also supports RAII. However, it is not part of the standard, at least not yet. Here is how it works — it is possible to specify a cleanup function for any auto function scope variable. In order to do that, a non-standard cleanup attribute must be specified. If you remember the example of a buggy non-exception-safe C++ function that uses a <em>mutex</em>, that code would look something like this in C:</p>
-
-<p>```c
-struct shared_resource {</p>
-
-<pre><code>pthread_mutex_t   mutex;
-struct int_vector data;
-</code></pre>
-
-<p>};</p>
-
-<p>struct shared_resource {</p>
-
-<pre><code>pthread_mutex_t   mutex;
-struct int_vector data;
-</code></pre>
-
-<p>};</p>
-
-<p>int int_vector_push_back(struct int_vector *data, int value);</p>
-
-<p>int foo(struct shared_resource *res)
-{</p>
-
-<pre><code>int i;
-
-if (pthread_mutex_lock(&amp;res-&gt;mutex) != 0)
-    return -1; /* Oops, cannot lock the mutex. */
-for (i = 0; i &lt; 10; ++i) {
-    if (int_vector_push_back(&amp;res-&gt;data, i) != 0) {
-        /* Oops, cannot add data into the vector! */
-        return -1;
-    }
-}
-pthread_mutex_unlock(&amp;res-&gt;mutex);
-return 0; /* All is good */
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Though it is a little bit hard to imagine that C programmer could write code like that. The code would probably look more like this (which is also functionally correct this time):</p>
-
-<p>```c
-int test(struct shared_resource *res)
-{</p>
-
-<pre><code>int r;
-int i;
-
-r = pthread_mutex_lock(&amp;res-&gt;mutex);
-if (r)
-    goto out;
-for (i = 0; i &lt; 10; ++i) {
-    r = int_vector_push_back(&amp;res-&gt;data, i);
-    if (r)
-        break;
-}
-pthread_mutex_unlock(&amp;res-&gt;mutex);
-</code></pre>
-
-<p>  out:</p>
-
-<pre><code>return r;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>Below is a RAII-like version of the code where mutex is guaranteed to be unlocked automatically, so it is possible to simply return from the function at any given point without worrying about it. This code closely resembles the behavior of a C++ example using <code>std::lock_guard</code> where <code>lock_guard_ctor</code> mimics <code>std::lock_guard::lock_guard</code> constructor that locks a <em>mutex</em>, and the <code>lock_guard_dtor</code> function is like <code>std::lock_guard::~lock_guard</code> destructor that unlocks the <em>mutex</em> (if it was locked) and is guaranteed to be called automatically:</p>
-
-<p>```c
-pthread_mutex_t <em>lock_guard_ctor(pthread_mutex_t </em>mutex) {</p>
-
-<pre><code>return pthread_mutex_lock(mutex) == 0 ? mutex : NULL;
-</code></pre>
-
-<p>}</p>
-
-<p>void lock_guard_dtor(pthread_mutex_t **mutex_ptr) {</p>
-
-<pre><code>pthread_mutex_t *mutex = *mutex_ptr;
-if (mutex != NULL)
-    pthread_mutex_unlock(mutex);
-</code></pre>
-
-<p>}</p>
-
-<p>int foo(struct shared_resource *res) {</p>
-
-<pre><code>int i;
-pthread_mutex_t *lock_guard
-    __attribute__((cleanup(lock_guard_dtor)))
-    = lock_guard_ctor(&amp;res-&gt;mutex);
-if (lock_guard == NULL)
-    return -1;
-for (i = 0; i &lt; 10; ++i) {
-    if (int_vector_push_back(&amp;res-&gt;data, i) != 0)
-        return -1;
-}
-return 0;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above code can also be simplified a bit with two simple steps. Step one is to have <code>lock_guard_ctor</code> and <code>lock_guard_dtor</code> functions defined somewhere else and be reusable. Because nobody writes custom constructors and destructor for a class every time they use it. Step number two is to get rid of a lot of typing by having a macro. For example, the common code that is written once could be:</p>
-
-<p>```c</p>
-
-<h1>include &lt;pthread.h></h1>
-
-<p>extern pthread_mutex_t <em>lock_guard_ctor(pthread_mutex_t </em>mutex);
-extern void lock_guard_dtor(pthread_mutex_t **mutex_ptr);</p>
-
-<h1>define LOCK_GUARD(name, mutex)                   \</h1>
-
-<pre><code>pthread_mutex_t * name                        \
-    __attribute__((cleanup(lock_guard_dtor))) \
-    = lock_guard_ctor((mutex))
-</code></pre>
-
-<p>```</p>
-
-<p>And the code using this feature becomes a lot simpler:</p>
-
-<p>```c
-int foo(struct shared_resource *res)
-{</p>
-
-<pre><code>int i;
-LOCK_GUARD(lock, &amp;res-&gt;mutex);
-if (!lock)
-    return -1;
-for (i = 0; i &lt; 10; ++i) {
-    if (int_vector_push_back(&amp;res-&gt;data, i) != 0)
-        return -1;
-}
-return 0;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>There are two possible ways for a compiler to implement a cleanup attribute. If exceptions are not enabled, it would generate the boilerplate code similar to that otherwise written by the programmer manually. If exceptions are enabled then compiler would generate the code that executes a cleanup function during the stack unwinding (yes, there are exceptions in C, too).</p>
-
-<p>Note that cleanup attribute cannot be used for global variables. constructor and destructor attributes should be used instead. The constructor attribute causes the function to be called automatically before execution enters <code>main()</code>. Similarly, the destructor attribute causes the function to be called automatically after <code>main()</code> completes or <code>exit()</code> is called. Functions with these attributes are useful for initializing data that is used implicitly during the execution of the program. It is also possible to manually control the order of execution by specifying priority number (optional).</p>
-
-<p>The techniques described above are available at least in today’s leading C compilers — GCC and Clang. Remember, the future of the language is in hands of its users. If you really like the feature and it is not standard — use it, spread the world, write a feedback to compiler developers and language standard committee. It will definitely help to make it into the next standard revision.</p>
-
-<p>Let the force be with you!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[C++11 Final Override]]></title>
-    <link href="http://741MHz.com/final-override/"/>
-    <updated>2013-02-27T00:00:00-05:00</updated>
-    <id>http://741MHz.com/final-override</id>
-    <content type="html"><![CDATA[<h2>Preface</h2>
-
-<p>The alternative name for this article is “How to protect yourself from others when it comes to polymorphism.” That is pretty much the primary purpose of two brand new C++ keywords introduced in C++11 — the <code>override</code> and <code>final</code>.</p>
-
-<p>Those who have at least some experience in team-based C++ development must be aware of at least one of many pitfalls of polymorphism and virtual methods in particular. Let’s go over some of real-world problems that could easily force developers to run a debugger or read the code over and over again trying to figure out why the program is not working as expected.</p>
-
-<h2>A Missing Virtual Function</h2>
-
-<p>This could happen to anyone — there was a base class with a virtual function and developer has decided to overload it for a good reason. Everything was fine and the program worked as expected. But one day after, a fresh build simply stopped working, and the reason is not obvious. After spending some time debugging the program, it turned out that a function that should have been called does not appear to be called at all. What could be wrong?</p>
-
-<p>Consider the following code where the Foo class is written by one developer while Bar was written by someone else and could even be part of another project:</p>
-
-<p>```c++
-class Foo {
-public:</p>
-
-<pre><code>Foo() { }
-virtual ~Foo() { }
-
-virtual int init() {
-    do_very_important_stuff();
-}
-</code></pre>
-
-<p>};</p>
-
-<p>class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-virtual ~Bar() { }
-
-virtual int init() {
-    Foo::init();
-    do_some_more_important_stuff();
-}
-</code></pre>
-
-<p>};
-```</p>
-
-<p>A few years later a new developer joins the company and accidentally removes a virtual keyword from the <code>init()</code> method’s declaration of class <em>Foo</em>. How that could even happen, you may ask? Maybe he was learning Emacs and executed a <em>replace-regexp</em> command without noticing all of the changes. Or maybe he just read the <em>Code Refactoring</em> book and decided to improve the code but couldn’t check all of the usages of class <em>Foo</em> because they were in a different repository that he didn’t have access to. Who knows? Things happen. As a result, the <code>Bar::init()</code> is no longer called because it does no longer override its base method. For example:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<h1>include <memory></h1>
-
-<p>class Foo {
-public:</p>
-
-<pre><code>Foo() { }
-virtual ~Foo() { }
-
-int init() {
-    std::cout &lt;&lt; "Hello, World!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-virtual ~Bar() { }
-
-virtual int init() {
-    Foo::init();
-    std::cout &lt;&lt; "The code is working!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>int main() {</p>
-
-<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
-foo-&gt;init();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above program will not print an expected “The code is working!” line and someone would definitely waste some time trying to figure out why, especially if the project has a few million lines of code.</p>
-
-<h2>A Million Dollars Typo</h2>
-
-<p>Typos can also cause a lot of troubles. For example, developers can misspell the name of the method when overriding:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<h1>include <memory></h1>
-
-<p>class Foo {
-public:</p>
-
-<pre><code>Foo() { }
-virtual ~Foo() { }
-
-virtual void doSomeVeryImportantWork() {
-}
-</code></pre>
-
-<p>};</p>
-
-<p>class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-virtual ~Bar() { }
-
-virtual void doSomeVeryInportantWork() {
-    std::cout &lt;&lt; "The code is working!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>int main() {</p>
-
-<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
-foo-&gt;doSomeVeryImportantWork();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above program prints nothing despite the expectations and the reason is not immediately obvious.</p>
-
-<h2>Signature Changes</h2>
-
-<p>Signature change is another seemingly innocent change that may potentially waste a log of valuable time when not accounted for properly. For example, the base class’s <code>init()</code> function is changed from this:</p>
-
-<pre><code>virtual void init() { }
-</code></pre>
-
-<p>… to this:</p>
-
-<pre><code>virtual void init(int x = 0) {
-}
-</code></pre>
-
-<p>The whole project still compiles just fine. Yet the program doesn’t work as expected anymore.</p>
-
-<p>It’s also possible to accidentally override someone’s virtual function, etc. The list of such gotchas can go on and on. For those who can relate to this — you must know that you are not alone! C++ developers including myself have dealt with this and similar problems for the past few decades.</p>
-
-<p>Luckily, since introduction of the C++11 the sun is shining on our side of the fence!</p>
-
-<h2>We Override!</h2>
-
-<p>Instead of using (or not using) a <code>virtual</code> keyword and assuming the base class has the method being overridden, we can now use the brand new <code>override</code> keyword. The compiler will then make sure that a method declared with that keyword really overrides the base method. And if that turns out to be not the case, the code won’t compile and the error would be caught during compilation, which is a lot better than debugging. The following is the new version of the first example:</p>
-
-<p>```c++
-class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-virtual ~Bar() { }
-
-int init() override {
-    Foo::init();
-    std::cout &lt;&lt; "The code is working!\n";
-}
-</code></pre>
-
-<p>};
-```</p>
-
-<p>The compilation fails if the base class`s init() method is no longer there:</p>
-
-<pre><code>error: ‘int Bar::init()’ marked override, but does not override
-</code></pre>
-
-<h2>It’s Final!</h2>
-
-<p>The second keyword is <code>final</code>. It is a little bit less useful but is still a good self-defense mechanism against unintended usage and/or code changes.</p>
-
-<p>What it means is that a method marked as final is not only virtual and must override its base but that nobody else can further override it. For example:</p>
-
-<p>```c++</p>
-
-<h1>include <iostream></h1>
-
-<h1>include <memory></h1>
-
-<p>class Foo {
-public:</p>
-
-<pre><code>Foo() { }
-virtual ~Foo() { }
-
-virtual int init() {
-    std::cout &lt;&lt; "Hello, World!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>class Bar : public Foo {
-public:</p>
-
-<pre><code>Bar() { }
-~Bar() override { }
-
-int init() final {
-    Foo::init();
-    std::cout &lt;&lt; "This code works!\n";
-}
-</code></pre>
-
-<p>};</p>
-
-<p>int main() {</p>
-
-<pre><code>std::unique_ptr&lt;Foo&gt; foo(new Bar());
-foo-&gt;init();
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above code is sound and secure. But if somebody else would try to write a class like this:</p>
-
-<p>```c++
-class BetterBar : public Bar {
-public:</p>
-
-<pre><code>BetterBar() { }
-~BetterBar() override { }
-
-int init() override {
-    Bar::init();
-    std::cout &lt;&lt; "Even better init() function!\n";
-}
-</code></pre>
-
-<p>};
-```</p>
-
-<p>… a compiler would tell them that they are wrong by issuing an error: </p>
-
-<pre><code>error: virtual function ‘virtual int BetterBar::init()’
-error: overriding final function ‘virtual int Bar::init()’
-</code></pre>
-
-<p>The <code>final</code> keyword can also be applied to the whole class in order to prevent further derivation from it. For example:</p>
-
-<p>```c++
-class Bar final : public Foo {
-  public:</p>
-
-<pre><code>Bar() {}
-</code></pre>
-
-<p>&hellip;
-```</p>
-
-<p>If anyone tries to inherit from Bar, the compiler issues an error: </p>
-
-<pre><code>error: cannot derive from ‘final’ base ‘Bar’ in derived type ‘BetterBar’
-</code></pre>
-
-<p>What is interesting is that almost the same effect can be achieved in a less obvious way by applying the <code>final</code> keyword to a virtual destructor of either base (which is not the same as <code>final</code> in this case because it introduces a virtual table) or any derived class:</p>
-
-<p>```c++
-class Foo { // You cannot derive from me!
-public:</p>
-
-<pre><code>Foo() { }
-virtual ~Foo() final { }
-</code></pre>
-
-<p>};
-```</p>
-
-<p>Template containers from the standard C++ library might be good candidates to be marked with a final keyword, as it is generally not a good idea to derive from them in almost every case.</p>
-
-<h2>Conclusion</h2>
-
-<p>C++11 introduces two important keywords in relation to polymorphism and inheritance — the <code>override</code> and <code>final</code>. Using those keywords should become a habit of any C++ developer. It is worth using every time except when writing a base class. This will make the code clear, maintainable, and potentially save hours that would have been otherwise wasted chasing an error in debugger.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">N2928</a> &ndash; Explicit Virtual Overrides</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">N3206</a> &ndash; Override control: Eliminating Attributes</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">N3272</a> &ndash; Follow-up on override control</li>
-<li><a href="http://clang.llvm.org/cxx_status.html">Clang C++11 Status Report</a></li>
-<li><a href="http://gcc.gnu.org/projects/cxx0x.html">GCC C++11 Status Report</a></li>
 </ul>
 
 ]]></content>

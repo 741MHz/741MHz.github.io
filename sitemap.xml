@@ -42,7 +42,7 @@
     </url>
     <url>
         <loc>http://741MHz.com/raii/</loc>
-        <lastmod>2013-12-01T20:36:33-05:00</lastmod>
+        <lastmod>2013-12-01T22:14:15-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/pyusb/</loc>
@@ -81,6 +81,22 @@
         <lastmod>2013-12-01T22:07:03-05:00</lastmod>
     </url>
     <url>
+        <loc>http://741MHz.com/wide-pointers/</loc>
+        <lastmod>2013-12-01T22:12:51-05:00</lastmod>
+    </url>
+    <url>
+        <loc>http://741MHz.com/constant/</loc>
+        <lastmod>2013-12-01T22:24:24-05:00</lastmod>
+    </url>
+    <url>
+        <loc>http://741MHz.com/cpp-like-python/</loc>
+        <lastmod>2013-12-01T22:28:59-05:00</lastmod>
+    </url>
+    <url>
+        <loc>http://741MHz.com/read-it-aloud/</loc>
+        <lastmod>2013-12-01T22:33:05-05:00</lastmod>
+    </url>
+    <url>
         <loc>http://741MHz.com/assets/bootstrap/about.html</loc>
         <lastmod>2013-12-01T16:47:32-05:00</lastmod>
     </url>
@@ -102,7 +118,7 @@
     </url>
     <url>
         <loc>http://741MHz.com/assets/bootstrap/</loc>
-        <lastmod>2013-12-01T22:07:03-05:00</lastmod>
+        <lastmod>2013-12-01T22:33:05-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/assets/bootstrap/javascript.html</loc>
@@ -110,11 +126,11 @@
     </url>
     <url>
         <loc>http://741MHz.com/blog/archives/</loc>
-        <lastmod>2013-12-01T22:07:03-05:00</lastmod>
+        <lastmod>2013-12-01T22:33:05-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/</loc>
-        <lastmod>2013-12-01T22:07:03-05:00</lastmod>
+        <lastmod>2013-12-01T22:33:05-05:00</lastmod>
     </url>
     <url>
         <loc>http://741MHz.com/robots.txt</loc>

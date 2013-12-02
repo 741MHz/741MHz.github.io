@@ -114,138 +114,53 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-04T00:00:00-05:00" pubdate data-updated="true">Mar 4<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-23T00:00:00-04:00" pubdate data-updated="true">Mar 23<span>rd</span>, 2013</time>
         
-           | <a href="/pyusb/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/pyusb/">Comments</a>
+           | <a href="/stranded/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/stranded/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/pyusb/">Linux, HID and PyUSB</a></h1>
+      <h1 class="entry-title"><a href="/stranded/">Stranded</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Today I was going through some stuff in my desk’s locker and ran into this nice toy — a big red electronic panic button. It has been there for years but I never had a chance to use it because a company making those does not have a driver for OS X, and of course I couldn’t find one for Linux either. But pushing a big red button is always fun and this time I have decided to try and make it work. So I brought it home with me into my “lab” to see what I can do.</p>
+  <div class="entry-content clearfix"><p>One of the things I really love about WordPress.com is its community. The Daily Prompt movement is especially great — it helps to connect so many people together, share so many great stories, and ideas. I am relatively new to blogging in general and WordPress in particular, so most of the time I just enjoy good reads. But today’s Daily Prompt’s topic “Stranded” brought back some of my old good memories and I decided to share my story about how I got stranded in a foreign city for a few days with no money and no friends.</p>
 
-<p>After plugging it into a USB port, it immediately showed up in a list of USB devices (which you can see with lsusb tool). My Linux box has identified it as a Dream Cheeky Stress/Panic Button:</p>
+<p>I have lived in New York area for a while now. But I am an immigrant, so I wasn’t always here. My life journey started in Illichivsk — a small half-resort, half-port city on the shores of the Black Sea, named after Vladimir Lenin. I was born there, in a country that does not exist anymore — USSR. In 1991, USSR fell apart, Ukraine got its independence, and I acquired a Ukrainian citizenship.</p>
 
-<pre><code>Bus 007 Device 010: ID 04f3:04a0 Elan Microelectronics Corp. Dream Cheeky Stress/Panic Button
-</code></pre>
+<p>The Illichivsk is a very small town. Back in the day there was no public transportation, no universities, no businesses, no jobs, no nothing. To say that it has always been extremely hard to make a living there is to say nothing at all. Both of my parents were working from dusk till dawn, and the income was barely enough to buy groceries. Everything was pretty much dead all year around except for the summers. I loved summers. It was a great chance for me to make some pocket-money. I used to buy some ice cream in the town, put it into a backpack and rush to the beach to sell it to lazy tourists. I would make enough money to buy an ice cream for my crush. Usually boys buy movie tickets and flowers, but we had no cinemas in Illichivsk. And flowers I used to steal from somebody’s lawn.</p>
 
-<p>Meanwhile, the kernel has also logged a message saying that it has found a new USB device. So the magic button seemed somewhat operational and I already knew two important things about it — a vendor and a product IDs. They were <code>0x04f3</code> and <code>0x04a0</code> respectively.</p>
+<p>One day my parents bought me a computer despite the fear that I would start playing video games all the time — they believed that computer would help me study. It worked out great — instead of playing video games I got into programming. First thing I installed on my computer was FreeBSD — operating system that somebody recommended to me in a local bookstore. It did not support my video card so I was working in console, 100% text mode. I got an English dictionary and translated manual pages word by word. That is pretty much how I learned to understand English and got my first experience with UNIX. I also bought a few Russian books about C programming and after about a year of studying day and night I started working as a freelancer taking on simple programming gigs. It was not paying a lot. But it was enough for me to quit my seasonal ice cream sales business.</p>
 
-<h2>Writing a USB driver</h2>
+<p>I always knew that to achieve something in my life I had to get out of that town. And by the time I was finishing the high school I sent my résumé to pretty much every company in Ukraine that I could find. Most of them never got back. But one day I got a phone call from Miratech — a big outsourcing company with headquarters in Kiev — the capital of Ukraine. Boy was I excited. The bags got packed with a speed of light, the piggy bank crushed to finance the trip, and I hopped on the next train to Kiev to get to a job interview, before my parents could understand what is going on.</p>
 
-<p>The only little detail missing was actually a driver. I tried to <a href="https://duckduckgo.com/">Duck Duck Go</a> it real quick but nothing showed up, and I decided to write it myself. How hard can it be, after all?</p>
+<p>I was hired. I was excited. It felt great. I will never forget that moment, those overwhelming feelings, that small success, an achievement, a coincidence, a chance that I was given. There was only one small problem — you don’t get paid until the end of the month, and I haven’t even started yet. I had no money. I had no friends. I was a kid all by myself in the big city that I knew absolutely nothing about. Where do I go; what do I do? I was stranded.</p>
 
-<h2>Reverse Engineering</h2>
+<p>Having no other choice, I immediately called my parents for help. They could have sent some money and have me return home. But going home was not an option for me — it would have been a huge step back. I had different goals. I wanted to show up at work next day, make a career and settle in Kiev. My parents knew that, and so they took last $300 of family money that we had and my father hopped on the next train to Kiev to help me out. The idea was to rent an apartment for $150 (for one month), buy a ticket so he can go back home. And leave the rest to me so I can buy some food and go to work.</p>
 
-<p>In order to write a device driver, one must know what the device is doing. Obviously, I didn’t have any specification, neither I wanted to deal with Elan Microelectronics support department. So the only way to figure it out was reverse engineering. Luckily, Linux has <a href="https://www.kernel.org/doc/Documentation/usb/usbmon.txt"><em>usbmon</em></a> — a facility in the kernel that is used to collect traces of I/O on the USB bus. After a quick pick at its documentation, I loaded the module using <code>modprobe usbmon</code> command and the device showed up in <code>/sys/kernel/debug/usb/devices</code>. Since it was attached to bus #7, I traced the I/O by reading the <code>/sys/kernel/debug/usb/usbmon/7u</code> file and pushing my panic button a few times to see if anything shows up. And every time I hit the button, the device was sending the following data to the host:</p>
+<p>Frankly speaking that was a very brave, naïve and indeed optimistic move. After my dad arrived on the scene, we spent the whole day rushing from one place to another trying to find an apartment. But nothing was up for rent for the money we had. A few apartments that we could afford were so far from the city that the only way to get to work for me would have been to drive a car, which I didn’t have. After a day of rat-running from one part of the city to another, we ended up in the middle of nowhere. It was 11 PM — too late to search for anything. We stood right there. We were hungry and freezing. We have stranded in a foreign city with no money and no friends. Where do we go; what do we do?</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>ffff8801b2efc9c0 1873321198 C Ii:7:010:1 0:8 8 = 02000000 00000000
-</span><span class='line'>ffff8801b2efc9c0 1873457204 C Ii:7:010:1 0:8 8 = 06000000 00000000
-</span><span class='line'>ffff8801b2efc9c0 1873633203 C Ii:7:010:1 0:8 8 = 06001300 00000000
-</span><span class='line'>ffff8801b2efc9c0 1873801206 C Ii:7:010:1 0:8 8 = 06000000 00000000
-</span><span class='line'>ffff8801b2efc9c0 1873977211 C Ii:7:010:1 0:8 8 = 02000000 00000000</span></code></pre></td></tr></table></div></figure>
+<p>The thought of giving up and going home has crossed my mind many times. Perhaps my father thought about that too, but he never said anything like that. Instead, he was telling me not to worry, that we would find the way out. Though of course he had no idea what to do either. We were about to go to the train terminal, try to sleep there and resume our journey in the early morning.
+Semiconscious, I was going through my phone’s address book looking for at least someone I could ask for help. But whom can I send an S.O.S. if I don’t know anyone who lives anywhere close? Suddenly, my eyes stopped on the entry that said “The Key”, and a phone number. What does it mean, whose phone number is that? Flashback. I remembered — a few months ago I was talking online on #rain IRC channel with a girl whose nickname was “key”. I told her that I would love to move to Kiev one day, if I ever get a chance. And she gave me her number just in case I get in trouble and would need help. I didn’t even know her name, but called the number. I said, — “Hello, this is Vlad, the kid from IRC chat. We met online, remember? I am here, uhm… I am not sure where I am exactly, I am here with my daddy, and we don’t know what to do… can you help us? Please.”</p>
 
+<p>I don’t know if she remembered me or not. She quickly asked what do we see in order to pinpoint our location, instructed us to get on a subway, told which train to take, what stop we should get off, and promised to meet us there. When we arrived, she was waiting for us, accompanied by quite big, nice and very beautiful dog — that was for her own protection, because you never know. “Hello, I’m Dasha. Follow me,” she said. My dad and me said “Hi,” introduced ourselves and started to tell our story while walking to her apartment.</p>
 
-<p>Not only this proved that button itself works, it also uncovered a pattern — the device was sending <code>02000000</code> and <code>06000000</code> twice with <code>06001300</code> in between. So <code>06001300</code> seemed like a good indication of the button being pressed.</p>
+<p>When we arrived, Dasha poured us some tea, regaled us with cookies, and introduced us to her dog, her husband and two beautiful kids. After hearing our story, Dasha said we could stay at her place as long as we need until we settle down. With her help, we were able to find a rental place in the next few days. My dad went back home. He left me all the money. It was enough for me to buy trolley bus tickets and buckwheat groats until I got my first paycheck.</p>
 
-<h2>Linux Kernel USB Driver</h2>
+<p>This was a life changing experiences for me, and a great lesson. We have been friends with Dasha and her family ever since. I am very grateful for our friendship. She and her family have moved to U.S. recently, so we are neighbors again. Her kids have grown up now. Oh, the time is flying so quickly…</p>
 
-<p>The next step was to write a USB Device Driver for Linux. I dealt with PCI Express, DMA and Ethernet network drivers, but never wrote a single USB driver before. So I pulled my copy of the Linux Device Drivers book off the shelf and opened it on Chapter 13 “USB Drivers”. I have to say I got surprised — that rant is about 100 pages long. I would of course suck it up, enjoy the reading and proceed to hacking. If only it was something serious. And what I had was a simple USB button that did nothing but sending two 32-bit integers, 0x06 and 0x13, every time it gets hit. Going through the hundred pages just to read 64-bit of data off the USB cable, on Monday night, after a hard 10 hours working day… Ain’t nobody got time for that?</p>
+<p>Catch every single moment of life.</p>
 
-<h2>PyUSB</h2>
+<p>Enjoy it as long as you can.</p>
 
-<p>A bit disappointed, I tried to find an easier way and once against ducked for a few keywords like “USB”, “driver”, “read”, “HID” and so on…</p>
+<p>Never give up.</p>
 
-<blockquote><p>Ask and it will be given to you; seek and you will find; knock and the door will be opened to you.
-— Matthew 7:7</p></blockquote>
+<p>Help each other.</p>
 
-<p>Turned out, it is possible to write a USB driver in just a few lines of Python. Sir <a href="http://www.micahcarrick.com/">Micah Carrick</a> have managed to make a driver for his credit card reader and wrote about his experience in <a href="http://www.micahcarrick.com/credit-card-reader-pyusb.html">this nice article</a>. Following in his footsteps, I quickly glanced at <a href="http://sourceforge.net/apps/trac/pyusb/">PyUSB</a> that he was using in his work, read a few other examples, and came up with a driver for my magic button. This is truly the shortest and simplest device driver that I have made in my life:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">usb.core</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">dev</span> <span class="o">=</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">idVendor</span><span class="o">=</span><span class="mh">0x04f3</span><span class="p">,</span> <span class="n">idProduct</span><span class="o">=</span><span class="mh">0x04a0</span><span class="p">)</span>
-</span><span class='line'><span class="k">if</span> <span class="n">dev</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;No Panic button found in the system&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">try</span><span class="p">:</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">dev</span><span class="o">.</span><span class="n">is_kernel_driver_active</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">dev</span><span class="o">.</span><span class="n">detach_kernel_driver</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span class='line'><span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Kernel driver won&#39;t give up control over device: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">try</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">dev</span><span class="o">.</span><span class="n">set_configuration</span><span class="p">()</span>
-</span><span class='line'>    <span class="n">dev</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-</span><span class='line'><span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Cannot set configuration the device: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">endpoint</span> <span class="o">=</span> <span class="n">dev</span><span class="p">[</span><span class="mi">0</span><span class="p">][(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
-</span><span class='line'><span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
-</span><span class='line'>    <span class="k">try</span><span class="p">:</span>
-</span><span class='line'>        <span class="n">data</span> <span class="o">=</span> <span class="n">dev</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">endpoint</span><span class="o">.</span><span class="n">bEndpointAddress</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">wMaxPacketSize</span><span class="p">,</span>
-</span><span class='line'>                        <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-</span><span class='line'>            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">19</span><span class="p">:</span>
-</span><span class='line'>                <span class="c"># Panic button was pressed!</span>
-</span><span class='line'>                <span class="k">print</span> <span class="s">&quot;OH MY GOD! OH MY GOD! DOUBLE RAINBOW!!!&quot;</span>
-</span><span class='line'>    <span class="k">except</span> <span class="n">usb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">USBError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="mi">110</span><span class="p">:</span> <span class="c"># 110 is a timeout.</span>
-</span><span class='line'>            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Error readin data: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So now I have my beautiful toy working!</p>
-
-<h2>UPDATE</h2>
-
-<p><a href="https://twitter.com/pdp7">Drew Fustini</a> have hooked this up to the BeagleBone Next-Gen and made this video:</p>
-
-<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/52b5RGd4yrE "></iframe></div>
-
+<p>Be happy!</p>
 </div>
   
   
@@ -276,15 +191,15 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    
+    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    
+    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    
+    <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
+    
     <a class="list-group-item " href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a>
-    
-    <a class="list-group-item " href="/c-vs-cxx/">Two Different Languages - C and C++</a>
-    
-    <a class="list-group-item " href="/ask-smart/">Ask Smart Questions and You Will Succeed</a>
-    
-    <a class="list-group-item " href="/network-evolution/">The Evolution of Computer Networking</a>
-    
-    <a class="list-group-item " href="/stranded/">Stranded</a>
     
   </div>
 </section>
@@ -296,7 +211,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">12</span>
+        <span class="badge">15</span>
         C++
       </a>
     
@@ -308,13 +223,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">18</span>
+        <span class="badge">22</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">2</span>
+        <span class="badge">1</span>
         C++11
       </a>
     
