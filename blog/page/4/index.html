@@ -114,30 +114,32 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-16T00:00:00-04:00" pubdate data-updated="true">Mar 16<span>th</span>, 2013</time>
         
-           | <a href="/final-override/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/final-override/">Comments</a>
+           | <a href="/fix-checksum/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/fix-checksum/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/final-override/">C++11 Final Override</a></h1>
+      <h1 class="entry-title"><a href="/fix-checksum/">Calculating FIX Message Checksum</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><h2>Preface</h2>
+  <div class="entry-content clearfix"><p>A FIX message is a stream of bytes that consists of data represented by <a href="http://en.wikipedia.org/wiki/Attribute%E2%80%93value_pair">field-value (aka key-value) pairs</a>. Those field-value pairs are delimited by <a href="http://en.wikipedia.org/wiki/Start-of-Header#SOH">SOH character</a> — a special non-printable ASCII character with hex code <code>0x01</code>. For convenience, it is usually replaced with a vertical bar (<code>|</code>) for displaying purposes. Each field-value pair consists of the field number and its value delimited by equals sign (<code>=</code>). In the code, it is represented as an escape sequence — <code>'\1'</code> or <code>"\001"</code>. Here is an example of a FIX message:</p>
 
-<p>The alternative name for this article is “How to protect yourself from others when it comes to polymorphism.” That is pretty much the primary purpose of two brand new C++ keywords introduced in C++11 — the <code>override</code> and <code>final</code>.</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>8=FIX.4.2|9=178|35=8|49=PHLX|56=PERS|52=20071123-05:30:00.000|11=ATOMNOCCC9990900|20=3|150=E|39=E|55=MSFT|167=CS|54=1|38=15|40=2|44=15|58=PHLX EQUITY TESTING|59=0|47=C|32=0|31=0|151=15|14=0|6=0|10=128|</span></code></pre></td></tr></table></div></figure>
 
-<p>Those who have at least some experience in team-based C++ development must be aware of at least one of many pitfalls of polymorphism and virtual methods in particular. Let’s go over some of real-world problems that could easily force developers to run a debugger or read the code over and over again trying to figure out why the program is not working as expected.</p>
 
-<h2>A Missing Virtual Function</h2>
+<p>Every FIX message must always end with a checksum field followed by SOH symbol. The field number for a checksum is 10. Therefore, the checksum part in the above message is <code>10=128|</code>.</p>
 
-<p>This could happen to anyone — there was a base class with a virtual function and developer has decided to overload it for a good reason. Everything was fine and the program worked as expected. But one day after, a fresh build simply stopped working, and the reason is not obvious. After spending some time debugging the program, it turned out that a function that should have been called does not appear to be called at all. What could be wrong?</p>
+<p>There is one special requirement for the checksum field — it must always be three characters long. Not more and not less. It must be left-padded with <code>0</code> characters if needed. For example, if the checksum value is <code>13</code>, then it should appear as <code>013</code>. If it is only <code>1</code>, then it should read <code>001</code>. It can also be just <code>000</code>.</p>
 
-<p>Consider the following code where the Foo class is written by one developer while Bar was written by someone else and could even be part of another project:</p>
+<p>The checksum of a FIX message is calculated by adding every byte of the message, excluding the checksum field-value pair, as unsigned binary number, discarding any overflow bits. Therefore, the range of possible values is [0-255], the same range of values that can be represented by unsigned 8-bit integer (<code>uint8_t</code>).</p>
+
+<p>The code for calculating FIX checksum is very simple — all it needs to do is add every byte of the input and store a result in <code>uint8_t</code>. Remember, the checksum field itself should not be used to calculate checksum. Here is an example in C:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -147,42 +149,35 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">do_very_important_stuff</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">do_some_more_important_stuff</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">uint8_t</span> <span class="n">fix_checksum</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">uint8_t</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">uint8_t</span><span class="p">)(</span><span class="n">sum</span> <span class="o">+</span> <span class="p">(</span><span class="n">uint8_t</span><span class="p">)</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>A few years later a new developer joins the company and accidentally removes a virtual keyword from the <code>init()</code> method’s declaration of class <em>Foo</em>. How that could even happen, you may ask? Maybe he was learning Emacs and executed a <em>replace-regexp</em> command without noticing all of the changes. Or maybe he just read the <em>Code Refactoring</em> book and decided to improve the code but couldn’t check all of the usages of class <em>Foo</em> because they were in a different repository that he didn’t have access to. Who knows? Things happen. As a result, the <code>Bar::init()</code> is no longer called because it does no longer override its base method. For example:</p>
+<p>If writing in C++, <a href="http://en.cppreference.com/w/cpp/algorithm/accumulate"><code>std::accumulate()</code></a> can be used to achieve the same. Here is an example:</p>
+
+<p>Once the checksum value is calculated, it must be added to the end of the message as an ASCII-encoded field-value pair with field number <code>10</code>, followed by SOH. As a remainder, the checksum value must always be three characters long, left padded with <code>0</code> if needed. The easiest way to convert the binary checksum value is this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To sum things up, here is a C++ example program that calculates the checksum and appends it to the end, forming a complete FIX message:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -212,296 +207,86 @@
 <span class='line-number'>26</span>
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// --*-- C++11 --*--</span>
+</span><span class='line'><span class="c1">// Compile: clang++ -std=c++11 -stdlib=libc++ -Wall ./test.cpp</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'><span class="cp">#include &lt;cstdint&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;numeric&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Hello, World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Initial message. The SOH is an escape sequence &#39;\001&#39;.</span>
+</span><span class='line'>    <span class="c1">// It does not include checksum field — the checksum must</span>
+</span><span class='line'>    <span class="c1">// be calculated.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">msg</span> <span class="o">=</span>
+</span><span class='line'>        <span class="s">&quot;8=FIX.4.2</span><span class="se">\001</span><span class="s">9=178</span><span class="se">\001</span><span class="s">35=8</span><span class="se">\001</span><span class="s">49=PHLX</span><span class="se">\001</span><span class="s">56=PERS</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;52=20071123-05:30:00.000</span><span class="se">\001</span><span class="s">11=ATOMNOCCC9990900</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;20=3</span><span class="se">\001</span><span class="s">150=E</span><span class="se">\001</span><span class="s">39=E</span><span class="se">\001</span><span class="s">55=MSFT</span><span class="se">\001</span><span class="s">167=CS</span><span class="se">\001</span><span class="s">54=1</span><span class="se">\001</span><span class="s">38=15&quot;</span>
+</span><span class='line'>        <span class="s">&quot;</span><span class="se">\001</span><span class="s">40=2</span><span class="se">\001</span><span class="s">44=15</span><span class="se">\001</span><span class="s">58=PHLX EQUITY TESTING</span><span class="se">\001</span><span class="s">59=0</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;47=C</span><span class="se">\001</span><span class="s">32=0</span><span class="se">\001</span><span class="s">31=0</span><span class="se">\001</span><span class="s">151=15</span><span class="se">\001</span><span class="s">14=0</span><span class="se">\001</span><span class="s">6=0</span><span class="se">\001</span><span class="s">&quot;</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'>    <span class="c1">// Calculate the checksum.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">uint8_t</span> <span class="n">csum</span> <span class="o">=</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">accumulate</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">msg</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+</span><span class='line'>                        <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">uint8_t</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
+</span><span class='line'>    <span class="c1">// Append the checksum field-value to the message.</span>
+</span><span class='line'>    <span class="c1">// First, add field number and field delimiter:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;10=&quot;</span><span class="p">);</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
+</span><span class='line'>    <span class="c1">// Then add checksum converted to ASCII characters,</span>
+</span><span class='line'>    <span class="c1">// left-padded with zeroes:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// And finally, complete the message by adding a final</span>
+</span><span class='line'>    <span class="c1">// SOH character:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="sc">&#39;\1&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Print the message to standard output.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">msg</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The above program will not print an expected “The code is working!” line and someone would definitely waste some time trying to figure out why, especially if the project has a few million lines of code.</p>
-
-<h2>A Million Dollars Typo</h2>
-
-<p>Typos can also cause a lot of troubles. For example, developers can misspell the name of the method when overriding:</p>
+<p>Note that some terminals may not be able to display SOH characters. It is possible that it would get displayed as <code>^A</code>, some other sequence, or not displayed at all. In OS X «Terminal», the above program would display the following:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">doSomeVeryImportantWork</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">doSomeVeryInportantWork</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">doSomeVeryImportantWork</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">std</span><span class="o">=</span><span class="n">c</span><span class="o">++</span><span class="mi">11</span> <span class="o">-</span><span class="n">stdlib</span><span class="o">=</span><span class="n">libc</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">pedantic</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span>
+</span><span class='line'><span class="mi">8</span><span class="o">=</span><span class="n">FIX</span><span class="mf">.4.29</span><span class="o">=</span><span class="mi">17835</span><span class="o">=</span><span class="mi">849</span><span class="o">=</span><span class="n">PHLX56</span><span class="o">=</span><span class="n">PERS52</span><span class="o">=</span><span class="mi">20071123</span><span class="o">-</span><span class="mo">05</span><span class="o">:</span><span class="mi">30</span><span class="o">:</span><span class="mf">00.00011</span><span class="o">=</span><span class="n">ATOMNOCCC999090020</span><span class="o">=</span><span class="mi">3150</span><span class="o">=</span><span class="n">E39</span><span class="o">=</span><span class="n">E55</span><span class="o">=</span><span class="n">MSFT167</span><span class="o">=</span><span class="n">CS54</span><span class="o">=</span><span class="mi">138</span><span class="o">=</span><span class="mi">1540</span><span class="o">=</span><span class="mi">244</span><span class="o">=</span><span class="mi">1558</span><span class="o">=</span><span class="n">PHLX</span> <span class="n">EQUITY</span> <span class="n">TESTING59</span><span class="o">=</span><span class="mo">047</span><span class="o">=</span><span class="n">C32</span><span class="o">=</span><span class="mo">031</span><span class="o">=</span><span class="mo">0151</span><span class="o">=</span><span class="mi">1514</span><span class="o">=</span><span class="mo">06</span><span class="o">=</span><span class="mo">010</span><span class="o">=</span><span class="mi">128</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The above program prints nothing despite the expectations and the reason is not immediately obvious.</p>
-
-<h2>Signature Changes</h2>
-
-<p>Signature change is another seemingly innocent change that may potentially waste a log of valuable time when not accounted for properly. For example, the base class’s <code>init()</code> function is changed from this:</p>
-
-<pre><code>virtual void init() { }
-</code></pre>
-
-<p>… to this:</p>
-
-<pre><code>virtual void init(int x = 0) {
-}
-</code></pre>
-
-<p>The whole project still compiles just fine. Yet the program doesn’t work as expected anymore.</p>
-
-<p>It’s also possible to accidentally override someone’s virtual function, etc. The list of such gotchas can go on and on. For those who can relate to this — you must know that you are not alone! C++ developers including myself have dealt with this and similar problems for the past few decades.</p>
-
-<p>Luckily, since introduction of the C++11 the sun is shining on our side of the fence!</p>
-
-<h2>We Override!</h2>
-
-<p>Instead of using (or not using) a <code>virtual</code> keyword and assuming the base class has the method being overridden, we can now use the brand new <code>override</code> keyword. The compiler will then make sure that a method declared with that keyword really overrides the base method. And if that turns out to be not the case, the code won’t compile and the error would be caught during compilation, which is a lot better than debugging. The following is the new version of the first example:</p>
+<p>So when printing a FIX message, it might be useful to replace all occurrences of <code>01</code> with something else, for example a vertical bar. It is also possible to do it with command line utility called <code>tr</code>. This does not require a code change:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;The code is working!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="o">|</span> <span class="n">tr</span> <span class="sc">&#39;\1&#39;</span> <span class="sc">&#39;|&#39;</span>
+</span><span class='line'><span class="mi">8</span><span class="o">=</span><span class="n">FIX</span><span class="mf">.4.2</span><span class="o">|</span><span class="mi">9</span><span class="o">=</span><span class="mi">178</span><span class="o">|</span><span class="mi">35</span><span class="o">=</span><span class="mi">8</span><span class="o">|</span><span class="mi">49</span><span class="o">=</span><span class="n">PHLX</span><span class="o">|</span><span class="mi">56</span><span class="o">=</span><span class="n">PERS</span><span class="o">|</span><span class="mi">52</span><span class="o">=</span><span class="mi">20071123</span><span class="o">-</span><span class="mo">05</span><span class="o">:</span><span class="mi">30</span><span class="o">:</span><span class="mf">00.000</span><span class="o">|</span><span class="mi">11</span><span class="o">=</span><span class="n">ATOMNOCCC9990900</span><span class="o">|</span><span class="mi">20</span><span class="o">=</span><span class="mi">3</span><span class="o">|</span><span class="mi">150</span><span class="o">=</span><span class="n">E</span><span class="o">|</span><span class="mi">39</span><span class="o">=</span><span class="n">E</span><span class="o">|</span><span class="mi">55</span><span class="o">=</span><span class="n">MSFT</span><span class="o">|</span><span class="mi">167</span><span class="o">=</span><span class="n">CS</span><span class="o">|</span><span class="mi">54</span><span class="o">=</span><span class="mi">1</span><span class="o">|</span><span class="mi">38</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">40</span><span class="o">=</span><span class="mi">2</span><span class="o">|</span><span class="mi">44</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">58</span><span class="o">=</span><span class="n">PHLX</span> <span class="n">EQUITY</span> <span class="n">TESTING</span><span class="o">|</span><span class="mi">59</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">47</span><span class="o">=</span><span class="n">C</span><span class="o">|</span><span class="mi">32</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">31</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">151</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">14</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">6</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">10</span><span class="o">=</span><span class="mi">128</span><span class="o">|</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The compilation fails if the base class`s init() method is no longer there:</p>
-
-<pre><code>error: ‘int Bar::init()’ marked override, but does not override
-</code></pre>
-
-<h2>It’s Final!</h2>
-
-<p>The second keyword is <code>final</code>. It is a little bit less useful but is still a good self-defense mechanism against unintended usage and/or code changes.</p>
-
-<p>What it means is that a method marked as final is not only virtual and must override its base but that nobody else can further override it. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;memory&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Hello, World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="o">~</span><span class="n">Bar</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">final</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Foo</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;This code works!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Foo</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="k">new</span> <span class="n">Bar</span><span class="p">());</span>
-</span><span class='line'>    <span class="n">foo</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above code is sound and secure. But if somebody else would try to write a class like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">BetterBar</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Bar</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">BetterBar</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="o">~</span><span class="n">BetterBar</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init</span><span class="p">()</span> <span class="n">override</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">Bar</span><span class="o">::</span><span class="n">init</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Even better init() function!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>… a compiler would tell them that they are wrong by issuing an error: </p>
-
-<pre><code>error: virtual function ‘virtual int BetterBar::init()’
-error: overriding final function ‘virtual int Bar::init()’
-</code></pre>
-
-<p>The <code>final</code> keyword can also be applied to the whole class in order to prevent further derivation from it. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Bar</span> <span class="n">final</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Foo</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Bar</span><span class="p">()</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>If anyone tries to inherit from Bar, the compiler issues an error: </p>
-
-<pre><code>error: cannot derive from ‘final’ base ‘Bar’ in derived type ‘BetterBar’
-</code></pre>
-
-<p>What is interesting is that almost the same effect can be achieved in a less obvious way by applying the <code>final</code> keyword to a virtual destructor of either base (which is not the same as <code>final</code> in this case because it introduces a virtual table) or any derived class:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">Foo</span> <span class="p">{</span> <span class="c1">// You cannot derive from me!</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">Foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">Foo</span><span class="p">()</span> <span class="n">final</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Template containers from the standard C++ library might be good candidates to be marked with a final keyword, as it is generally not a good idea to derive from them in almost every case.</p>
-
-<h2>Conclusion</h2>
-
-<p>C++11 introduces two important keywords in relation to polymorphism and inheritance — the <code>override</code> and <code>final</code>. Using those keywords should become a habit of any C++ developer. It is worth using every time except when writing a base class. This will make the code clear, maintainable, and potentially save hours that would have been otherwise wasted chasing an error in debugger.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2928.htm">N2928</a> &ndash; Explicit Virtual Overrides</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3206.htm">N3206</a> &ndash; Override control: Eliminating Attributes</li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3272.htm">N3272</a> &ndash; Follow-up on override control</li>
-<li><a href="http://clang.llvm.org/cxx_status.html">Clang C++11 Status Report</a></li>
-<li><a href="http://gcc.gnu.org/projects/cxx0x.html">GCC C++11 Status Report</a></li>
-</ul>
-
+<p>That is pretty much all you need to know to successfully calculate a FIX checksum. There is also one little detail that might come handy — checksums are meant to help verify data integrity and make sure that no part of the message got corrupted during transmission from one application to another. These days, FIX messages are transmitted using TCP/IP or UDP. Both TCP/IP and UDP protocols guarantee data integrity out of the box and therefore a FIX checksum doesn’t make a lot of sense. Given that calculating FIX checksums requires a lot of CPU resources and is even likely to be the bottleneck, make sure that exchange or broker, with which you intend to communicate using FIX Protocol, require a checksum. There are a number of technically wise brokers and exchanges out there that do not require you to provide the correct checksum. If that is the case, simply put <code>10=000|</code> at the end of every message.</p>
 </div>
   
   
@@ -532,15 +317,15 @@ error: overriding final function ‘virtual int Bar::init()’
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/network-evolution/">The Evolution of Computer Networking</a>
+    
+    <a class="list-group-item " href="/stranded/">Stranded</a>
+    
+    <a class="list-group-item " href="/c-oop/">OOP With ANSI C</a>
+    
+    <a class="list-group-item " href="/fix-checksum/">Calculating FIX Message Checksum</a>
+    
     <a class="list-group-item " href="/free-delete/">Use Free and Delete Correctly.</a>
-    
-    <a class="list-group-item " href="/pyusb/">Linux, HID and PyUSB</a>
-    
-    <a class="list-group-item " href="/raii/">Automatic Resource Management in Programming Languages</a>
-    
-    <a class="list-group-item " href="/final-override/">C++11 Final Override</a>
-    
-    <a class="list-group-item " href="/signal-handler/">How Not to Write a Signal Handler</a>
     
   </div>
 </section>
@@ -564,7 +349,7 @@ error: overriding final function ‘virtual int Bar::init()’
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">13</span>
+        <span class="badge">16</span>
         Tech
       </a>
     
@@ -572,6 +357,18 @@ error: overriding final function ‘virtual int Bar::init()’
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
         <span class="badge">2</span>
         C++11
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c">
+        <span class="badge">1</span>
+        C
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/life">
+        <span class="badge">1</span>
+        Life
       </a>
     
   </div>

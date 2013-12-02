@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Calculating FIX Message Checksum - Ranting @ 741 MHz</title>
+  <meta name="author" content="741MHz.com">
+
+  
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://741MHz.com/fix-checksum">
+  <link href="/favicon.png" type="image/png" rel="icon">
+  <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
+
+  <link href="/assets/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+
+  <script src="/javascripts/libs/jquery/jquery-2.0.3.min.js"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-45575473-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+  <body   >
+    <div id="wrap">
+      <header role="banner">
+        <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ranting @ 741 MHz</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href="/">Blog</a>
+                </li>
+                <li >
+                    <a href="/blog/archives">Archives</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="subscribe-rss" href="/atom.xml" title="subscribe via RSS">
+                        <span class="visible-xs">RSS</span>
+                        <img class="hidden-xs" src="/images/rss.png" alt="RSS">
+                    </a>
+                </li>
+                
+            </ul>
+            
+                <form class="search navbar-form navbar-right" action="http://google.com/search" method="GET">
+                    <input type="hidden" name="q" value="site:741MHz.com">
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="q" placeholder="Search">
+                    </div>
+                </form>
+            
+        </div>
+    </div>
+</nav>
+
+
+      </header>
+      <div id="main" class="container">
+        <div id="content">
+          <div class="row">
+  <div class="page-content col-md-9">
+    <article class="hentry" role="article">
+      
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-16T00:00:00-04:00" pubdate data-updated="true">Mar 16<span>th</span>, 2013</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://741MHz.com">Comments</a>
+        
+      </p>
+    
+    
+    <h1 class="entry-title">
+        Calculating FIX Message Checksum
+        
+    </h1>
+    
+  </header>
+
+
+<div class="entry-content clearfix"><p>A FIX message is a stream of bytes that consists of data represented by <a href="http://en.wikipedia.org/wiki/Attribute%E2%80%93value_pair">field-value (aka key-value) pairs</a>. Those field-value pairs are delimited by <a href="http://en.wikipedia.org/wiki/Start-of-Header#SOH">SOH character</a> — a special non-printable ASCII character with hex code <code>0x01</code>. For convenience, it is usually replaced with a vertical bar (<code>|</code>) for displaying purposes. Each field-value pair consists of the field number and its value delimited by equals sign (<code>=</code>). In the code, it is represented as an escape sequence — <code>'\1'</code> or <code>"\001"</code>. Here is an example of a FIX message:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>8=FIX.4.2|9=178|35=8|49=PHLX|56=PERS|52=20071123-05:30:00.000|11=ATOMNOCCC9990900|20=3|150=E|39=E|55=MSFT|167=CS|54=1|38=15|40=2|44=15|58=PHLX EQUITY TESTING|59=0|47=C|32=0|31=0|151=15|14=0|6=0|10=128|</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Every FIX message must always end with a checksum field followed by SOH symbol. The field number for a checksum is 10. Therefore, the checksum part in the above message is <code>10=128|</code>.</p>
+
+<p>There is one special requirement for the checksum field — it must always be three characters long. Not more and not less. It must be left-padded with <code>0</code> characters if needed. For example, if the checksum value is <code>13</code>, then it should appear as <code>013</code>. If it is only <code>1</code>, then it should read <code>001</code>. It can also be just <code>000</code>.</p>
+
+<p>The checksum of a FIX message is calculated by adding every byte of the message, excluding the checksum field-value pair, as unsigned binary number, discarding any overflow bits. Therefore, the range of possible values is [0-255], the same range of values that can be represented by unsigned 8-bit integer (<code>uint8_t</code>).</p>
+
+<p>The code for calculating FIX checksum is very simple — all it needs to do is add every byte of the input and store a result in <code>uint8_t</code>. Remember, the checksum field itself should not be used to calculate checksum. Here is an example in C:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">uint8_t</span> <span class="n">fix_checksum</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">uint8_t</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">uint8_t</span><span class="p">)(</span><span class="n">sum</span> <span class="o">+</span> <span class="p">(</span><span class="n">uint8_t</span><span class="p">)</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If writing in C++, <a href="http://en.cppreference.com/w/cpp/algorithm/accumulate"><code>std::accumulate()</code></a> can be used to achieve the same. Here is an example:</p>
+
+<p>Once the checksum value is calculated, it must be added to the end of the message as an ASCII-encoded field-value pair with field number <code>10</code>, followed by SOH. As a remainder, the checksum value must always be three characters long, left padded with <code>0</code> if needed. The easiest way to convert the binary checksum value is this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To sum things up, here is a C++ example program that calculates the checksum and appends it to the end, forming a complete FIX message:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// --*-- C++11 --*--</span>
+</span><span class='line'><span class="c1">// Compile: clang++ -std=c++11 -stdlib=libc++ -Wall ./test.cpp</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#include &lt;cstdint&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;numeric&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Initial message. The SOH is an escape sequence &#39;\001&#39;.</span>
+</span><span class='line'>    <span class="c1">// It does not include checksum field — the checksum must</span>
+</span><span class='line'>    <span class="c1">// be calculated.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">msg</span> <span class="o">=</span>
+</span><span class='line'>        <span class="s">&quot;8=FIX.4.2</span><span class="se">\001</span><span class="s">9=178</span><span class="se">\001</span><span class="s">35=8</span><span class="se">\001</span><span class="s">49=PHLX</span><span class="se">\001</span><span class="s">56=PERS</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;52=20071123-05:30:00.000</span><span class="se">\001</span><span class="s">11=ATOMNOCCC9990900</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;20=3</span><span class="se">\001</span><span class="s">150=E</span><span class="se">\001</span><span class="s">39=E</span><span class="se">\001</span><span class="s">55=MSFT</span><span class="se">\001</span><span class="s">167=CS</span><span class="se">\001</span><span class="s">54=1</span><span class="se">\001</span><span class="s">38=15&quot;</span>
+</span><span class='line'>        <span class="s">&quot;</span><span class="se">\001</span><span class="s">40=2</span><span class="se">\001</span><span class="s">44=15</span><span class="se">\001</span><span class="s">58=PHLX EQUITY TESTING</span><span class="se">\001</span><span class="s">59=0</span><span class="se">\001</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;47=C</span><span class="se">\001</span><span class="s">32=0</span><span class="se">\001</span><span class="s">31=0</span><span class="se">\001</span><span class="s">151=15</span><span class="se">\001</span><span class="s">14=0</span><span class="se">\001</span><span class="s">6=0</span><span class="se">\001</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Calculate the checksum.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">uint8_t</span> <span class="n">csum</span> <span class="o">=</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">accumulate</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">msg</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+</span><span class='line'>                        <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">uint8_t</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Append the checksum field-value to the message.</span>
+</span><span class='line'>    <span class="c1">// First, add field number and field delimiter:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;10=&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Then add checksum converted to ASCII characters,</span>
+</span><span class='line'>    <span class="c1">// left-padded with zeroes:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// And finally, complete the message by adding a final</span>
+</span><span class='line'>    <span class="c1">// SOH character:</span>
+</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="sc">&#39;\1&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Print the message to standard output.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">msg</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note that some terminals may not be able to display SOH characters. It is possible that it would get displayed as <code>^A</code>, some other sequence, or not displayed at all. In OS X «Terminal», the above program would display the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">std</span><span class="o">=</span><span class="n">c</span><span class="o">++</span><span class="mi">11</span> <span class="o">-</span><span class="n">stdlib</span><span class="o">=</span><span class="n">libc</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">pedantic</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
+</span><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span>
+</span><span class='line'><span class="mi">8</span><span class="o">=</span><span class="n">FIX</span><span class="mf">.4.29</span><span class="o">=</span><span class="mi">17835</span><span class="o">=</span><span class="mi">849</span><span class="o">=</span><span class="n">PHLX56</span><span class="o">=</span><span class="n">PERS52</span><span class="o">=</span><span class="mi">20071123</span><span class="o">-</span><span class="mo">05</span><span class="o">:</span><span class="mi">30</span><span class="o">:</span><span class="mf">00.00011</span><span class="o">=</span><span class="n">ATOMNOCCC999090020</span><span class="o">=</span><span class="mi">3150</span><span class="o">=</span><span class="n">E39</span><span class="o">=</span><span class="n">E55</span><span class="o">=</span><span class="n">MSFT167</span><span class="o">=</span><span class="n">CS54</span><span class="o">=</span><span class="mi">138</span><span class="o">=</span><span class="mi">1540</span><span class="o">=</span><span class="mi">244</span><span class="o">=</span><span class="mi">1558</span><span class="o">=</span><span class="n">PHLX</span> <span class="n">EQUITY</span> <span class="n">TESTING59</span><span class="o">=</span><span class="mo">047</span><span class="o">=</span><span class="n">C32</span><span class="o">=</span><span class="mo">031</span><span class="o">=</span><span class="mo">0151</span><span class="o">=</span><span class="mi">1514</span><span class="o">=</span><span class="mo">06</span><span class="o">=</span><span class="mo">010</span><span class="o">=</span><span class="mi">128</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So when printing a FIX message, it might be useful to replace all occurrences of <code>01</code> with something else, for example a vertical bar. It is also possible to do it with command line utility called <code>tr</code>. This does not require a code change:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="o">|</span> <span class="n">tr</span> <span class="sc">&#39;\1&#39;</span> <span class="sc">&#39;|&#39;</span>
+</span><span class='line'><span class="mi">8</span><span class="o">=</span><span class="n">FIX</span><span class="mf">.4.2</span><span class="o">|</span><span class="mi">9</span><span class="o">=</span><span class="mi">178</span><span class="o">|</span><span class="mi">35</span><span class="o">=</span><span class="mi">8</span><span class="o">|</span><span class="mi">49</span><span class="o">=</span><span class="n">PHLX</span><span class="o">|</span><span class="mi">56</span><span class="o">=</span><span class="n">PERS</span><span class="o">|</span><span class="mi">52</span><span class="o">=</span><span class="mi">20071123</span><span class="o">-</span><span class="mo">05</span><span class="o">:</span><span class="mi">30</span><span class="o">:</span><span class="mf">00.000</span><span class="o">|</span><span class="mi">11</span><span class="o">=</span><span class="n">ATOMNOCCC9990900</span><span class="o">|</span><span class="mi">20</span><span class="o">=</span><span class="mi">3</span><span class="o">|</span><span class="mi">150</span><span class="o">=</span><span class="n">E</span><span class="o">|</span><span class="mi">39</span><span class="o">=</span><span class="n">E</span><span class="o">|</span><span class="mi">55</span><span class="o">=</span><span class="n">MSFT</span><span class="o">|</span><span class="mi">167</span><span class="o">=</span><span class="n">CS</span><span class="o">|</span><span class="mi">54</span><span class="o">=</span><span class="mi">1</span><span class="o">|</span><span class="mi">38</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">40</span><span class="o">=</span><span class="mi">2</span><span class="o">|</span><span class="mi">44</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">58</span><span class="o">=</span><span class="n">PHLX</span> <span class="n">EQUITY</span> <span class="n">TESTING</span><span class="o">|</span><span class="mi">59</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">47</span><span class="o">=</span><span class="n">C</span><span class="o">|</span><span class="mi">32</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">31</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">151</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">14</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">6</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">10</span><span class="o">=</span><span class="mi">128</span><span class="o">|</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That is pretty much all you need to know to successfully calculate a FIX checksum. There is also one little detail that might come handy — checksums are meant to help verify data integrity and make sure that no part of the message got corrupted during transmission from one application to another. These days, FIX messages are transmitted using TCP/IP or UDP. Both TCP/IP and UDP protocols guarantee data integrity out of the box and therefore a FIX checksum doesn’t make a lot of sense. Given that calculating FIX checksums requires a lot of CPU resources and is even likely to be the bottleneck, make sure that exchange or broker, with which you intend to communicate using FIX Protocol, require a checksum. There are a number of technically wise brokers and exchanges out there that do not require you to provide the correct checksum. If that is the case, simply put <code>10=000|</code> at the end of every message.</p>
+</div>
+
+
+      <footer>
+        <p class="meta text-muted">
+          
+  
+
+<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-16T00:00:00-04:00" pubdate data-updated="true">Mar 16<span>th</span>, 2013</time>
+          
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/fix-checksum/" data-via="" data-counturl="http://741MHz.com/fix-checksum/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+        
+        
+          <ul class="meta text-muted pager">
+            
+            <li class="previous"><a href="/free-delete/" title="Previous Post: Use free and delete correctly.">&laquo; Use free and delete correctly.</a></li>
+            
+            
+            <li class="next"><a href="/c-oop/" title="Next Post: OOP with ANSI C">OOP with ANSI C &raquo;</a></li>
+            
+          </ul>
+        
+      </footer>
+    </article>
+    
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+      </section>
+    
+  </div>
+
+  
+  <aside class="sidebar col-md-3">
+    
+      <section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Recent Posts</h3>
+  </div>
+  
+  <div id="recent_posts" class="list-group">
+    
+    <a class="list-group-item " href="/network-evolution/">The Evolution of Computer Networking</a>
+    
+    <a class="list-group-item " href="/stranded/">Stranded</a>
+    
+    <a class="list-group-item " href="/c-oop/">OOP With ANSI C</a>
+    
+    <a class="list-group-item active" href="/fix-checksum/">Calculating FIX Message Checksum</a>
+    
+    <a class="list-group-item " href="/free-delete/">Use Free and Delete Correctly.</a>
+    
+  </div>
+</section>
+<section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Categories</h3>
+  </div>
+  <div class="list-group">
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus">
+        <span class="badge">10</span>
+        C++
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/linux">
+        <span class="badge">3</span>
+        Linux
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/tech">
+        <span class="badge">16</span>
+        Tech
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
+        <span class="badge">2</span>
+        C++11
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c">
+        <span class="badge">1</span>
+        C
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/life">
+        <span class="badge">1</span>
+        Life
+      </a>
+    
+  </div>
+</section>
+
+
+
+
+
+    
+  </aside>
+  
+</div>
+
+        </div>
+      </div>
+    </div>
+    <footer role="contentinfo"><div class="container">
+    <p class="text-muted credits">
+  Copyright &copy; 2010-2013 <a href="/">741MHz.com</a>
+</p>
+
+</div>
+</footer>
+    <script src="/assets/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/javascripts/modernizr-2.0.js"></script>
+
+
+<script type="text/javascript">
+      var disqus_shortname = '741mhz';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://741MHz.com/fix-checksum/';
+        var disqus_url = 'http://741MHz.com/fix-checksum/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  </body>
+</html>
