@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>C++11 Static Assert - Ranting @ 741 MHz</title>
+  <meta name="author" content="741MHz.com">
+
+  
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://741MHz.com/static-assert">
+  <link href="/favicon.png" type="image/png" rel="icon">
+  <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
+
+  <link href="/assets/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+
+  <script src="/javascripts/libs/jquery/jquery-2.0.3.min.js"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-45575473-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+  <body   >
+    <div id="wrap">
+      <header role="banner">
+        <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ranting @ 741 MHz</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href="/">Blog</a>
+                </li>
+                <li >
+                    <a href="/blog/archives">Archives</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="subscribe-rss" href="/atom.xml" title="subscribe via RSS">
+                        <span class="visible-xs">RSS</span>
+                        <img class="hidden-xs" src="/images/rss.png" alt="RSS">
+                    </a>
+                </li>
+                
+            </ul>
+            
+                <form class="search navbar-form navbar-right" action="http://google.com/search" method="GET">
+                    <input type="hidden" name="q" value="site:741MHz.com">
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="q" placeholder="Search">
+                    </div>
+                </form>
+            
+        </div>
+    </div>
+</nav>
+
+
+      </header>
+      <div id="main" class="container">
+        <div id="content">
+          <div class="row">
+  <div class="page-content col-md-9">
+    <article class="hentry" role="article">
+      
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-07T00:00:00-04:00" pubdate data-updated="true">May 7<span>th</span>, 2013</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://741MHz.com">Comments</a>
+        
+      </p>
+    
+    
+    <h1 class="entry-title">
+        C++11 Static Assert
+        
+    </h1>
+    
+  </header>
+
+
+<div class="entry-content clearfix"><h2>Introduction</h2>
+
+<p>Assertions is one of they key features of almost every programming language that help programmers verify their assumptions made when writing the code.
+In C, assertion mechanism is provided by <a href="http://man7.org/linux/man-pages/man3/assert.3.html">assert()</a> preprocessor macro defined by <a href="http://en.wikipedia.org/wiki/Assert.h">assert.h</a> header file. C++ programs can also use it by including &ldquo;<a href="http://en.cppreference.com/w/cpp/header/cassert">cassert</a>&rdquo; header file. As an added benefit, assertions also serve as documentation of the internal details of the program enhancing the code maintainability. Here is a simple C++11 example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cassert&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argc</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">assert</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nullptr</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>GNU C library also provides a convenient function to check for error numbers called &ldquo;<a href="http://man7.org/linux/man-pages/man3/assert_perror.3.html">assert_perror()</a>&rdquo;.</p>
+
+<p>There are at least 71 more programming language that provide assertion mechanism. You can check them out along with examples at <a href="http://rosettacode.org/wiki/Assertions">http://rosettacode.org/wiki/Assertions</a></p>
+
+<h2>The Problem</h2>
+
+<p>The <code>assert()</code> macro in both C and C++ would only check for errors at <a href="http://en.wikipedia.org/wiki/Run_time_(program_lifecycle_phase">execution time</a>) when the program is actually running. By definition that implies that:</p>
+
+<ul>
+<li>It adds some overhead to the program execution (time, size or both).</li>
+<li>The assertion may not be exercised leaving a program undetected for a while (in the worse case, the program may pass a testing stage only to be discover by the end user later).</li>
+</ul>
+
+
+<p>The above two points sound like are necessary evil. But what if we could get rid of those tradeoffs?</p>
+
+<p>There are cases when there is enough information during <a href="http://en.wikipedia.org/wiki/Compile_time">compile-time</a> to detect a possible error. For example, macro definitions and <a href="http://msdn.microsoft.com/en-us/library/tby3xex3(v=vs.110">constant expressions</a>.aspx) are things that do not exist in compile-time.</p>
+
+<p>If only there was a way to check constant expressions in compile-time it would have been always preferred over runtime checking.</p>
+
+<p>Luckily, programmers have figured out a few different ways to do this.</p>
+
+<h2>Workarounds</h2>
+
+<h3>Preprocessor Assertions</h3>
+
+<p>Both C and C++ preprocessors have <code>#error</code> directive that can be used to abort compilation with an error. It can be used to perform compile-time assertions.</p>
+
+<p>For example, consider a simple C program that reads data from into a buffer whose size is specified using a standard <a href="http://www.gnu.org/software/libc/manual/html_node/Controlling-Buffering.html"><code>BUFSIZ</code> macro</a> and the programmer wants to make sure that buffer is at least 1024 bytes large. The code using assertions might look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cassert&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Make sure we have at least 1024 bytes:</span>
+</span><span class='line'>    <span class="n">assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Given that <code>BUFSIZ</code> is a macro, a better solution would be to use preprocessor and its <code>#error</code> directive to check for this at compile-time instead:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#if BUFSIZ &lt; 1024</span>
+</span><span class='line'><span class="cp"># error Buffer size is too small</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>When the buffer size defined by <code>BUFSIZ</code> is large enough, the program would compile as normal. But when it isn&rsquo;t, the compile would refuse to compile the program spitting out an error that might look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">g</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">pedantic</span> <span class="p">.</span><span class="o">/</span><span class="n">assert_example</span><span class="p">.</span><span class="n">cc</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">assert_example</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">4</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span> <span class="nl">error:</span> <span class="n">Buffer</span> <span class="n">size</span> <span class="n">is</span> <span class="n">too</span> <span class="n">small</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Unfortunately, this mechanism can be used with binary operands only. In other words, something like this would not work by definition:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'><span class="cp">#if sizeof(mybuffer) &lt; 1024</span>
+</span><span class='line'><span class="cp"># error Buffer size is too small</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is because preprocessor knows nothing about <code>sizeof</code> operator and cannot use the result of this expression to compare it against 1024.</p>
+
+<p>Of course, being limited to macros usage only is a big problem. And so people accepted the challenge and came up with another way to overcome this limitation&hellip;</p>
+
+<h3>Negative Buffer Size</h3>
+
+<p>C and C++ developers have been relying on the fact that it is impossible to have a buffer of negative size in order to implement compile time assertions. The mechanism is very simple &ndash; evaluate a constant expression and yield <code>1</code> if it evaluates as <code>true</code>, or <code>-1</code> otherwise, and use the result as size of the buffer. For example, let&rsquo;s say we want to make sure that size of the integer is exactly 4 bytes, we could write code like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">typedef</span> <span class="kt">char</span> <span class="n">assert_int_size</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This approach, however, has its own limitations.</p>
+
+<p>In C, it can be used in both function and non-function scopes, but cannot be used inside structs and unions.</p>
+
+<p>Unlike C, C++ allows to have typedef statements, but there is another problem &ndash; if the static assertion is not dependent upon one or more template parameters, then the compiler is permitted to evaluate the static assertion at the point it is first seen, irrespective of whether the template is ever instantiated. In other words &ndash; it is hard to use with templates as programmers should always remember to use a template type in a condition.</p>
+
+<h2>Core Language Support</h2>
+
+<p>Over the years people have been working around issues associated with different workarounds to implement static assertions and realized that there is no way to implement them without a proper core language support.</p>
+
+<h3>C++</h3>
+
+<p>In 2004, Robert Klarer, Dr. John Maddock, Beman Dawes and Howard Hinnant wrote a proposal for adding a static assertion mechanism to the Core Language, known as <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a>.</p>
+
+<p>The proposal was accepted into the C++11 language specification and is implemented by the majority of C++ compilers today as &ldquo;<a href="http://en.cppreference.com/w/cpp/language/static_assert">static_assert()</a>&rdquo; keyword/function.</p>
+
+<p>It comes with no strings attached and accepts two parameters &ndash; a compile-time expressions that is evaluates to either <code>true</code> or <code>false</code> and a message. If the expression evaluates to <code>false</code>, the compilation is aborted and specified message is shown as an error message. <code>static_assert()</code> can be used in any scope, including templates. For example:</p>
+
+<figure class='code'><figcaption><span>Static Assert Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">static_assert</span><span class="p">(</span><span class="n">BUFSIZ</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&quot;Int size is not 4 bytes&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>C</h3>
+
+<p>In C, static assertions are introduced as part of <a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">ISO/IEC 9899:2011 standard</a>), informally known as C11. The mechanism is exactly the same as in C++, but the function name is <code>_Static_assert()</code>. For example:</p>
+
+<figure class='code'><figcaption><span>C11 Static Assert Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">_Static_assert</span><span class="p">(</span><span class="n">BUFSIZ</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">union</span> <span class="n">Bar</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">y</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">_Static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">union</span> <span class="n">Bar</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&quot;Size of int is not 4 bytes&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">_Static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It still cannot be used inside structs and unions, though.</p>
+
+<h3>Note on error messages</h3>
+
+<p>There is but one thing about <code>static_assert()</code> that can be pretty annoying &ndash; having to specify an error message even if it is an empty string. Of course, providing good error messages is the way to go. But there are a lot of cases when a condition used in assertion just does not need any extra words.</p>
+
+<p>The first solution that immediately comes to mind is to use the macro like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#define STATIC_ASSERT(Expr) static_assert((Expr), #Expr)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note, however, that it won&rsquo;t work well with expressions that contain a comma, like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Of course, programmers can enclose an expression in extra pair of <code>()</code>, but there is a better to do this, using <a href="http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html">variadic macros</a>. Here is a complete example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;type_traits&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define STATIC_ASSERT_IMPL(Expr) static_assert((Expr), #Expr)</span>
+</span><span class='line'><span class="cp">#define STATIC_ASSERT(...) STATIC_ASSERT_IMPL((__VA_ARGS__))</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="n">final</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="http://www.robertgamble.net/2012/01/c11-static-assertions.html">C11 Static Assertions</a> by Robert Gamble</li>
+<li><a href="http://docs.oracle.com/javase/1.4.2/docs/guide/lang/assert.html">Java: Programming with assertions</a></li>
+<li><a href="http://www.boost.org/doc/libs/release/doc/html/boost_staticassert.html">Boost.StaticAssert library</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/dd293588.aspx">MSDN on &ldquo;static_assert()&rdquo;</a></li>
+<li><a href="http://www.drdobbs.com/compile-time-assertions/184401873">Compile-Time Assertions</a> by Ralf Holly</li>
+</ul>
+
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">C11 (C Standard Revision)</a>)</li>
+<li><a href="http://gcc.gnu.org/wiki/C11Status">GCC C11 Status</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a></li>
+<li><a href="http://rosettacode.org/wiki/Assertions">Assertions</a> by RosettaCode.org</li>
+</ul>
+
+</div>
+
+
+      <footer>
+        <p class="meta text-muted">
+          
+  
+
+<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-07T00:00:00-04:00" pubdate data-updated="true">May 7<span>th</span>, 2013</time>
+          
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/c-plus-plus-11/'>C++11</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/static-assert/" data-via="" data-counturl="http://741MHz.com/static-assert/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+        
+        
+          <ul class="meta text-muted pager">
+            
+            <li class="previous"><a href="/read-it-aloud/" title="Previous Post: Read it Aloud to Yourself">&laquo; Read it Aloud to Yourself</a></li>
+            
+            
+          </ul>
+        
+      </footer>
+    </article>
+    
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+      </section>
+    
+  </div>
+
+  
+  <aside class="sidebar col-md-3">
+    
+      <section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Recent Posts</h3>
+  </div>
+  
+  <div id="recent_posts" class="list-group">
+    
+    <a class="list-group-item active" href="/static-assert/">C++11 Static Assert</a>
+    
+    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
+    
+    <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
+    
+    <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
+    
+    <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
+    
+  </div>
+</section>
+<section class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Categories</h3>
+  </div>
+  <div class="list-group">
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus">
+        <span class="badge">17</span>
+        C++
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/linux">
+        <span class="badge">3</span>
+        Linux
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/tech">
+        <span class="badge">25</span>
+        Tech
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
+        <span class="badge">2</span>
+        C++11
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/c">
+        <span class="badge">1</span>
+        C
+      </a>
+    
+    
+    <a class="list-group-item " href="/blog/categories/life">
+        <span class="badge">2</span>
+        Life
+      </a>
+    
+  </div>
+</section>
+
+
+
+
+
+    
+  </aside>
+  
+</div>
+
+        </div>
+      </div>
+    </div>
+    <footer role="contentinfo"><div class="container">
+    <p class="text-muted credits">
+  Copyright &copy; 2010-2013 <a href="/">741MHz.com</a>
+</p>
+
+</div>
+</footer>
+    <script src="/assets/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/javascripts/modernizr-2.0.js"></script>
+
+
+<script type="text/javascript">
+      var disqus_shortname = '741mhz';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://741MHz.com/static-assert/';
+        var disqus_url = 'http://741MHz.com/static-assert/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  </body>
+</html>

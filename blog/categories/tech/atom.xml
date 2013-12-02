@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Tech | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/tech/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-01T22:33:13-05:00</updated>
+  <updated>2013-12-01T22:53:55-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,289 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[C++11 Static Assert]]></title>
+    <link href="http://741MHz.com/static-assert/"/>
+    <updated>2013-05-07T00:00:00-04:00</updated>
+    <id>http://741MHz.com/static-assert</id>
+    <content type="html"><![CDATA[<h2>Introduction</h2>
+
+<p>Assertions is one of they key features of almost every programming language that help programmers verify their assumptions made when writing the code.
+In C, assertion mechanism is provided by <a href="http://man7.org/linux/man-pages/man3/assert.3.html">assert()</a> preprocessor macro defined by <a href="http://en.wikipedia.org/wiki/Assert.h">assert.h</a> header file. C++ programs can also use it by including &ldquo;<a href="http://en.cppreference.com/w/cpp/header/cassert">cassert</a>&rdquo; header file. As an added benefit, assertions also serve as documentation of the internal details of the program enhancing the code maintainability. Here is a simple C++11 example:</p>
+
+<p>```c++</p>
+
+<h1>include <iostream></h1>
+
+<h1>include <cassert></h1>
+
+<p>int main(int argc, char* argv[]) {</p>
+
+<pre><code>for (int i = 0; i &lt; argc; ++i) {
+    assert(argv[i] != nullptr);
+    std::cout &lt;&lt; argv[i] &lt;&lt; std::endl;
+}
+</code></pre>
+
+<p>}
+```
+GNU C library also provides a convenient function to check for error numbers called &ldquo;<a href="http://man7.org/linux/man-pages/man3/assert_perror.3.html">assert_perror()</a>&rdquo;.</p>
+
+<p>There are at least 71 more programming language that provide assertion mechanism. You can check them out along with examples at <a href="http://rosettacode.org/wiki/Assertions">http://rosettacode.org/wiki/Assertions</a></p>
+
+<h2>The Problem</h2>
+
+<p>The <code>assert()</code> macro in both C and C++ would only check for errors at <a href="http://en.wikipedia.org/wiki/Run_time_(program_lifecycle_phase">execution time</a>) when the program is actually running. By definition that implies that:</p>
+
+<ul>
+<li>It adds some overhead to the program execution (time, size or both).</li>
+<li>The assertion may not be exercised leaving a program undetected for a while (in the worse case, the program may pass a testing stage only to be discover by the end user later).</li>
+</ul>
+
+
+<p>The above two points sound like are necessary evil. But what if we could get rid of those tradeoffs?</p>
+
+<p>There are cases when there is enough information during <a href="http://en.wikipedia.org/wiki/Compile_time">compile-time</a> to detect a possible error. For example, macro definitions and <a href="http://msdn.microsoft.com/en-us/library/tby3xex3(v=vs.110">constant expressions</a>.aspx) are things that do not exist in compile-time.</p>
+
+<p>If only there was a way to check constant expressions in compile-time it would have been always preferred over runtime checking.</p>
+
+<p>Luckily, programmers have figured out a few different ways to do this.</p>
+
+<h2>Workarounds</h2>
+
+<h3>Preprocessor Assertions</h3>
+
+<p>Both C and C++ preprocessors have <code>#error</code> directive that can be used to abort compilation with an error. It can be used to perform compile-time assertions.</p>
+
+<p>For example, consider a simple C program that reads data from into a buffer whose size is specified using a standard <a href="http://www.gnu.org/software/libc/manual/html_node/Controlling-Buffering.html"><code>BUFSIZ</code> macro</a> and the programmer wants to make sure that buffer is at least 1024 bytes large. The code using assertions might look like this:</p>
+
+<p>```c++</p>
+
+<h1>include <cstdio></h1>
+
+<h1>include <cassert></h1>
+
+<p>int main(int argc, char* argv[]) {</p>
+
+<pre><code>// Allocate buffer on stack:
+char mybuffer[BUFSIZ];
+
+// Make sure we have at least 1024 bytes:
+assert(sizeof(mybuffer) &gt;= 1024);
+
+// Read data into "mybuffer"...
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Given that <code>BUFSIZ</code> is a macro, a better solution would be to use preprocessor and its <code>#error</code> directive to check for this at compile-time instead:</p>
+
+<p>```c++</p>
+
+<h1>include <cstdio></h1>
+
+<h1>if BUFSIZ &lt; 1024</h1>
+
+<h1>error Buffer size is too small</h1>
+
+<h1>endif</h1>
+
+<p>int main(int argc, char* argv[]) {</p>
+
+<pre><code>// Allocate buffer on stack:
+char mybuffer[BUFSIZ];
+
+// Read data into "mybuffer"...
+</code></pre>
+
+<p>}
+```</p>
+
+<p>When the buffer size defined by <code>BUFSIZ</code> is large enough, the program would compile as normal. But when it isn&rsquo;t, the compile would refuse to compile the program spitting out an error that might look like this:</p>
+
+<p><code>
+$ g++ -Wall -pedantic ./assert_example.cc
+./assert_example.cc:4:3: error: Buffer size is too small
+</code></p>
+
+<p>Unfortunately, this mechanism can be used with binary operands only. In other words, something like this would not work by definition:</p>
+
+<p>```c
+char mybuffer[BUFSIZ];</p>
+
+<h1>if sizeof(mybuffer) &lt; 1024</h1>
+
+<h1>error Buffer size is too small</h1>
+
+<h1>endif</h1>
+
+<p>```</p>
+
+<p>This is because preprocessor knows nothing about <code>sizeof</code> operator and cannot use the result of this expression to compare it against 1024.</p>
+
+<p>Of course, being limited to macros usage only is a big problem. And so people accepted the challenge and came up with another way to overcome this limitation&hellip;</p>
+
+<h3>Negative Buffer Size</h3>
+
+<p>C and C++ developers have been relying on the fact that it is impossible to have a buffer of negative size in order to implement compile time assertions. The mechanism is very simple &ndash; evaluate a constant expression and yield <code>1</code> if it evaluates as <code>true</code>, or <code>-1</code> otherwise, and use the result as size of the buffer. For example, let&rsquo;s say we want to make sure that size of the integer is exactly 4 bytes, we could write code like this:</p>
+
+<p><code>c
+typedef char assert_int_size[sizeof(int) == 4 ? 1 : -1];
+</code></p>
+
+<p>This approach, however, has its own limitations.</p>
+
+<p>In C, it can be used in both function and non-function scopes, but cannot be used inside structs and unions.</p>
+
+<p>Unlike C, C++ allows to have typedef statements, but there is another problem &ndash; if the static assertion is not dependent upon one or more template parameters, then the compiler is permitted to evaluate the static assertion at the point it is first seen, irrespective of whether the template is ever instantiated. In other words &ndash; it is hard to use with templates as programmers should always remember to use a template type in a condition.</p>
+
+<h2>Core Language Support</h2>
+
+<p>Over the years people have been working around issues associated with different workarounds to implement static assertions and realized that there is no way to implement them without a proper core language support.</p>
+
+<h3>C++</h3>
+
+<p>In 2004, Robert Klarer, Dr. John Maddock, Beman Dawes and Howard Hinnant wrote a proposal for adding a static assertion mechanism to the Core Language, known as <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a>.</p>
+
+<p>The proposal was accepted into the C++11 language specification and is implemented by the majority of C++ compilers today as &ldquo;<a href="http://en.cppreference.com/w/cpp/language/static_assert">static_assert()</a>&rdquo; keyword/function.</p>
+
+<p>It comes with no strings attached and accepts two parameters &ndash; a compile-time expressions that is evaluates to either <code>true</code> or <code>false</code> and a message. If the expression evaluates to <code>false</code>, the compilation is aborted and specified message is shown as an error message. <code>static_assert()</code> can be used in any scope, including templates. For example:</p>
+
+<p>```c++ Static Assert Example</p>
+
+<h1>include <cstdio></h1>
+
+<p>static_assert(BUFSIZ >= 1024, &ldquo;Buffer size is too small&rdquo;);</p>
+
+<p>template <typename T>
+struct Foo {</p>
+
+<pre><code>static_assert(sizeof(int) == 4, "Int size is not 4 bytes");
+</code></pre>
+
+<p>};</p>
+
+<p>int main(int argc, char* argv[]) {</p>
+
+<pre><code>// Allocate buffer on stack:
+char mybuffer[BUFSIZ];
+static_assert(sizeof(mybuffer) &gt;= 1024, "Buffer size is too small");
+
+// Read data into "mybuffer"...
+</code></pre>
+
+<p>}
+```</p>
+
+<h3>C</h3>
+
+<p>In C, static assertions are introduced as part of <a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">ISO/IEC 9899:2011 standard</a>), informally known as C11. The mechanism is exactly the same as in C++, but the function name is <code>_Static_assert()</code>. For example:</p>
+
+<p>```c C11 Static Assert Example</p>
+
+<h1>include &lt;stdio.h></h1>
+
+<p>_Static_assert(BUFSIZ >= 1024, &ldquo;Buffer size is too small&rdquo;);</p>
+
+<p>struct Foo {</p>
+
+<pre><code>char data[BUFSIZ];
+</code></pre>
+
+<p>};</p>
+
+<p>union Bar {</p>
+
+<pre><code>int x;
+char y[4];
+</code></pre>
+
+<p>};</p>
+
+<p>_Static_assert(sizeof(union Bar) == 4, &ldquo;Size of int is not 4 bytes&rdquo;);</p>
+
+<p>int main(int argc, char* argv[]) {</p>
+
+<pre><code>// Allocate buffer on stack:
+char mybuffer[BUFSIZ];
+_Static_assert(sizeof(mybuffer) &gt;= 1024, "Buffer size is too small");
+
+// Read data into "mybuffer"...
+</code></pre>
+
+<p>}
+```</p>
+
+<p>It still cannot be used inside structs and unions, though.</p>
+
+<h3>Note on error messages</h3>
+
+<p>There is but one thing about <code>static_assert()</code> that can be pretty annoying &ndash; having to specify an error message even if it is an empty string. Of course, providing good error messages is the way to go. But there are a lot of cases when a condition used in assertion just does not need any extra words.</p>
+
+<p>The first solution that immediately comes to mind is to use the macro like this:</p>
+
+<p>```c++</p>
+
+<h1>define STATIC_ASSERT(Expr) static_assert((Expr), #Expr)</h1>
+
+<p>```</p>
+
+<p>Note, however, that it won&rsquo;t work well with expressions that contain a comma, like this:</p>
+
+<p><code>c++
+STATIC_ASSERT(!std::is_same&lt;T, int&gt;::value);
+</code></p>
+
+<p>Of course, programmers can enclose an expression in extra pair of <code>()</code>, but there is a better to do this, using <a href="http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html">variadic macros</a>. Here is a complete example:</p>
+
+<p>```c++</p>
+
+<h1>include &lt;type_traits></h1>
+
+<h1>define STATIC_ASSERT_IMPL(Expr) static_assert((Expr), #Expr)</h1>
+
+<h1>define STATIC_ASSERT(&hellip;) STATIC_ASSERT_IMPL((<strong>VA_ARGS</strong>))</h1>
+
+<p>template <typename T>
+struct Foo final {</p>
+
+<pre><code>STATIC_ASSERT(!std::is_same&lt;T, int&gt;::value);
+</code></pre>
+
+<p>};</p>
+
+<p>int main(int argc, char* argv[]) {</p>
+
+<pre><code>STATIC_ASSERT(sizeof(int) == 4);
+</code></pre>
+
+<p>}
+```</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="http://www.robertgamble.net/2012/01/c11-static-assertions.html">C11 Static Assertions</a> by Robert Gamble</li>
+<li><a href="http://docs.oracle.com/javase/1.4.2/docs/guide/lang/assert.html">Java: Programming with assertions</a></li>
+<li><a href="http://www.boost.org/doc/libs/release/doc/html/boost_staticassert.html">Boost.StaticAssert library</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/dd293588.aspx">MSDN on &ldquo;static_assert()&rdquo;</a></li>
+<li><a href="http://www.drdobbs.com/compile-time-assertions/184401873">Compile-Time Assertions</a> by Ralf Holly</li>
+</ul>
+
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">C11 (C Standard Revision)</a>)</li>
+<li><a href="http://gcc.gnu.org/wiki/C11Status">GCC C11 Status</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a></li>
+<li><a href="http://rosettacode.org/wiki/Assertions">Assertions</a> by RosettaCode.org</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Read it Aloud to Yourself]]></title>
@@ -923,370 +1206,6 @@ B&rsquo;s this:   0x7fff535dfb48
 ```</p>
 
 <p>Hopefully that clears things up a little bit.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[C++ Exceptions, Stack Trace and GDB Automation]]></title>
-    <link href="http://741MHz.com/throw-stacktrace/"/>
-    <updated>2013-04-16T00:00:00-04:00</updated>
-    <id>http://741MHz.com/throw-stacktrace</id>
-    <content type="html"><![CDATA[<p>The tricky part about any exception is that the stack is already unwinded by the time exception is caught and there is no easy way to figure out from which part of the code it was thrown. Have you ever caught an exception that has no information that can be used to find where the problem is? The one that says «this should never happen» or even has no text at all. Hopefully, this doesn’t happen to you very often. But if you work with a large C++ codebase with tons of different components written by different developers then sooner or later it would definitely happen. It can be quite disappointing and take a lot of time going through the pile of somebody else’s code trying to figure out what went wrong. So you must be prepared. I might be a little bit unlucky in this regard – this happened to me a lot, so I decided to share a few ways for overcoming this type of situations.</p>
-
-<h2>Backtrace API</h2>
-
-<p>Quite a few C runtime libraries provide a mechanism to examine the current thread’s call stack. It consists of three functions declared in <code>execinfo.h</code> header:</p>
-
-<p>```c
-int backtrace(void** array, int size);</p>
-
-<p>char<em><em> backtrace_symbols(void</em> const</em> array, int size);</p>
-
-<p>void backtrace_symbols_fd(void<em> const</em> array, int size, int fd);
-```</p>
-
-<p>Using those functions, one can access the stack trace at any given point of program execution. Here is a simple example that prints the stack to standard output:</p>
-
-<p>```c++</p>
-
-<h1>include &lt;execinfo.h></h1>
-
-<h1>include <iostream></h1>
-
-<p>int main()
-{</p>
-
-<pre><code>void *callstack[256];
-int frames = ::backtrace(
-    callstack, sizeof(callstack) / sizeof(callstack[0]));
-char **symbols = ::backtrace_symbols(callstack, frames);
-std::cout &lt;&lt; "Stack Trace:\n";
-for (int i = 0; i &lt; frames; ++i) {
-    std::cout &lt;&lt; '\t' &lt;&lt; symbols[i] &lt;&lt; '\n';
-}
-std::free(symbols);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>This method can be used to get the stack trace before the exception is thrown and before the stack is unwinded. In order to do that, one could define a custom exception class that grabs the stack trace in its constructor. For example:</p>
-
-<p>```c++</p>
-
-<h1>include &lt;execinfo.h></h1>
-
-<h1>include <string></h1>
-
-<h1>include <stdexcept></h1>
-
-<h1>include <cstdlib></h1>
-
-<h1>include <iostream></h1>
-
-<p>class Exception : public std::exception {
-  public:</p>
-
-<pre><code>Exception() {
-    grab_backtrace();
-}
-
-explicit Exception(const std::string &amp;reason) : reason_(reason) {
-    reason_.append(1, '\n');
-    grab_backtrace();
-}
-
-virtual ~Exception() throw() { }
-
-virtual const char *what() const throw() {
-    return reason_.c_str();
-}
-</code></pre>
-
-<p>  private:</p>
-
-<pre><code>void grab_backtrace() {
-    void *callstack[256];
-    int frames = ::backtrace(
-        callstack, sizeof(callstack) / sizeof(callstack[0]));
-    char **symbols = backtrace_symbols(callstack, frames);
-    try {
-        reason_.append("Stack Trace:");
-        for (int i = 0; i &lt; frames; ++i) {
-            reason_.append("\n\t").append(symbols[i]);
-        }
-    } catch(const std::exception &amp;) {
-        std::free(symbols);
-        throw;
-    }
-    std::free(symbols);
-}
-
-std::string reason_;
-</code></pre>
-
-<p>};</p>
-
-<p>static void do_something(int n, int i = 0)
-{</p>
-
-<pre><code>if (i &lt; n) {
-    do_something(n, ++i);
-} else {
-    throw Exception("Recursion limit exceeded");
-}
-</code></pre>
-
-<p>}</p>
-
-<p>int main(int argc, char *argv[])
-{</p>
-
-<pre><code>try {
-    do_something(argc &gt; 1 ? std::atoi(argv[1]) : 10, argc);
-} catch(const std::exception &amp;e) {
-    std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
-    return EXIT_FAILURE;
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>So far so good! Here is an example of running the above program:</p>
-
-<p>```
-$ clang++ -Wall -pedantic ./test.cpp &amp;&amp; ./a.out 3
-Recursion limit exceeded
-Stack Trace:</p>
-
-<pre><code>0   a.out                0x00000001034fa7af _ZN9Exception14grab_backtraceEv + 63
-1   a.out                0x00000001034fa6f4 _ZN9ExceptionC2ERKSs + 116
-2   a.out                0x00000001034fa56d _ZN9ExceptionC1ERKSs + 29
-3   a.out                0x00000001034fa33c _Z12do_somethingii + 140
-4   a.out                0x00000001034fa2df _Z12do_somethingii + 47
-5   a.out                0x00000001034fa42d main + 93
-6   libdyld.dylib        0x00007fff935e27e1 start + 0
-</code></pre>
-
-<p>```</p>
-
-<p>Unfortunately, there are a few problems with this approach. Firstly, there no file names and no line numbers. Secondly, this approach requires to use the “Exception” class as a base class of all exceptions in the project (well, at least for those you want to get a stack trace for), which indeed can be very problematic if not impossible. But even if all of the above is fine with you, this approach may still not work out for you because frame pointers can be omitted in optimized builds. For example, omitting frame pointers is a default behavior of recent GCC compilers for x86_64 platforms (which can also be turned on/off using <code>-fomit-frame-pointer</code> option). Our call stack becomes useless if frame pointers are omitted:</p>
-
-<p>```
-$ clang++ -Wall -fomit-frame-pointer ./test.cpp &amp;&amp; ./a.out 3
-Recursion limit exceeded
-Stack Trace:</p>
-
-<pre><code>0   a.out                0x0000000105eca82d _ZN9Exception14grab_backtraceEv + 61
-</code></pre>
-
-<p>```</p>
-
-<p>Depending on the system, there could be other requirements in order to make this API work. For example, GNU runtime requires you to specify “-rdynamic” flag to instruct the linker to add all symbols, not only used ones, to the dynamic symbol table. So don’t forget to read a manual page for this API in your system before using this.</p>
-
-<h2>__FILE__ and __LINE__</h2>
-
-<p>C++ has many <a href="http://gcc.gnu.org/onlinedocs/cpp/Standard-Predefined-Macros.html">standard predefined macros</a>. <code>__FILE__</code> and <code>__LINE__</code> macros are those two that come handy in order to identify a point in a program:</p>
-
-<p><code>__FILE__</code>  macros expands to the name of the current input file, in the form of a C string constant. This is the path by which the preprocessor opened the file, not the short name specified in ‘#include’ or as the input file name argument. For example, “/usr/local/include/myheader.h” is a possible expansion of this macros.</p>
-
-<p><code>__LINE__</code> macros expands to the current input line number, in the form of a decimal integer constant. While we call it a predefined macro, it’s a pretty strange macro, since its “definition” changes with each new line of source code.|</p>
-
-<p>Using the above macros, it is possible to include both file and line information along with exception’s text, or maybe as additional member fields of any given exception class. There are multiple choices. Here is an example of one of possible implementations:</p>
-
-<p>```c++</p>
-
-<h1>include <stdexcept></h1>
-
-<h1>include <cstdlib></h1>
-
-<h1>include <iostream></h1>
-
-<p>class Exception : public std::runtime_error {
-  public:</p>
-
-<pre><code>template &lt;unsigned int location_len&gt;
-inline Exception(const char (&amp;location)[location_len],
-                 const std::string &amp;reason)
-    : std::runtime_error(reason + location)
-{ }
-
-virtual ~Exception() throw() { }
-</code></pre>
-
-<p>};</p>
-
-<h1>define MY_THROW_STR_I(Arg) #Arg</h1>
-
-<h1>define MY_THROW_STR(Arg) MY_THROW_STR_I(Arg)</h1>
-
-<h1>define MY_THROW(Type, &hellip;)                                             \</h1>
-
-<pre><code>do {                                                                \
-    throw Type(" @ "; __FILE__ ";:" MY_THROW_STR(__LINE__), ##__VA_ARGS__); \
-} while (0)
-</code></pre>
-
-<p>static void do_something(int n, int i = 0)
-{</p>
-
-<pre><code>if (i &lt; n) {
-    do_something(n, ++i);
-} else {
-    MY_THROW(Exception, "Recursion limit exceeded");
-}
-</code></pre>
-
-<p>}</p>
-
-<p>int main(int argc, char *argv[])
-{</p>
-
-<pre><code>try {
-    do_something(argc &gt; 1 ? std::atoi(argv[1]) : 10, argc);
-} catch(const std::exception &amp;e) {
-    std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
-    return EXIT_FAILURE;
-}
-</code></pre>
-
-<p>}
-```</p>
-
-<p>When the exception is caught and printed, the source file name and a line numbers are included, which makes it easy to trace the origins of such an exception:</p>
-
-<p><code>
-$ ./a.out
-Recursion limit exceeded @ ./test.cpp:26
-</code></p>
-
-<p>Of course, this does not include a stack trace. But it works if frame pointers are omitted, tail recursion optimization is applied, or even if all symbol names are stripped out of the executable. There is one problem though — it may not be useful without a stack trace in certain cases. For example, one may declare a helper function used to throw an exception, like this:</p>
-
-<p>```c++
-<strong>attribute</strong>((noreturn)) void report_error(const std::string &amp;reason) {</p>
-
-<pre><code>MY_THROW(Exception, reason);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>In that case, the file and line of the exception origins will always be the same even if it was called from different places in the program. So this approach is also not a cure for all diseases.</p>
-
-<h2>GDB Scripting: Automatic Backtrace on Exception Catchpoints</h2>
-
-<p>And the last but not least method is to use <a href="http://www.gnu.org/software/gdb/">GDB debugger</a>. If you are not familiar with this debugger, you definitely should spend some time learning it. It is one of the most powerful tools out there. And it comes extremely handy when dealing with exceptions.</p>
-
-<p><a href="http://sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html">GDB provides special catch points</a>, including those to catch exceptions being thrown, caught or even unhandled. We are interested in exceptions that are being thrown and so must use <code>catch throw</code> command. Here is an example of manually using GDB in order to examine a stack trace before the exception is thrown:</p>
-
-<p>```
-$ gdb -args ./a.out 5
-Reading symbols from /tmp/a.out&hellip;done.
-(gdb) catch throw
-Catchpoint 1 (throw)
-(gdb) run
-Starting program: /tmp/a.out 5
-Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</p>
-
-<pre><code>at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
-</code></pre>
-
-<p>70    header->exc.unexpectedHandler = __unexpected_handler;
-(gdb) backtrace</p>
-
-<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 )</h1>
-
-<pre><code>at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
-</code></pre>
-
-<h1>1  0x0000000000400fee in report_error (reason=&ldquo;Recursion limit exceeded&rdquo;) at ./test.cpp:25</h1>
-
-<h1>2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</h1>
-
-<h1>3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</h1>
-
-<h1>4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</h1>
-
-<h1>5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</h1>
-
-<h1>6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</h1>
-
-<p>(gdb) continue
-Continuing.
-Recursion limit exceeded @ ./test.cpp:25
-[Inferior 1 (process 3865) exited with code 01]
-(gdb) quit
-```</p>
-
-<p>At first, this might sound silly because in the real world a program may encounter a lot of exceptions and manually typing “backtrace” and “continue” every type that happens is nothing but a waste of time. But there is one trick — GDB can be automated. There are two ways of doing this — use a batch mode or a more sophisticated <a href="http://sourceware.org/gdb/wiki/PythonGdbTutorial">Python scripting</a>. For our purpose, a batch script will do just fine. Here is a simple script that turns off verbose output and paging, sets up a <code>throw</code> catch point and executes <code>backtrace</code> + <code>continue</code> commands every time the event is caught:</p>
-
-<p><code>
-set verbose off
-set pagination off
-catch throw
-commands
-backtrace
-continue
-end
-run
-quit
-</code></p>
-
-<p>Save the above script into a file, and then run GDB in batch mode telling it to use that file, which in my case is called “gdb_bt_script”:</p>
-
-<p>```
-$ gdb -n -batch -x ./gdb_bt_script &mdash;args ./a.out 5
-Catchpoint 1 (throw)
-Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
-70    header->exc.unexpectedHandler = __unexpected_handler;</p>
-
-<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401420 , dest=0x401198 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</h1>
-
-<h1>1  0x0000000000400fee in report_error (reason=&ldquo;Recursion limit exceeded&rdquo;) at ./test.cpp:25</h1>
-
-<h1>2  0x000000000040105d in do_something (n=5, i=5) at ./test.cpp:33</h1>
-
-<h1>3  0x000000000040102e in do_something (n=5, i=5) at ./test.cpp:31</h1>
-
-<h1>4  0x000000000040102e in do_something (n=5, i=4) at ./test.cpp:31</h1>
-
-<h1>5  0x000000000040102e in do_something (n=5, i=3) at ./test.cpp:31</h1>
-
-<h1>6  0x00000000004010cb in main (argc=2, argv=0x7fffffffe1f8) at ./test.cpp:40</h1>
-
-<p>Recursion limit exceeded @ ./test.cpp:25
-[Inferior 1 (process 5849) exited with code 01]
-$
-```</p>
-
-<p>Whoala! Now we get a full stack trace including function parameters, their values, and file and line numbers. If the program is optimized and has no debug symbols, however, we get a little bit less:</p>
-
-<p>```
-$ gdb -n -batch -x ./gdb_bt_script &mdash;args ./a.out 5
-Catchpoint 1 (throw)
-Catchpoint 1 (exception thrown), <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70
-70    header->exc.unexpectedHandler = __unexpected_handler;</p>
-
-<h1>0  <strong>cxxabiv1::</strong>cxa_throw (obj=0x6030d0, tinfo=0x401470 , dest=0x401270 ) at ../../../../libstdc++-v3/libsupc++/eh_throw.cc:70</h1>
-
-<h1>1  0x00000000004010a8 in report_error(std::string const&amp;) ()</h1>
-
-<h1>2  0x000000000040121e in do_something(int, int) ()</h1>
-
-<h1>3  0x0000000000400ef6 in main ()</h1>
-
-<p>Recursion limit exceeded @ ./test.cpp:25
-[Inferior 1 (process 1877) exited with code 01]
-```</p>
-
-<p>Yet still a lot more than we get using backtrace API. But the most beautiful part is that this method does not require any code changes and works for pretty much any binary.</p>
-
-<h2>The End</h2>
-
-<p>Those were three fundamental methods that can help to identify a place where exception is thrown from. They are not mutually exclusive. Each has its cons and pros. I personally prefer to use GDB because it doesn’t require a code change, but use other two methods as well, depending on a situation. It is up to you to decide which one to use.</p>
-
-<p>Hope it helps and Good Luck!</p>
 ]]></content>
   </entry>
   

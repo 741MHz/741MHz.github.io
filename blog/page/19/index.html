@@ -114,32 +114,82 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-10T00:00:00-05:00" pubdate data-updated="true">Jan 10<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-01-14T00:00:00-05:00" pubdate data-updated="true">Jan 14<span>th</span>, 2013</time>
         
-           | <a href="/unreasonable-effectiveness-of-c/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/unreasonable-effectiveness-of-c/">Comments</a>
+           | <a href="/vector-erase/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/vector-erase/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/unreasonable-effectiveness-of-c/">Unreasonable Effectiveness of C</a></h1>
+      <h1 class="entry-title"><a href="/vector-erase/">Erasing Vector the Smart Way</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>It is always nice to run into like-minded people. Today I ran into <a href="http://damienkatz.net/">Damien Katz</a>, CTO at <a href="http://www.couchbase.com/">Couchbase</a>,  and his brilliant story about why C is a beautiful high-level language. For a big fan of C like me it would have been a crime not to share this story. If you agree that OOP is a hype and a disease or if you think that C++ is a horrible language then you will definitely enjoy it:</p>
+  <div class="entry-content clearfix"><p>In the C++ world, <a href="http://en.cppreference.com/w/cpp/container/vector"><code>std::vector</code></a> is a <a href="http://en.wikipedia.org/wiki/Sequence_container_(C%2B%2B">sequence container</a>) that encapsulates <a href="http://en.wikipedia.org/wiki/Dynamic_array">dynamic size arrays</a>. One of the main perks of the vector is the fact that elements are stored <strong>contiguously</strong>. In other words, a pointer to an element of a vector may be passed to any function that expects a pointer to an element of array. Or simply put — <code>std::vector</code> is very close to a <a href="http://www.cplusplus.com/doc/tutorial/arrays/">plain old-school C-style array</a>, yet it provides developers with a lot of C++ perks like automatic memory management, bounds checking and more. Unfortunately, <code>std::vector</code> is so great that many developers are using it without really thinking too much about the underlying implementation and its downsides.</p>
 
-<blockquote><p>For years I’ve tried my damnedest to get away from C. Too simple, too many details to manage, too old and crufty, too low level. I’ve had intense and torrid love affairs with Java, C++, and Erlang. I’ve built things I’m proud of with all of them, and yet each has broken my heart. They’ve made promises they couldn’t keep, created cultures that focus on the wrong things, and made devastating tradeoffs that eventually make you suffer painfully. And I keep crawling back to C.</p></blockquote>
+<h2>Erase Trap</h2>
 
-<p><a href="http://damienkatz.net/2013/01/the_unreasonable_effectiveness_of_c.html">[Read the full story&hellip;]</a></p>
+<p>A common programming task is to remove one or more elements from the vector. Luckily, <code>std::vector</code> provides a wonderful method called <code>erase()</code> that does exactly that. So what’s the big deal? It’s a trap!</p>
 
-<p>While we are at it, you may also enjoy:</p>
+<p>C++ is just like medicine — it is both a cure and a disease. Vector is no exception. Its contiguous memory layout may heal, or it may kill. In this case it is a serial killer. Let’s see why.</p>
 
-<ul>
-<li><a href="http://en.wikipedia.org/wiki/Object-oriented_programming#Criticism">Object Oriented Programming Criticism</a></li>
-<li><a href="http://article.gmane.org/gmane.comp.version-control.git/57918">Linus Torvalds opinion on C++</a> — you are full of bullshit!</li>
-</ul>
+<h2>The Innocent Piece of Code</h2>
 
+<p>Let’s take a look at the real-world example that I ran into a few days ago. The goal was to remove all even numbers from a vector, leaving only odd ones. Here is how it was implemented:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">array</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+</span><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">it</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">it</span> <span class="o">=</span> <span class="n">array</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>        <span class="o">++</span><span class="n">it</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Logically thinking, the code is very sound — every element is being checked and removed only if it matches a given criteria. Developer even took extra care not to access invalidated iterator. Sounds like a great job. Nice, simple, and it works. Or does it?</p>
+
+<h2>The Problem</h2>
+
+<p>No, it does not. There is one big problem with that code that makes it totally useless. It takes about 55 seconds to run on just one million random elements. Why does that happen, you may ask? The developer  fell into a common trap! That happened because the elements of the vector are stored contiguously, in a contiguous memory and the whole vector is shifted left every time an element is erased. In other words — one does not simply erase an element that is not at the end of the vector.</p>
+
+<h2>The Solution</h2>
+
+<p>Here is the right way of doing this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">array</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span>
+</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">remove_if</span><span class="p">(</span>
+</span><span class='line'>      <span class="n">array</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="n">v</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">),</span>
+</span><span class='line'>    <span class="n">array</span><span class="p">.</span><span class="n">end</span><span class="p">()</span>
+</span><span class='line'><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above code does the job in only 5 milliseconds. That is about eleven thousand times faster. What kind of sorcery is that? Very simple — <a href="http://en.cppreference.com/w/cpp/algorithm/remove"><code>std::remove_if()</code></a> does not erase elements from the vector. It does’t remove anything either. Just a good naming joke. So what the hell it does? It re-arranges elements in such a way that elements to be erased are moved towards the end of a vector. Once the job is done, all elements are erased from the vector with a single invocation of <code>erase()</code>. As a result, the whole vector is not shifted tens of thousands of times and runs a lot faster.</p>
+
+<h2>The Conclusion</h2>
+
+<p>There ain’t no such thing as a free lunch.</p>
 </div>
   
   
@@ -170,6 +220,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/static-assert/">C++11 Static Assert</a>
+    
     <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
     
     <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
@@ -177,8 +229,6 @@
     <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
     
     <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
-    
-    <a class="list-group-item " href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a>
     
   </div>
 </section>
@@ -190,7 +240,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">15</span>
+        <span class="badge">17</span>
         C++
       </a>
     
@@ -202,13 +252,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">22</span>
+        <span class="badge">25</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">1</span>
+        <span class="badge">2</span>
         C++11
       </a>
     

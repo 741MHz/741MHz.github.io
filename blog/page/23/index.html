@@ -114,41 +114,47 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2010-10-17T00:00:00-04:00" pubdate data-updated="true">Oct 17<span>th</span>, 2010</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2012-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2012</time>
         
-           | <a href="/predefined-macros/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/predefined-macros/">Comments</a>
+           | <a href="/system-program-problem-detected/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/system-program-problem-detected/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/predefined-macros/">Predefined Macros</a></h1>
+      <h1 class="entry-title"><a href="/system-program-problem-detected/">System Program Problem Detected</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Every C and C++ compiler has several object-like macros that are implicitly defined and can be used  without supplying their definitions on the command line or through including header files. Such macros are called &ldquo;predefined&rdquo; and can help figure out for what architecture you compile for, on what platform, if the source code being compiled is C or C++, and even tell the language standard of the code being used.</p>
+  <div class="entry-content clearfix"><p>I have just installed Ubuntu 12.10 and the first thing I ran into is tons of annoying popup windows telling me about system program problems and asking to report them:</p>
 
-<p>All predefined macros are described in GCC online documentation. However, not all of them are guaranteed to be defined. Sometimes it is helpful to see a list of macros defined by the compiler with their values, if any. To do that, run a preprocessor with zero input, using the following command:</p>
+<p><img src="/images/ubuntu_system_problem/popup.png"></p>
 
-<pre><code>cpp -dM &lt;/dev/null
+<p>Apparently, this is a common problem that drives crazy a lot of people. What happens is some of the programs crash, and those cases are being reported by the Apport application. I highly doubt that anyone at Ubuntu is actually reading these reports. Firstly, millions of Ubuntu installations constantly have programs crashing and it must take an army of developers to investigate and fix them. Secondly, these crashes are happening for many years and they don’t seem to go away. So why bother? Here is how you disable this annoying reporting facility.</p>
+
+<h3>Launch a terminal</h3>
+
+<p>First, you need to open a terminal. You can do that by clicking on “Dash Home” button (on the top left of your screen), typing “Terminal”, and clicking on a Terminal application icon in order to launch it:</p>
+
+<p><img src="/images/ubuntu_system_problem/open_terminal.png"></p>
+
+<h3>Disable Apport</h3>
+
+<p>In the terminal, type the following commands:</p>
+
+<pre><code>sudo sed -i 's;^enabled=1$;enabled=0;g' /etc/default/apport
+sudo service apport restart
+sudo rm /var/crash/*
 </code></pre>
 
-<p>This will produce the output like this:</p>
+<p>The above commands will replace “enabled=1″ with “enabled=0″ in the “/etc/default/apport” configuration file, restart the Apport application and remove old reports to save you a valuable disk space. The problem should now go away.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>#define __unix__ 1
-</span><span class='line'>#define __x86_64 1
-</span><span class='line'>#define __DBL_MIN_10_EXP__ (-307)
-</span><span class='line'>#define __FINITE_MATH_ONLY__ 0
-</span><span class='line'>#define __GNUC_PATCHLEVEL__ 3</span></code></pre></td></tr></table></div></figure>
+<h3>Still having annoying popups?</h3>
 
+<p>Be aware that in earlier versions of Ubuntu there was a bug when restarting Apport didn’t really restart it (see <a href="https://bugs.launchpad.net/ubuntu/+source/apport/+bug/292402">Bug #292402</a>). So as the last resort, simply reboot your computer.</p>
 
-<p>From the above output we can tell that code is being compiled for x86_64 architecture. The output may change depending on the platform and/or compiler settings.</p>
+<p>Hope it helps! Good Luck!</p>
 </div>
   
   
@@ -179,6 +185,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/static-assert/">C++11 Static Assert</a>
+    
     <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
     
     <a class="list-group-item " href="/cpp-like-python/">C++ Like Python</a>
@@ -186,8 +194,6 @@
     <a class="list-group-item " href="/constant/">How Constant Is a Constant?</a>
     
     <a class="list-group-item " href="/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a>
-    
-    <a class="list-group-item " href="/throw-stacktrace/">C++ Exceptions, Stack Trace and GDB Automation</a>
     
   </div>
 </section>
@@ -199,7 +205,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">15</span>
+        <span class="badge">17</span>
         C++
       </a>
     
@@ -211,13 +217,13 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">22</span>
+        <span class="badge">25</span>
         Tech
       </a>
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus-11">
-        <span class="badge">1</span>
+        <span class="badge">2</span>
         C++11
       </a>
     
