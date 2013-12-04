@@ -114,30 +114,20 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-14T20:35:00-05:00" pubdate data-updated="true">Nov 14<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-17T13:00:00-05:00" pubdate data-updated="true">Nov 17<span>th</span>, 2013</time>
         
-           | <a href="/default-function-template-arguments/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/default-function-template-arguments/">Comments</a>
+           | <a href="/inheriting-constructors/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/inheriting-constructors/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/default-function-template-arguments/">Default Template Arguments for Functions</a></h1>
+      <h1 class="entry-title"><a href="/inheriting-constructors/">Inheriting Constructors in C++11</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>One of the features that C++ provides to its users is the ability to write code in an object-oriented manner. The first object-oriented system was created in 1960 by <a href="http://en.wikipedia.org/wiki/Ivan_Sutherland">Ivan Sutherland</a>. 32 years later, when C++ first appeared back in 1983, object-oriented paradigm was so popular that everything that was not a class or a method was treated as a defective entity.</p>
-
-<p>The beauty of C++ compared to many other languages like Java, where there can be no freestanding methods or global variables, is the fact that C++ neither tries to limit its users in terms of ideas they can have, nor does it force any specific ideas or ideals upon its users. It always allowed programmers to make their creations follow object-oriented, procedural, data-oriented designs, or have no design whatsoever.</p>
-
-<p>In practice, however, there will always be limits. But C++ honestly tries not to stand in a way and help us, the programmers, to code anything that we could possibly have in our heads. And C++11 have proved this one more time with a lot of changes over the previous revision effectively improving the language to allow us to achieve more with less labor, focus on our current ideas rather than overcoming limitations of our tools and programming language, and come up with even more ideas, because ideas are most important.</p>
-
-<blockquote><p>It is not labor, not capital, not land, that has created modern wealth or is creating it today. It is <em>ideas</em> that create wealth, and what is wanted is more ideas&hellip;</p>
-
-<p>— <a href="http://en.wikipedia.org/wiki/Emerson_Harrington">Harrington Emerson</a></p></blockquote>
-
-<p>Back in a day, freestanding functions, as well as freestanding function templates, did not get a lot of attention because people fell for the hype of object-oriented design. As a consequence, it was never possible to have seemingly simple and intuitive things such as a default template argument for a function template. It was allowed for classes, but not for functions. To give an example, the following would work:</p>
+  <div class="entry-content clearfix"><p>We have previously reviewed a feature introduced in C++11 that allows a class to delegate work between multiple constructors constructors of a class, called &ldquo;<a href="/delegating-constructors">Delegating Constructors</a>&rdquo; that allows one constructor to call another:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -145,48 +135,192 @@
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">X</span><span class="p">,</span> <span class="k">typename</span> <span class="n">Y</span> <span class="o">=</span> <span class="kt">int</span><span class="o">&gt;</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">static</span> <span class="kt">void</span> <span class="n">func</span><span class="p">(</span><span class="n">X</span> <span class="n">x</span><span class="p">,</span> <span class="n">Y</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="c1">// ...</span>
-</span><span class='line'>    <span class="p">}</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">n</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">double</span> <span class="n">f</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">lround</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>But the function template like this would not compile:</p>
+<p>Although extremely useful in boosting efficiency, it does not solve the problem when programmer wants to create a derived class that has exactly the same set of constructor as its base class or classes. In which case programmers are forced to tediously duplicate constructors of the base class, for example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">X</span><span class="p">,</span> <span class="k">typename</span> <span class="n">Y</span> <span class="o">=</span> <span class="kt">int</span><span class="o">&gt;</span>
-</span><span class='line'><span class="kt">void</span> <span class="n">func</span><span class="p">(</span><span class="n">X</span> <span class="n">x</span><span class="p">,</span> <span class="n">Y</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'><span class="p">}</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Programmers are forced to define at least one</span>
+</span><span class='line'>    <span class="c1">// if not all of the following constructors:</span>
+</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">double</span> <span class="n">v</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">double</span> <span class="n">y</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Seems a little bit odd. Bjarne Stroustrup answered why this was happening in April 2000 when <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226">he wrote</a>:</p>
-
-<blockquote><p>The prohibition of default template arguments for function templates is a misbegotten remnant of the time where freestanding functions were treated as second-class citizens and required all template arguments to be deduced from the function arguments rather than specified.</p>
-
-<p>The restriction seriously cramps programming style by unnecessarily making freestanding functions different from member functions, thus making it harder to write STL-style code.</p>
-
-<p>— <a href="http://www.stroustrup.com">Bjarne Stroustrup</a></p></blockquote>
-
-<p>Luckily, this was written along with a proposal on how to fix it, and after a couple of meetings with the core language working group, all of the small details were thought through and the final resolution was proposed in October 2002. It consisted of seven changes to different sections and paragraphs to the C++ standard.</p>
-
-<p>If you are interested in details, you can check them out at <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226">http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226</a>.</p>
-
-<p>What&rsquo;s important is that today we need to waste our time no more working around this limitation as all of the production quality C++ compilers and tools support default template arguments for function templates, and we we can write our code like this:</p>
+<p>C++11 solves this problem by introducing constructor inheritance. In a derived class, programmers can write a single <code>using T::T;</code> statement that makes a derived class automatically inherit constructors of a base class. For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span> <span class="o">=</span> <span class="kt">double</span><span class="o">&gt;</span>
-</span><span class='line'><span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="n">T</span> <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">U</span> <span class="n">u</span> <span class="o">=</span> <span class="mi">0</span><span class="p">);</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">using</span> <span class="n">A</span><span class="o">::</span><span class="n">A</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Long live C++!</p>
+<p>How this works is obvious for utmost simple cases. It might not be as clear when multiple inheritance is involved. For those cases, inheriting constructors would only work if all but one base classes have default constructors. For example, the following would work:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">C</span> <span class="o">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">using</span> <span class="n">B</span><span class="o">::</span><span class="n">B</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And will be an equivalent of the following hand-crafted constructor:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">C</span> <span class="o">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">C</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(),</span> <span class="n">B</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>But if <code>A</code> does not have default constructor (even if the signature is the same as <code>B</code>), it won&rsquo;t work, so the below code is ill-formed:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">C</span> <span class="o">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">using</span> <span class="n">B</span><span class="o">::</span><span class="n">B</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There is also another catch that programmers should be aware of. It is the same old problem as forgetting to initialize class fields:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">using</span> <span class="n">A</span><span class="o">::</span><span class="n">A</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With the above code, class <code>B</code> introduces <code>B(int)</code> constructor through inheritance of <code>A</code>&rsquo;s constructor(s), but it leaves <code>x</code> uninitialized. This means that inherited constructors might be useless if we need to initialize POD types. But do not rush with writing a custom constructor in this case. One can use non-static data member initializers, another new C++11 feature that we have reviewed before, to initialize <code>x</code>. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">using</span> <span class="n">A</span><span class="o">::</span><span class="n">A</span><span class="p">;</span> <span class="c1">// Inheriting A&#39;s constructor to create B::B(int){}</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// Initializing &quot;x&quot; using non-static field initializer.</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>See Also</h3>
+
+<ul>
+<li><a href="/delegating-constructors">Delegating constructors in C++11</a></li>
+<li><a href="/member-initializers/">Non-Static Data Member Initializers</a></li>
+</ul>
+
+
+<h3>References</h3>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2540.htm">N2540 &ndash; Inheriting Constructors (revision 5)</a></li>
+</ul>
+
 </div>
   
   
@@ -217,6 +351,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/smart-getopt/">Smart Command Line Options Parsing</a>
+    
     <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
     <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
@@ -235,8 +371,6 @@
     
     <a class="list-group-item " href="/static-assert/">Static Assert</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
-    
   </div>
 </section>
 <section class="panel panel-default">
@@ -247,7 +381,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">25</span>
+        <span class="badge">26</span>
         C++
       </a>
     
@@ -259,7 +393,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">33</span>
+        <span class="badge">34</span>
         Tech
       </a>
     

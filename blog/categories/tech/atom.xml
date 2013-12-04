@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Tech | Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/blog/categories/tech/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-03T18:57:30-05:00</updated>
+  <updated>2013-12-03T23:02:53-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,278 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Smart Command Line Options Parsing]]></title>
+    <link href="http://741MHz.com/smart-getopt/"/>
+    <updated>2013-12-03T08:47:00-05:00</updated>
+    <id>http://741MHz.com/smart-getopt</id>
+    <content type="html"><![CDATA[<p>A countless number of command line programs have been written since the invention of computers. Most of them parse command line options and spew out errors and usage messages if a user enters an unknown option or simply makes a typo. Examples are not far to seek. Make a typo trying to commit your changes into SVN repository and <a href="http://en.wikipedia.org/wiki/Apache_Subversion">Subversion</a> would bail out with errors:</p>
+
+<p><code>bash
+$ svn commir
+Unknown command: 'commir'
+Type 'svn help' for usage.
+</code></p>
+
+<p>There are command line tools that are standing out among others, impress with their intelligence and deliver unforgettable user experience.</p>
+
+<p>One of them is <a href="http://git-scm.com/">Git</a>. If it encounters an unknown option, it can analyze it, guess what user meant and suggest correct options:</p>
+
+<p>```bash
+$ git commir
+git: &lsquo;commir&rsquo; is not a git command. See &lsquo;git &mdash;help&rsquo;.</p>
+
+<p>Did you mean this?</p>
+
+<pre><code>commit
+</code></pre>
+
+<p>```</p>
+
+<p>To see this kind of feature in a command line tool is a pleasant surprise and could catch user’s attention. But if we take one step back and try to reckon programs with similar features, there will be a lot. Any decent word processors would have spell-checking feature that not only can detect mistakes but also suggest a correct spelling. Proofreading tools. Search engines often guess what we are looking for as well.</p>
+
+<p><img src="/images/levenshtein-getopt/kute.png"></p>
+
+<p>So what kind of sorcery is this?</p>
+
+<h2>String Metrics</h2>
+
+<p>All of the similar algorithms are based on string metric algorithms that measure similarity or dissimilarity between two strings for <a href="http://en.wikipedia.org/wiki/Approximate_string_matching">approximate matching</a> or comparison and in <a href="http://en.wikipedia.org/wiki/Approximate_string_matching">fuzzy string searching</a>. The similarity or dissimilarity between two strings of text is commonly known as string distance.</p>
+
+<p>There are <a href="http://en.wikipedia.org/wiki/String_metrics">a number of different string metrics algorithms</a>. The most widely known string metric is the Levenshtein Distance, also known as Edit Distance.</p>
+
+<p>Informally, the Levenshtein distance between two words is the minimum number of single-character edits (insertion, deletion, substitution) required to change one word into the other. One could apply this algorithm to determine which one of the possible words is the most similar by comparing a number of character edits it requires to transform one word into another.</p>
+
+<h2>How Git Does This</h2>
+
+<p>Since <a href="http://git-scm.com">Git</a> is <a href="http://git-scm.com/about/free-and-open-source">free and open source</a>, we can check how it does the command line argument suggestion, and what algorithm is being used for that.</p>
+
+<p>The Git source code can be downloaded or viewed online at <a href="https://github.com/git/git">https://github.com/git/git</a>. All of the command line options handling is implemented in <a href="https://github.com/git/git/blob/master/help.c">help.c</a> file, and the suggestion is being made by <code>help_unknown_cmd()</code> function on line 293.</p>
+
+<p>After quickly grasping through the code, it turns out that Git is using a <a href="http://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance">Damerau–Levenshtein distance algorithm</a> to calculate similarities between an unknown command and a list of supported commands. The implementation of this algorithm consists of two small files &ndash; <a href="https://github.com/git/git/blob/master/levenshtein.h">levenshtein.h</a> and <a href="https://github.com/git/git/blob/master/levenshtein.c">levenshtein.c</a>.</p>
+
+<h2>Use It In Your Program</h2>
+
+<p>To see how hard it would be to implement something similar, we have decided to borrow the algorithm implementation and use it to implement a simple command line tool in C++.</p>
+
+<p>The basic idea is to accept command line options from a user and function that corresponds to a command name. In case the command name is unknown, use Damerau-Levenshtein algorithm and compare the unknown command to a list of supported ones. The algorithm returns an integer number that is a string distance. The bigger it is, less similar two strings are. Therefore, after comparing all of the strings, we simply store a result in <code>std::map</code> and take the first element as the most likely command user meant to type, but didn’t quite get it right.</p>
+
+<p>Since we are more focused on C++ rather than C, the first is to transform levenshtein.c into a C++ code (alternatively, a <a href="http://www.parashift.com/c++-faq/mixing-c-and-cpp.html">mixing of C and C++</a> code could have been used) and get rid of Git-specific <code>xmalloc()</code> function. Here are the changes:</p>
+
+<p>```diff
+&mdash;&ndash; ../git/levenshtein.c    2013-12-03 19:09:52.000000000 -0500
++++ levenshtein.cc  2013-12-03 19:49:40.000000000 -0500
+@@ -1,5 +1,6 @@
+&ndash;#include &ldquo;cache.h&rdquo;
+&ndash;#include &ldquo;levenshtein.h&rdquo;
++#include &ldquo;levenshtein.hh&rdquo;
++#include <cstdlib> // for malloc and free
++#include <cstring> // for strlen</p>
+
+<p> /*
+  * This function implements the Damerau-Levenshtein algorithm to
+@@ -42,9 +43,9 @@</p>
+
+<pre><code>    int w, int s, int a, int d)
+</code></pre>
+
+<p> {</p>
+
+<pre><code>int len1 = strlen(string1), len2 = strlen(string2);
+</code></pre>
+
+<ul>
+<li>int *row0 = xmalloc(sizeof(int) * (len2 + 1));</li>
+<li>int *row1 = xmalloc(sizeof(int) * (len2 + 1));</li>
+<li>int *row2 = xmalloc(sizeof(int) * (len2 + 1));</li>
+<li>int <em>row0 = (int</em>)malloc(sizeof(int) * (len2 + 1));</li>
+<li>int <em>row1 = (int</em>)malloc(sizeof(int) * (len2 + 1));</li>
+<li><p>int <em>row2 = (int</em>)malloc(sizeof(int) * (len2 + 1));
+int i, j;</p>
+
+<p>for (j = 0; j &lt;= len2; j++)
+```</p></li>
+</ul>
+
+
+<p>And a simple command line tool that uses Git&rsquo;s <code>levenshtein()</code> function:</p>
+
+<p>```c++
+//
+// An example of using Damerau-Levenshtein algorithm
+// to suggest a correct command if user enters something
+// that we don&rsquo;t know how to handle.
+//</p>
+
+<h1>include <cstdlib></h1>
+
+<h1>include <string></h1>
+
+<h1>include <map></h1>
+
+<h1>include &lt;unordered_map></h1>
+
+<h1>include <iostream></h1>
+
+<h1>include &ldquo;levenshtein.h&rdquo;</h1>
+
+<p>// Define command handler function type.
+static void on_help() {</p>
+
+<pre><code>std::cout &lt;&lt; "Sure thing! What can I do for you?\n";
+</code></pre>
+
+<p>}</p>
+
+<p>static void on_version() {</p>
+
+<pre><code>std::cout &lt;&lt; "I am not versioned, sorry.\n";
+</code></pre>
+
+<p>}</p>
+
+<p>static void on_verbose() {</p>
+
+<pre><code>std::cout &lt;&lt; "If you need verbose, go read Twitter!\n";
+</code></pre>
+
+<p>}</p>
+
+<p>static void on_say() {</p>
+
+<pre><code>std::cout &lt;&lt; "Oops, my speech speed synthesizer is broken :(\n";
+</code></pre>
+
+<p>}</p>
+
+<p>// This function does not need an introduction.
+int main(int argc, const char *argv[]) {</p>
+
+<pre><code>// Check that we have at least one argument.
+if (argc &lt; 2) {
+    std::cerr &lt;&lt; "Please enter a command\n";
+    return EXIT_FAILURE;
+}
+
+// Deduce command from command line.
+std::string cmd{argv[1]};
+
+// Create a list of commands.
+const std::unordered_map&lt;
+    std::string,
+    std::function&lt;void()&gt;
+&gt; cmd_map{
+    { "help", &amp;on_help },
+    { "say", &amp;on_say },
+    { "version", &amp;on_version },
+    { "verbose", &amp;on_verbose }
+};
+
+// Find a command.
+auto cmd_it = cmd_map.find(cmd);
+if (cmd_it != cmd_map.end()) {
+    // Command was found. Run the handler and exit.
+    (cmd_it-&gt;second)();
+    return EXIT_SUCCESS;
+}
+
+// If we get there, the command is unknown.
+// First, tell it to the user.
+std::cerr &lt;&lt; "Unknown command: " &lt;&lt; cmd &lt;&lt; '\n';
+
+// Use Damerau-Levenshtein algorithm to get similarity
+// score with all of the commands we support, then pick
+// the best few to suggest to the user.
+std::multimap&lt;
+    int /* Levenshtein distance, less is better. */,
+    std::string /* Supported command */
+&gt; dist;
+
+for (auto&amp; p : cmd_map) {
+    dist.emplace(
+        levenshtein(
+            cmd.c_str(), // Command entered by the user.
+            p.first.c_str(), // One of the supported commands.
+            0, // swap cost
+            2, // substitution cost
+            1, // insertion cost
+            3  // deletion cost
+        ),
+        p.first
+    );
+}
+
+// Take the first best guess (lowest distance = better match).
+// Suggest a list of commands with the same Levenshtein distance.
+// This can be tweaked to show more options, etc..
+if (!dist.empty()) {
+    auto best_score = dist.begin()-&gt;first;
+    std::cerr &lt;&lt; "Did you mean one of these?\n";
+    for (auto&amp; p : dist) {
+        if (p.first != best_score) {
+            // For more option, one could use something like
+            // `p.first - best_score &gt; N` where N is max.
+            // allowed difference.
+            break;
+        }
+        std::cout &lt;&lt; '\t' &lt;&lt; p.second &lt;&lt; '\n';
+    }
+}
+
+return EXIT_FAILURE;
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Compile two files into a binary using Clang:</p>
+
+<p><code>bash
+clang++ -Wall -Wextra -pedantic -std=c++11 -o test ./smart_help.cc
+</code></p>
+
+<p>The tool supports only three commands — &ldquo;help&rdquo;, &ldquo;version&rdquo;, &ldquo;verbose&rdquo; and &ldquo;say&rdquo;. Let&rsquo;s say user only types &ldquo;ver&rdquo;, in that case it correctly suggest two possible alternatives:</p>
+
+<p>```bash
+$ ./test ver
+Unknown command: ver
+Did you mean one of these?</p>
+
+<pre><code>verbose
+version
+</code></pre>
+
+<p>```</p>
+
+<p>It doesn&rsquo;t lose face when handling &ldquo;he&rdquo; and &ldquo;s&rdquo; as well:</p>
+
+<p>```
+$ ./test he
+Unknown command: he
+Did you mean one of these?</p>
+
+<pre><code>help
+</code></pre>
+
+<p>$ ./test s
+Unknown command: s
+Did you mean one of these?</p>
+
+<pre><code>say
+</code></pre>
+
+<p>```</p>
+
+<p>Of course, it is possible to tweak and tune this program further &ndash; do more error checking, play with different cost weights, do less or more aggressive guessing and so one.</p>
+
+<p>The main point is – it isn’t all that difficult to make your command line option parsing more intelligent and user friendly by using this or similar algorithms. A great <a href="http://en.wikipedia.org/wiki/User_experience">user experience</a> matters a lot.</p>
+
+<p>Maybe one day this would become a standard feature of option parsing libraries like <a href="http://www.boost.org/doc/libs/release/doc/html/program_options.html">Boost’s Program Options</a>, Python’s <a href="http://docs.python.org/2.7/library/argparse.html">argparse</a> and even GNU <a href="http://www.gnu.org/software/libc/manual/html_node/Getopt.html">getopt</a>.</p>
+
+<p>As always, thanks for reading!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Range-Based For Loop]]></title>
@@ -697,135 +969,6 @@ decltype(1 + 2) foo(A a, B b) {</p>
 <li><a href="http://en.cppreference.com/w/cpp/language/auto">&ldquo;auto&rdquo; specifier</a> @ cppreference.com</li>
 <li><a href="http://stackoverflow.com/questions/5563000/implicit-type-conversion-rules-in-c-operators">Implicit type conversion rules in C++ operators</a> via Stack Overflow</li>
 <li><a href="http://en.wikipedia.org/wiki/Typeof">Typeof keyword</a> @ Wikipedia</li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Type of Expression in C++]]></title>
-    <link href="http://741MHz.com/decltype/"/>
-    <updated>2013-11-11T00:37:00-05:00</updated>
-    <id>http://741MHz.com/decltype</id>
-    <content type="html"><![CDATA[<h3>The Problem</h3>
-
-<p>Those who program in C++ for a while must know how difficult it is sometimes to figure out a type of an expression, especially when in comes to <a href="http://en.wikipedia.org/wiki/Generic_programming">generic programming</a> using C++ templates. <a href="http://www.boost.org/doc/libs/release/doc/html/typeof.html">Boost.Typeof</a> library provides a great example where a simple expression using <a href="http://www.boost.org/doc/libs/release/doc/html/lambda.html">Boost.Lambda</a> that looks like this &ndash; <code>_1 &gt; 15 &amp;&amp; _2 &lt; 20</code> may returns an object of a complex type that can easily take a few dozen lines of code to describe, and may look like this:</p>
-
-<p>```c++
-lambda_functor&lt;</p>
-
-<pre><code>lambda_functor_base&lt;
-    logical_action&lt;and_action&gt;,
-    tuple&lt;
-        lambda_functor&lt;
-            lambda_functor_base&lt;
-                relational_action&lt;greater_action&gt;,
-                tuple&lt;
-                    lambda_functor&lt;placeholder&lt;1&gt; &gt;,
-                    int const
-                &gt;
-            &gt;
-        &gt;,
-        lambda_functor&lt;
-            lambda_functor_base&lt;
-                relational_action&lt;less_action&gt;,
-                tuple&lt;
-                    lambda_functor&lt;placeholder&lt;2&gt; &gt;,
-                    int const
-                &gt;
-            &gt;
-        &gt;
-    &gt;
-&gt;
-</code></pre>
-
-<blockquote><p>f = <em>1 > 15 &amp;&amp; </em>2 &lt; 20;
-```</p></blockquote>
-
-<p>In most cases programmers had to create more template functions and classes to have compiler deduct those types automatically. In some cases, this approach was creating unnecessary overhead and reduce maintainability of the code.</p>
-
-<h3>Typeof Solution</h3>
-
-<p>In the meantime, both GCC and EDG compilers have implemented a non-standard extension to C and C++ known as <code>typeof</code> operator. It worked extremely well for C, but there was a slight problem with C++ &ndash; the declared type of an expression deduced by <code>typeof</code> did not retain a reference if there was one. Consider the following example:</p>
-
-<p>```c++</p>
-
-<h1>include <cstdio></h1>
-
-<p>int main() {</p>
-
-<pre><code>int a = 1;
-int&amp; b = a;
-typeof(b) c = b; // expected c to be of type `int&amp;`, but it is just `int`.
-a = 2;
-printf("%d\n", c);
-</code></pre>
-
-<p>}
-```</p>
-
-<p>The above program outputs <code>1</code> and not <code>2</code>, which means that type of <code>c</code> is in fact <code>int</code> and not <code>int&amp;</code>.</p>
-
-<h3>Boost.Typeof</h3>
-
-<p>The first code snippet with a very long type is taken from a &ldquo;Motivation&rdquo; section of Boost.Typeof library. And you guessed it right &ndash; that library is aiming at solving the problem.</p>
-
-<p>The Boost.Typeof library was a great success, and it did solve a lot of problems. Unfortunately, it did not provide a uniform solution, and certainly did not solve all of the problem. But most importantly, it proved that core C++ language does not provide powerful enough facilities to have a uniform, generic solution to determine a type of an expression, which seemingly is such a simple thing to do.</p>
-
-<h3>On The Way Into C++ Standard</h3>
-
-<p>Both <code>typeof</code> keyword and <code>Boost.Typeof</code> libraries quickly became &ldquo;celebrities&rdquo; in the programming world, gaining a lot of traction, usages and ever growing fan club. And it became obvious that people need a real, uniform, standard and portable solution.</p>
-
-<p>In 2002, Bjarne Stroustrup observed that the reference-dropping semantics offered by the <code>typeof</code> operator provided by the GCC and EDG compilers could be problematic and suggested extending the C++ language with mechanisms for querying the type of an expression, and initializing objects without specifying the type.</p>
-
-<p>In other words, the <code>typeof</code> operator was suggested to become a part of core language standard with a semantical improvement for not dropping a &ldquo;reference&rdquo;.</p>
-
-<p>In 2008, Jaakko Järvi have found an issue with <code>decltype</code> &ndash; it was not possible to use it to form a qualified-id. The <code>typeof</code> suffered the same problem. For example, the following code would not compile:</p>
-
-<p>```c++</p>
-
-<h1>include <vector></h1>
-
-<p>int main() {</p>
-
-<pre><code>std::vector&lt;int&gt; v;
-typeof(v)::value_type i = 0;
-</code></pre>
-
-<p>}
-```</p>
-
-<p>This, and similar issues pertaining to the wording inhibiting the use of decltype in the declaration of a derived class and in a destructor call, were addressed by David Vandevoorde, and voted into the working paper in March 2010.</p>
-
-<h3>The Solution: C++11 decltype</h3>
-
-<p>As a result, C++ officially got a new keyword named <code>decltype</code> that is now a part of ISO/IEC 14882:2011 standard also known as C++11. It effectively obsoletes <code>Boost.Typeof</code> and replaces non-standard <code>typeof</code> keyword. Here is an example (<a href="http://en.wikipedia.org/wiki/Decltype">taken from Wikipedia</a>):</p>
-
-<p><code>c++
-const int&amp;&amp; foo();
-const int bar();
-int i;
-struct A { double x; };
-const A* a = new A();
-decltype(foo()) x1; // type is const int&amp;&amp;
-decltype(bar()) x2; // type is int
-decltype(i) x3; // type is int
-decltype(a-&gt;x) x4; // type is double
-decltype((a-&gt;x)) x5; // type is const double&amp;
-</code></p>
-
-<p>It can also be used inside structures, with declarations of derived classes, scope resolution operator and so on.</p>
-
-<p>Those who have sinned by using non-standard <code>typeof</code> or suffered from numerous inconveniences and limitations of <code>Boost.Typeof</code>, behold the new power of <code>decltype</code>. And enjoy!</p>
-
-<h3>References</h3>
-
-<ul>
-<li><a href="http://gcc.gnu.org/onlinedocs/gcc/Typeof.html">GCC Typeof &ndash; Referring to a Type with typeof</a></li>
-<li><a href="http://en.wikipedia.org/wiki/Decltype">Wikipedia article on <code>decltype</code></a></li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2343.pdf">N2343 Decltype: proposed wording</a></li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3276.pdf">N3276 Decltype and Call Expressions</a></li>
-<li><a href="http://www.edg.com/docs/edg_cpp.pdf">EDG C++ Front End (Internal Documentation)</a></li>
 </ul>
 
 ]]></content>

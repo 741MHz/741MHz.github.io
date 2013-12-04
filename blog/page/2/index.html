@@ -114,39 +114,100 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-17T13:00:00-05:00" pubdate data-updated="true">Nov 17<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-23T09:23:00-05:00" pubdate data-updated="true">Nov 23<span>rd</span>, 2013</time>
         
-           | <a href="/inheriting-constructors/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/inheriting-constructors/">Comments</a>
+           | <a href="/range-for/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/range-for/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/inheriting-constructors/">Inheriting Constructors in C++11</a></h1>
+      <h1 class="entry-title"><a href="/range-for/">Range-Based for Loop</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>We have previously reviewed a feature introduced in C++11 that allows a class to delegate work between multiple constructors constructors of a class, called &ldquo;<a href="/delegating-constructors">Delegating Constructors</a>&rdquo; that allows one constructor to call another:</p>
+  <div class="entry-content clearfix"><p>How do you write a &ldquo;for&rdquo; loop in C++? This could be done in many different ways. One could write it like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// ...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>&hellip; or like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">for</span> <span class="p">(</span><span class="n">iterator_type</span> <span class="n">it</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">data</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="o">++</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// ...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The most hand-crafted loops though usually looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">for</span> <span class="p">(</span><span class="n">iterator_type</span> <span class="n">it</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">eit</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">eit</span><span class="p">;</span> <span class="o">++</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">reference_type</span><span class="o">&amp;</span> <span class="n">value</span> <span class="o">=</span> <span class="o">*</span><span class="n">it</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// ...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And although professional C++ developers, after years of training their left cerebral hemisphere, quickly grasp any of the above variations of the loop, one cannot not agree that a syntax is a bit inefficient and hard to read, especially for novice developers. So why such a simple thing should be that complicated? Can we do this simpler?</p>
+
+<h2>Range-Based For Loop (Since C++11)</h2>
+
+<p>C++11 provides a new, more readable syntax for iterating over a range of values, which is called a &ldquo;range-based for&rdquo;. Its syntax is very simple:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">for</span> <span class="p">(</span><span class="n">range_declaration</span> <span class="o">:</span> <span class="n">range_expression</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">loop_statement</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For the above syntax, the compiler will produce code similar to the following:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">n</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">double</span> <span class="n">f</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">lround</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="p">{}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">__range</span> <span class="o">=</span> <span class="n">range_expression</span> <span class="p">;</span>
+</span><span class='line'><span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">__begin</span> <span class="o">=</span> <span class="n">begin_expr</span><span class="p">,</span> <span class="n">__end</span> <span class="o">=</span> <span class="n">end_expr</span><span class="p">;</span>  <span class="n">__begin</span> <span class="o">!=</span> <span class="n">__end</span><span class="p">;</span> <span class="o">++</span><span class="n">__begin</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">range_declaration</span> <span class="o">=</span> <span class="o">*</span><span class="n">__begin</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">loop_statement</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Although extremely useful in boosting efficiency, it does not solve the problem when programmer wants to create a derived class that has exactly the same set of constructor as its base class or classes. In which case programmers are forced to tediously duplicate constructors of the base class, for example:</p>
+<p>The generated code looks very similar to that of professionally hand-crafted for-loops. But it is a lot easier to both read and write. Let&rsquo;s go over a few code snippets demonstrating how to use this new for loop syntax.</p>
+
+<h2>Examples</h2>
+
+<p>A very simple iteration over a vector:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vec</span> <span class="p">{</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span> <span class="p">};</span>
+</span><span class='line'><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span> <span class="o">:</span> <span class="n">vec</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For more generic programming, using <a href="/c/auto">&ldquo;auto&rdquo; keyword</a> to let compiler automatically deduce the type is also possible:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -161,84 +222,40 @@
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">};</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;vector&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// Programmers are forced to define at least one</span>
-</span><span class='line'>    <span class="c1">// if not all of the following constructors:</span>
-</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">double</span> <span class="n">v</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">double</span> <span class="n">y</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">Range</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">print</span><span class="p">(</span><span class="k">const</span> <span class="n">Range</span><span class="o">&amp;</span> <span class="n">range</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">element</span> <span class="o">:</span> <span class="n">range</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Using &quot;auto&quot; with range-based for loop.</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">element</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vec</span> <span class="p">{</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span> <span class="p">};</span>
+</span><span class='line'>    <span class="n">print</span><span class="p">(</span><span class="n">vec</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>C++11 solves this problem by introducing constructor inheritance. In a derived class, programmers can write a single <code>using T::T;</code> statement that makes a derived class automatically inherit constructors of a base class. For example:</p>
+<p>The range-based for loop also works with plain arrays:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">using</span> <span class="n">A</span><span class="o">::</span><span class="n">A</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">const</span> <span class="kt">int</span> <span class="n">data</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span> <span class="p">};</span>
+</span><span class='line'><span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">v</span> <span class="o">:</span> <span class="n">data</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>How this works is obvious for utmost simple cases. It might not be as clear when multiple inheritance is involved. For those cases, inheriting constructors would only work if all but one base classes have default constructors. For example, the following would work:</p>
+<h3>Range-Based For With Custom Types</h3>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">C</span> <span class="o">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">using</span> <span class="n">B</span><span class="o">::</span><span class="n">B</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>One of the questions that is often raised is how to use this new syntax with custom types. There are two possible ways to do this.</p>
 
-
-<p>And will be an equivalent of the following hand-crafted constructor:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">C</span> <span class="o">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">C</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(),</span> <span class="n">B</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>But if <code>A</code> does not have default constructor (even if the signature is the same as <code>B</code>), it won&rsquo;t work, so the below code is ill-formed:</p>
+<p>The first is to make your custom class provide two member functions: <code>begin()</code> and <code>end()</code>. They should return beginning of the iterate-able range as well as its end, respectively (both should be of the same type). For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -251,21 +268,45 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">custom_container</span> <span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">begin</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">data_</span><span class="p">.</span><span class="n">c_str</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">end</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">data_</span><span class="p">.</span><span class="n">c_str</span><span class="p">()</span> <span class="o">+</span> <span class="n">data_</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">data_</span> <span class="o">=</span> <span class="s">&quot;Hello, Range-Based For!&quot;</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">B</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">C</span> <span class="o">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">using</span> <span class="n">B</span><span class="o">::</span><span class="n">B</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">custom_container</span> <span class="n">container</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">element</span> <span class="o">:</span> <span class="n">container</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">element</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>There is also another catch that programmers should be aware of. It is the same old problem as forgetting to initialize class fields:</p>
+<p>The second approach is to provide freestanding <code>begin()</code> and <code>end()</code> functions for a data type:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -275,18 +316,56 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">custom_container</span> <span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">data</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">data_</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">data_</span> <span class="o">=</span> <span class="s">&quot;Hello, Range-Based For!&quot;</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">using</span> <span class="n">A</span><span class="o">::</span><span class="n">A</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">begin</span><span class="p">(</span><span class="k">const</span> <span class="n">custom_container</span><span class="o">&amp;</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">c</span><span class="p">.</span><span class="n">data</span><span class="p">().</span><span class="n">c_str</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">end</span><span class="p">(</span><span class="k">const</span> <span class="n">custom_container</span><span class="o">&amp;</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">c</span><span class="p">.</span><span class="n">data</span><span class="p">().</span><span class="n">c_str</span><span class="p">()</span> <span class="o">+</span> <span class="n">c</span><span class="p">.</span><span class="n">data</span><span class="p">().</span><span class="n">size</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">custom_container</span> <span class="n">container</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">element</span> <span class="o">:</span> <span class="n">container</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">element</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>With the above code, class <code>B</code> introduces <code>B(int)</code> constructor through inheritance of <code>A</code>&rsquo;s constructor(s), but it leaves <code>x</code> uninitialized. This means that inherited constructors might be useless if we need to initialize POD types. But do not rush with writing a custom constructor in this case. One can use non-static data member initializers, another new C++11 feature that we have reviewed before, to initialize <code>x</code>. For example:</p>
+<p>Note that compiler will first look for member functions, then for free-standing functions. This is described in 6.5.4/1 of the C++ standard.</p>
+
+<h2>Old Style Still Apply</h2>
+
+<p>So can we switch to use a new range-based for loops everywhere? Where possible, it could simplify the code and theoretically even make it faster (only if optimizing compiler is way too silly and does not handle loop optimizations well). But in cases where we do need an iterator or perhaps some other loop type like <code>while</code>, the range-based for loop won&rsquo;t work. For example, the below loop cannot be substituted for a new one:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -295,30 +374,28 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">using</span> <span class="n">A</span><span class="o">::</span><span class="n">A</span><span class="p">;</span> <span class="c1">// Inheriting A&#39;s constructor to create B::B(int){}</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// Initializing &quot;x&quot; using non-static field initializer.</span>
-</span><span class='line'><span class="p">};</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">eit</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">end</span><span class="p">();</span>
+</span><span class='line'><span class="k">while</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">eit</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">++</span><span class="n">it</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>        <span class="n">it</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">it</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h3>See Also</h3>
+<h2>See Also</h2>
 
 <ul>
-<li><a href="/delegating-constructors">Delegating constructors in C++11</a></li>
-<li><a href="/member-initializers/">Non-Static Data Member Initializers</a></li>
+<li><a href="/auto-type">C++, Type Safety and Automatic Type Deduction With “auto” Keyword</a></li>
 </ul>
 
 
 <h3>References</h3>
 
 <ul>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2540.htm">N2540 &ndash; Inheriting Constructors (revision 5)</a></li>
+<li><a href="http://en.cppreference.com/w/cpp/language/range-for">Range-based for loop @ cppreference.com</a></li>
+<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2009/n2930.html">N2930 &ndash; Range-Based For Loop Wording (Without Concepts)</a></li>
 </ul>
 
 </div>
@@ -351,6 +428,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/smart-getopt/">Smart Command Line Options Parsing</a>
+    
     <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
     
     <a class="list-group-item " href="/inheriting-constructors/">Inheriting Constructors in C++11</a>
@@ -369,8 +448,6 @@
     
     <a class="list-group-item " href="/static-assert/">Static Assert</a>
     
-    <a class="list-group-item " href="/read-it-aloud/">Read It Aloud to Yourself</a>
-    
   </div>
 </section>
 <section class="panel panel-default">
@@ -381,7 +458,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">25</span>
+        <span class="badge">26</span>
         C++
       </a>
     
@@ -393,7 +470,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">33</span>
+        <span class="badge">34</span>
         Tech
       </a>
     

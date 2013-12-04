@@ -4,7 +4,7 @@
   <title><![CDATA[Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-03T18:57:30-05:00</updated>
+  <updated>2013-12-03T23:02:53-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,388 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Smart Command Line Options Parsing]]></title>
+    <link href="http://741MHz.com/smart-getopt/"/>
+    <updated>2013-12-03T08:47:00-05:00</updated>
+    <id>http://741MHz.com/smart-getopt</id>
+    <content type="html"><![CDATA[<p>A countless number of command line programs have been written since the invention of computers. Most of them parse command line options and spew out errors and usage messages if a user enters an unknown option or simply makes a typo. Examples are not far to seek. Make a typo trying to commit your changes into SVN repository and <a href="http://en.wikipedia.org/wiki/Apache_Subversion">Subversion</a> would bail out with errors:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>svn commir
+</span><span class='line'>Unknown <span class="nb">command</span>: <span class="s1">&#39;commir&#39;</span>
+</span><span class='line'>Type <span class="s1">&#39;svn help&#39;</span> <span class="k">for </span>usage.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There are command line tools that are standing out among others, impress with their intelligence and deliver unforgettable user experience.</p>
+
+<p>One of them is <a href="http://git-scm.com/">Git</a>. If it encounters an unknown option, it can analyze it, guess what user meant and suggest correct options:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git commir
+</span><span class='line'>git: <span class="s1">&#39;commir&#39;</span> is not a git command. See <span class="s1">&#39;git --help&#39;</span>.
+</span><span class='line'>
+</span><span class='line'>Did you mean this?
+</span><span class='line'>  commit
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To see this kind of feature in a command line tool is a pleasant surprise and could catch user’s attention. But if we take one step back and try to reckon programs with similar features, there will be a lot. Any decent word processors would have spell-checking feature that not only can detect mistakes but also suggest a correct spelling. Proofreading tools. Search engines often guess what we are looking for as well.</p>
+
+<p><img src="http://741MHz.com/images/levenshtein-getopt/kute.png"></p>
+
+<p>So what kind of sorcery is this?</p>
+
+<h2>String Metrics</h2>
+
+<p>All of the similar algorithms are based on string metric algorithms that measure similarity or dissimilarity between two strings for <a href="http://en.wikipedia.org/wiki/Approximate_string_matching">approximate matching</a> or comparison and in <a href="http://en.wikipedia.org/wiki/Approximate_string_matching">fuzzy string searching</a>. The similarity or dissimilarity between two strings of text is commonly known as string distance.</p>
+
+<p>There are <a href="http://en.wikipedia.org/wiki/String_metrics">a number of different string metrics algorithms</a>. The most widely known string metric is the Levenshtein Distance, also known as Edit Distance.</p>
+
+<p>Informally, the Levenshtein distance between two words is the minimum number of single-character edits (insertion, deletion, substitution) required to change one word into the other. One could apply this algorithm to determine which one of the possible words is the most similar by comparing a number of character edits it requires to transform one word into another.</p>
+
+<h2>How Git Does This</h2>
+
+<p>Since <a href="http://git-scm.com">Git</a> is <a href="http://git-scm.com/about/free-and-open-source">free and open source</a>, we can check how it does the command line argument suggestion, and what algorithm is being used for that.</p>
+
+<p>The Git source code can be downloaded or viewed online at <a href="https://github.com/git/git">https://github.com/git/git</a>. All of the command line options handling is implemented in <a href="https://github.com/git/git/blob/master/help.c">help.c</a> file, and the suggestion is being made by <code>help_unknown_cmd()</code> function on line 293.</p>
+
+<p>After quickly grasping through the code, it turns out that Git is using a <a href="http://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance">Damerau–Levenshtein distance algorithm</a> to calculate similarities between an unknown command and a list of supported commands. The implementation of this algorithm consists of two small files &ndash; <a href="https://github.com/git/git/blob/master/levenshtein.h">levenshtein.h</a> and <a href="https://github.com/git/git/blob/master/levenshtein.c">levenshtein.c</a>.</p>
+
+<h2>Use It In Your Program</h2>
+
+<p>To see how hard it would be to implement something similar, we have decided to borrow the algorithm implementation and use it to implement a simple command line tool in C++.</p>
+
+<p>The basic idea is to accept command line options from a user and function that corresponds to a command name. In case the command name is unknown, use Damerau-Levenshtein algorithm and compare the unknown command to a list of supported ones. The algorithm returns an integer number that is a string distance. The bigger it is, less similar two strings are. Therefore, after comparing all of the strings, we simply store a result in <code>std::map</code> and take the first element as the most likely command user meant to type, but didn’t quite get it right.</p>
+
+<p>Since we are more focused on C++ rather than C, the first is to transform levenshtein.c into a C++ code (alternatively, a <a href="http://www.parashift.com/c++-faq/mixing-c-and-cpp.html">mixing of C and C++</a> code could have been used) and get rid of Git-specific <code>xmalloc()</code> function. Here are the changes:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'><span class="gd">--- ../git/levenshtein.c    2013-12-03 19:09:52.000000000 -0500</span>
+</span><span class='line'><span class="gi">+++ levenshtein.cc   2013-12-03 19:49:40.000000000 -0500</span>
+</span><span class='line'><span class="gu">@@ -1,5 +1,6 @@</span>
+</span><span class='line'><span class="gd">-#include &quot;cache.h&quot;</span>
+</span><span class='line'><span class="gd">-#include &quot;levenshtein.h&quot;</span>
+</span><span class='line'><span class="gi">+#include &quot;levenshtein.hh&quot;</span>
+</span><span class='line'><span class="gi">+#include &lt;cstdlib&gt; // for malloc and free</span>
+</span><span class='line'><span class="gi">+#include &lt;cstring&gt; // for strlen</span>
+</span><span class='line'>
+</span><span class='line'> /*
+</span><span class='line'>  * This function implements the Damerau-Levenshtein algorithm to
+</span><span class='line'><span class="gu">@@ -42,9 +43,9 @@</span>
+</span><span class='line'>      int w, int s, int a, int d)
+</span><span class='line'> {
+</span><span class='line'>  int len1 = strlen(string1), len2 = strlen(string2);
+</span><span class='line'><span class="gd">-    int *row0 = xmalloc(sizeof(int) * (len2 + 1));</span>
+</span><span class='line'><span class="gd">-    int *row1 = xmalloc(sizeof(int) * (len2 + 1));</span>
+</span><span class='line'><span class="gd">-    int *row2 = xmalloc(sizeof(int) * (len2 + 1));</span>
+</span><span class='line'><span class="gi">+    int *row0 = (int*)malloc(sizeof(int) * (len2 + 1));</span>
+</span><span class='line'><span class="gi">+    int *row1 = (int*)malloc(sizeof(int) * (len2 + 1));</span>
+</span><span class='line'><span class="gi">+    int *row2 = (int*)malloc(sizeof(int) * (len2 + 1));</span>
+</span><span class='line'>  int i, j;
+</span><span class='line'>
+</span><span class='line'>  for (j = 0; j &lt;= len2; j++)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And a simple command line tool that uses Git&rsquo;s <code>levenshtein()</code> function:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">//</span>
+</span><span class='line'><span class="c1">// An example of using Damerau-Levenshtein algorithm</span>
+</span><span class='line'><span class="c1">// to suggest a correct command if user enters something</span>
+</span><span class='line'><span class="c1">// that we don&#39;t know how to handle.</span>
+</span><span class='line'><span class="c1">//</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#include &lt;cstdlib&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;map&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;unordered_map&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &quot;levenshtein.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Define command handler function type.</span>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">on_help</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Sure thing! What can I do for you?</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">on_version</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;I am not versioned, sorry.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">on_verbose</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;If you need verbose, go read Twitter!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="n">on_say</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Oops, my speech speed synthesizer is broken :(</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// This function does not need an introduction.</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Check that we have at least one argument.</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Please enter a command</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Deduce command from command line.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">cmd</span><span class="p">{</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]};</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Create a list of commands.</span>
+</span><span class='line'>    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&gt;</span> <span class="n">cmd_map</span><span class="p">{</span>
+</span><span class='line'>        <span class="p">{</span> <span class="s">&quot;help&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">on_help</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="s">&quot;say&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">on_say</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="s">&quot;version&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">on_version</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="s">&quot;verbose&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">on_verbose</span> <span class="p">}</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Find a command.</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">cmd_it</span> <span class="o">=</span> <span class="n">cmd_map</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">cmd_it</span> <span class="o">!=</span> <span class="n">cmd_map</span><span class="p">.</span><span class="n">end</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// Command was found. Run the handler and exit.</span>
+</span><span class='line'>        <span class="p">(</span><span class="n">cmd_it</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">)();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// If we get there, the command is unknown.</span>
+</span><span class='line'>    <span class="c1">// First, tell it to the user.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Unknown command: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">cmd</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Use Damerau-Levenshtein algorithm to get similarity</span>
+</span><span class='line'>    <span class="c1">// score with all of the commands we support, then pick</span>
+</span><span class='line'>    <span class="c1">// the best few to suggest to the user.</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">multimap</span><span class="o">&lt;</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="cm">/* Levenshtein distance, less is better. */</span><span class="p">,</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="cm">/* Supported command */</span>
+</span><span class='line'>    <span class="o">&gt;</span> <span class="n">dist</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">p</span> <span class="o">:</span> <span class="n">cmd_map</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">dist</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span>
+</span><span class='line'>            <span class="n">levenshtein</span><span class="p">(</span>
+</span><span class='line'>                <span class="n">cmd</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="c1">// Command entered by the user.</span>
+</span><span class='line'>                <span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="c1">// One of the supported commands.</span>
+</span><span class='line'>                <span class="mi">0</span><span class="p">,</span> <span class="c1">// swap cost</span>
+</span><span class='line'>                <span class="mi">2</span><span class="p">,</span> <span class="c1">// substitution cost</span>
+</span><span class='line'>                <span class="mi">1</span><span class="p">,</span> <span class="c1">// insertion cost</span>
+</span><span class='line'>                <span class="mi">3</span>  <span class="c1">// deletion cost</span>
+</span><span class='line'>            <span class="p">),</span>
+</span><span class='line'>            <span class="n">p</span><span class="p">.</span><span class="n">first</span>
+</span><span class='line'>        <span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Take the first best guess (lowest distance = better match).</span>
+</span><span class='line'>    <span class="c1">// Suggest a list of commands with the same Levenshtein distance.</span>
+</span><span class='line'>    <span class="c1">// This can be tweaked to show more options, etc..</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">dist</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">auto</span> <span class="n">best_score</span> <span class="o">=</span> <span class="n">dist</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Did you mean one of these?</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">p</span> <span class="o">:</span> <span class="n">dist</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">first</span> <span class="o">!=</span> <span class="n">best_score</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="c1">// For more option, one could use something like</span>
+</span><span class='line'>                <span class="c1">// `p.first - best_score &gt; N` where N is max.</span>
+</span><span class='line'>                <span class="c1">// allowed difference.</span>
+</span><span class='line'>                <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\t&#39;</span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="p">.</span><span class="n">second</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">EXIT_FAILURE</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Compile two files into a binary using Clang:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>clang++ -Wall -Wextra -pedantic -std<span class="o">=</span>c++11 -o <span class="nb">test</span> ./smart_help.cc
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The tool supports only three commands — &ldquo;help&rdquo;, &ldquo;version&rdquo;, &ldquo;verbose&rdquo; and &ldquo;say&rdquo;. Let&rsquo;s say user only types &ldquo;ver&rdquo;, in that case it correctly suggest two possible alternatives:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>./test ver
+</span><span class='line'>Unknown <span class="nb">command</span>: ver
+</span><span class='line'>Did you mean one of these?
+</span><span class='line'>  verbose
+</span><span class='line'>  version
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It doesn&rsquo;t lose face when handling &ldquo;he&rdquo; and &ldquo;s&rdquo; as well:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>./test he
+</span><span class='line'>Unknown <span class="nb">command</span>: he
+</span><span class='line'>Did you mean one of these?
+</span><span class='line'>  <span class="nb">help</span>
+</span><span class='line'><span class="nv">$ </span>./test s
+</span><span class='line'>Unknown <span class="nb">command</span>: s
+</span><span class='line'>Did you mean one of these?
+</span><span class='line'>  say
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Of course, it is possible to tweak and tune this program further &ndash; do more error checking, play with different cost weights, do less or more aggressive guessing and so one.</p>
+
+<p>The main point is – it isn’t all that difficult to make your command line option parsing more intelligent and user friendly by using this or similar algorithms. A great <a href="http://en.wikipedia.org/wiki/User_experience">user experience</a> matters a lot.</p>
+
+<p>Maybe one day this would become a standard feature of option parsing libraries like <a href="http://www.boost.org/doc/libs/release/doc/html/program_options.html">Boost’s Program Options</a>, Python’s <a href="http://docs.python.org/2.7/library/argparse.html">argparse</a> and even GNU <a href="http://www.gnu.org/software/libc/manual/html_node/Getopt.html">getopt</a>.</p>
+
+<p>As always, thanks for reading!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Range-Based For Loop]]></title>
@@ -4261,174 +4643,6 @@ Semiconscious, I was going through my phone’s address book looking for at leas
 <p>The book <a href="http://www.lulu.com/shop/axel-schreiner/object-oriented-programming-with-ansi-c/paperback/product-17561597.html">can be purchased for $20 from Lulu</a> and it is worth every penny. You can also <a href="http://www.cs.rit.edu/~ats/books/ooc.pdf">download a free PDF version</a> from Mr. Schreiner’s website.</p>
 
 <p>Axel-Tobias Schreiner, Thank You!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Calculating FIX Message Checksum]]></title>
-    <link href="http://741MHz.com/fix-checksum/"/>
-    <updated>2013-03-16T00:00:00-04:00</updated>
-    <id>http://741MHz.com/fix-checksum</id>
-    <content type="html"><![CDATA[<p>A FIX message is a stream of bytes that consists of data represented by <a href="http://en.wikipedia.org/wiki/Attribute%E2%80%93value_pair">field-value (aka key-value) pairs</a>. Those field-value pairs are delimited by <a href="http://en.wikipedia.org/wiki/Start-of-Header#SOH">SOH character</a> — a special non-printable ASCII character with hex code <code>0x01</code>. For convenience, it is usually replaced with a vertical bar (<code>|</code>) for displaying purposes. Each field-value pair consists of the field number and its value delimited by equals sign (<code>=</code>). In the code, it is represented as an escape sequence — <code>'\1'</code> or <code>"\001"</code>. Here is an example of a FIX message:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>8=FIX.4.2|9=178|35=8|49=PHLX|56=PERS|52=20071123-05:30:00.000|11=ATOMNOCCC9990900|20=3|150=E|39=E|55=MSFT|167=CS|54=1|38=15|40=2|44=15|58=PHLX EQUITY TESTING|59=0|47=C|32=0|31=0|151=15|14=0|6=0|10=128|</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Every FIX message must always end with a checksum field followed by SOH symbol. The field number for a checksum is 10. Therefore, the checksum part in the above message is <code>10=128|</code>.</p>
-
-<p>There is one special requirement for the checksum field — it must always be three characters long. Not more and not less. It must be left-padded with <code>0</code> characters if needed. For example, if the checksum value is <code>13</code>, then it should appear as <code>013</code>. If it is only <code>1</code>, then it should read <code>001</code>. It can also be just <code>000</code>.</p>
-
-<p>The checksum of a FIX message is calculated by adding every byte of the message, excluding the checksum field-value pair, as unsigned binary number, discarding any overflow bits. Therefore, the range of possible values is [0-255], the same range of values that can be represented by unsigned 8-bit integer (<code>uint8_t</code>).</p>
-
-<p>The code for calculating FIX checksum is very simple — all it needs to do is add every byte of the input and store a result in <code>uint8_t</code>. Remember, the checksum field itself should not be used to calculate checksum. Here is an example in C:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">uint8_t</span> <span class="n">fix_checksum</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">uint8_t</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">uint8_t</span><span class="p">)(</span><span class="n">sum</span> <span class="o">+</span> <span class="p">(</span><span class="n">uint8_t</span><span class="p">)</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>If writing in C++, <a href="http://en.cppreference.com/w/cpp/algorithm/accumulate"><code>std::accumulate()</code></a> can be used to achieve the same. Here is an example:</p>
-
-<p>Once the checksum value is calculated, it must be added to the end of the message as an ASCII-encoded field-value pair with field number <code>10</code>, followed by SOH. As a remainder, the checksum value must always be three characters long, left padded with <code>0</code> if needed. The easiest way to convert the binary checksum value is this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)(</span><span class="n">checksum</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>To sum things up, here is a C++ example program that calculates the checksum and appends it to the end, forming a complete FIX message:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="c1">// --*-- C++11 --*--</span>
-</span><span class='line'><span class="c1">// Compile: clang++ -std=c++11 -stdlib=libc++ -Wall ./test.cpp</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#include &lt;cstdint&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;numeric&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="c1">// Initial message. The SOH is an escape sequence &#39;\001&#39;.</span>
-</span><span class='line'>    <span class="c1">// It does not include checksum field — the checksum must</span>
-</span><span class='line'>    <span class="c1">// be calculated.</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">msg</span> <span class="o">=</span>
-</span><span class='line'>        <span class="s">&quot;8=FIX.4.2</span><span class="se">\001</span><span class="s">9=178</span><span class="se">\001</span><span class="s">35=8</span><span class="se">\001</span><span class="s">49=PHLX</span><span class="se">\001</span><span class="s">56=PERS</span><span class="se">\001</span><span class="s">&quot;</span>
-</span><span class='line'>        <span class="s">&quot;52=20071123-05:30:00.000</span><span class="se">\001</span><span class="s">11=ATOMNOCCC9990900</span><span class="se">\001</span><span class="s">&quot;</span>
-</span><span class='line'>        <span class="s">&quot;20=3</span><span class="se">\001</span><span class="s">150=E</span><span class="se">\001</span><span class="s">39=E</span><span class="se">\001</span><span class="s">55=MSFT</span><span class="se">\001</span><span class="s">167=CS</span><span class="se">\001</span><span class="s">54=1</span><span class="se">\001</span><span class="s">38=15&quot;</span>
-</span><span class='line'>        <span class="s">&quot;</span><span class="se">\001</span><span class="s">40=2</span><span class="se">\001</span><span class="s">44=15</span><span class="se">\001</span><span class="s">58=PHLX EQUITY TESTING</span><span class="se">\001</span><span class="s">59=0</span><span class="se">\001</span><span class="s">&quot;</span>
-</span><span class='line'>        <span class="s">&quot;47=C</span><span class="se">\001</span><span class="s">32=0</span><span class="se">\001</span><span class="s">31=0</span><span class="se">\001</span><span class="s">151=15</span><span class="se">\001</span><span class="s">14=0</span><span class="se">\001</span><span class="s">6=0</span><span class="se">\001</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Calculate the checksum.</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">uint8_t</span> <span class="n">csum</span> <span class="o">=</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">accumulate</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">msg</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
-</span><span class='line'>                        <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">uint8_t</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Append the checksum field-value to the message.</span>
-</span><span class='line'>    <span class="c1">// First, add field number and field delimiter:</span>
-</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;10=&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Then add checksum converted to ASCII characters,</span>
-</span><span class='line'>    <span class="c1">// left-padded with zeroes:</span>
-</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">csum</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// And finally, complete the message by adding a final</span>
-</span><span class='line'>    <span class="c1">// SOH character:</span>
-</span><span class='line'>    <span class="n">msg</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="sc">&#39;\1&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Print the message to standard output.</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">msg</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Note that some terminals may not be able to display SOH characters. It is possible that it would get displayed as <code>^A</code>, some other sequence, or not displayed at all. In OS X «Terminal», the above program would display the following:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">std</span><span class="o">=</span><span class="n">c</span><span class="o">++</span><span class="mi">11</span> <span class="o">-</span><span class="n">stdlib</span><span class="o">=</span><span class="n">libc</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">pedantic</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span><span class="p">.</span><span class="n">cpp</span>
-</span><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span>
-</span><span class='line'><span class="mi">8</span><span class="o">=</span><span class="n">FIX</span><span class="mf">.4.29</span><span class="o">=</span><span class="mi">17835</span><span class="o">=</span><span class="mi">849</span><span class="o">=</span><span class="n">PHLX56</span><span class="o">=</span><span class="n">PERS52</span><span class="o">=</span><span class="mi">20071123</span><span class="o">-</span><span class="mo">05</span><span class="o">:</span><span class="mi">30</span><span class="o">:</span><span class="mf">00.00011</span><span class="o">=</span><span class="n">ATOMNOCCC999090020</span><span class="o">=</span><span class="mi">3150</span><span class="o">=</span><span class="n">E39</span><span class="o">=</span><span class="n">E55</span><span class="o">=</span><span class="n">MSFT167</span><span class="o">=</span><span class="n">CS54</span><span class="o">=</span><span class="mi">138</span><span class="o">=</span><span class="mi">1540</span><span class="o">=</span><span class="mi">244</span><span class="o">=</span><span class="mi">1558</span><span class="o">=</span><span class="n">PHLX</span> <span class="n">EQUITY</span> <span class="n">TESTING59</span><span class="o">=</span><span class="mo">047</span><span class="o">=</span><span class="n">C32</span><span class="o">=</span><span class="mo">031</span><span class="o">=</span><span class="mo">0151</span><span class="o">=</span><span class="mi">1514</span><span class="o">=</span><span class="mo">06</span><span class="o">=</span><span class="mo">010</span><span class="o">=</span><span class="mi">128</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So when printing a FIX message, it might be useful to replace all occurrences of <code>01</code> with something else, for example a vertical bar. It is also possible to do it with command line utility called <code>tr</code>. This does not require a code change:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">a</span><span class="p">.</span><span class="n">out</span> <span class="o">|</span> <span class="n">tr</span> <span class="sc">&#39;\1&#39;</span> <span class="sc">&#39;|&#39;</span>
-</span><span class='line'><span class="mi">8</span><span class="o">=</span><span class="n">FIX</span><span class="mf">.4.2</span><span class="o">|</span><span class="mi">9</span><span class="o">=</span><span class="mi">178</span><span class="o">|</span><span class="mi">35</span><span class="o">=</span><span class="mi">8</span><span class="o">|</span><span class="mi">49</span><span class="o">=</span><span class="n">PHLX</span><span class="o">|</span><span class="mi">56</span><span class="o">=</span><span class="n">PERS</span><span class="o">|</span><span class="mi">52</span><span class="o">=</span><span class="mi">20071123</span><span class="o">-</span><span class="mo">05</span><span class="o">:</span><span class="mi">30</span><span class="o">:</span><span class="mf">00.000</span><span class="o">|</span><span class="mi">11</span><span class="o">=</span><span class="n">ATOMNOCCC9990900</span><span class="o">|</span><span class="mi">20</span><span class="o">=</span><span class="mi">3</span><span class="o">|</span><span class="mi">150</span><span class="o">=</span><span class="n">E</span><span class="o">|</span><span class="mi">39</span><span class="o">=</span><span class="n">E</span><span class="o">|</span><span class="mi">55</span><span class="o">=</span><span class="n">MSFT</span><span class="o">|</span><span class="mi">167</span><span class="o">=</span><span class="n">CS</span><span class="o">|</span><span class="mi">54</span><span class="o">=</span><span class="mi">1</span><span class="o">|</span><span class="mi">38</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">40</span><span class="o">=</span><span class="mi">2</span><span class="o">|</span><span class="mi">44</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">58</span><span class="o">=</span><span class="n">PHLX</span> <span class="n">EQUITY</span> <span class="n">TESTING</span><span class="o">|</span><span class="mi">59</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">47</span><span class="o">=</span><span class="n">C</span><span class="o">|</span><span class="mi">32</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">31</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">151</span><span class="o">=</span><span class="mi">15</span><span class="o">|</span><span class="mi">14</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">6</span><span class="o">=</span><span class="mi">0</span><span class="o">|</span><span class="mi">10</span><span class="o">=</span><span class="mi">128</span><span class="o">|</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>That is pretty much all you need to know to successfully calculate a FIX checksum. There is also one little detail that might come handy — checksums are meant to help verify data integrity and make sure that no part of the message got corrupted during transmission from one application to another. These days, FIX messages are transmitted using TCP/IP or UDP. Both TCP/IP and UDP protocols guarantee data integrity out of the box and therefore a FIX checksum doesn’t make a lot of sense. Given that calculating FIX checksums requires a lot of CPU resources and is even likely to be the bottleneck, make sure that exchange or broker, with which you intend to communicate using FIX Protocol, require a checksum. There are a number of technically wise brokers and exchanges out there that do not require you to provide the correct checksum. If that is the case, simply put <code>10=000|</code> at the end of every message.</p>
 ]]></content>
   </entry>
   
