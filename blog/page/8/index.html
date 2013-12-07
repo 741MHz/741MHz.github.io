@@ -117,41 +117,24 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-10T02:00:00-05:00" pubdate data-updated="true">Nov 10<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-10T10:10:00-05:00" pubdate data-updated="true">Nov 10<span>th</span>, 2013</time>
         
-           | <a href="/member-initializers/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/member-initializers/">Comments</a>
+           | <a href="/delegating-constructors/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/delegating-constructors/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/member-initializers/">Non-Static Data Member Initializers</a></h1>
+      <h1 class="entry-title"><a href="/delegating-constructors/">Delegating Constructors in C++11</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Non-static data member initialization is one of the new core language features introduced in C++11. It allows to provide an initial value for a field in class declaration.</p>
+  <div class="entry-content clearfix"><p>C++ has caught up with other popular object-oriented languages such as Scala, Java, C# and others when it comes to constructor delegation, a feature that is now supported as per 2011 core language specification of ISO C++.This solves a common problem with repetitive coding, which is tedious and fragile, that C++ programmers had to do in order to provide multiple class constructors.</p>
 
-<p>For a long time this feature existed in other object oriented languages. In Java, for instance, fields can be initialized like this:</p>
+<h3>The Problem</h3>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BedAndBreakfast</span> <span class="o">{</span>
-</span><span class='line'>    <span class="c1">// initialize to 10</span>
-</span><span class='line'>      <span class="kd">public</span> <span class="kt">int</span> <span class="n">capacity</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// initialize to false</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">full</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>But C++ programmers, to achieve the same thing, had to write a constructor:</p>
+<p>Below is an example of a class with multiple constructors written in old C++:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -160,21 +143,17 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">BedAndBreakfast</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="n">BedAndBreakfast</span><span class="p">()</span> <span class="o">:</span> <span class="n">capacity</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">full</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span> <span class="p">{}</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">n</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">double</span> <span class="n">f</span><span class="p">)</span> <span class="o">:</span> <span class="n">x</span><span class="p">(</span><span class="n">lround</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span> <span class="n">n</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="p">{</span> <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">capacity</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">private</span><span class="o">:</span>
-</span><span class='line'>    <span class="kt">bool</span> <span class="n">full</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The benefit of being able to specify an initial value along with a field&rsquo;s declaration becomes more apparent once we add more constructors. Consider the following class:</p>
+<p>As we can see, the initialization of member field <code>n</code> is the same in both constructors. To reduce the amount of duplicate code, the recommended way was to introduce a common initialization method called by different constructors, for example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -188,41 +167,70 @@
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span> <span class="o">:</span> <span class="n">x_</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">y_</span><span class="p">(</span><span class="n">x_</span> <span class="o">*</span> <span class="n">x_</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">()</span> <span class="o">:</span> <span class="n">x_</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">y_</span><span class="p">(</span><span class="n">x_</span> <span class="o">*</span> <span class="n">x_</span><span class="p">)</span> <span class="p">{}</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span> <span class="n">init</span><span class="p">(</span><span class="n">i</span><span class="p">);</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">double</span> <span class="n">f</span><span class="p">)</span> <span class="p">{</span> <span class="n">init</span><span class="p">(</span><span class="n">lround</span><span class="p">(</span><span class="n">f</span><span class="p">));</span> <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">get_x</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">x_</span><span class="p">;</span> <span class="p">}</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">get_y</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">y_</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">init</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">x</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">n</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">private</span><span class="o">:</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x_</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">y_</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The initialization of field <code>y_</code> is already duplicated twice, and this will only become less maintainable as more constructors are added.</p>
+<p>However, it was still undesirable the of redundant constructor body as well as initialization lists.</p>
 
-<h2>New C++ Syntax</h2>
-
-<p>This problem is addressed in C++11 by allowing non-static data members to be initialized along with a declaration. For example, the following syntax is allowed:</p>
+<p>As an aside, novice C++ programmers coming from different background frequently and mistakenly through they could call one constructor from another and wrote the following code that would compile, although it doesn&rsquo;t do what they expect:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">double</span> <span class="n">x</span> <span class="o">=</span> <span class="mf">1.23</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">z</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">n</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="p">{</span>  <span class="p">}</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">double</span> <span class="n">f</span><span class="p">)</span> <span class="p">{</span> <span class="n">A</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">lround</span><span class="p">(</span><span class="n">f</span><span class="p">));</span> <span class="p">}</span>
+</span><span class='line'>  
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>This also works well with multiple constructors. The class described above could now be simplified and made easier to maintain further down the road:</p>
+<h3>The Solution</h3>
+
+<p>C++11 allows that a constructor of a class type “A” may have an initializer list that invokes another constructor of the same type. Therefore, programmers can get rid of undesirable common initialization function and duplicate all at once by writing the code like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">n</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">double</span> <span class="n">f</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">lround</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Constructor delegation also work with more complicated cases &ndash; template constructors (in which case type deduction is performed as usual) and constructor function &ldquo;try&rdquo; blocks.</p>
+
+<h4>Destructor Gotcha</h4>
+
+<p>There is a potential pitfall when switching to constructor delegation. Before this new feature, the destructor of the class was never called shall constructor fail with an exception. So the old code that does not use RAII properly for some reasons may now fail.</p>
+
+<p>Consider the following code where class retains a pointer to an object and deletes in a destructor. An extra special care is taken to make sure there are no memory leaks &ndash; the pointer is &ldquo;released&rdquo; from <code>std::auto_ptr</code> at the very end of a constructor when it is clear that no exceptions will be thrown and destructor is guaranteed to be called after that:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -236,83 +244,306 @@
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
-</span><span class='line'><span class="k">public</span><span class="o">:</span>
-</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span> <span class="o">:</span> <span class="n">x_</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;memory&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdexcept&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cmath&gt;</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">get_x</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">x_</span><span class="p">;</span> <span class="p">}</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">get_y</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">y_</span><span class="p">;</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">private</span><span class="o">:</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x_</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">y_</span> <span class="o">=</span> <span class="n">x_</span> <span class="o">*</span> <span class="n">x_</span><span class="p">;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">P1</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">P1</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;P1::P1()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">P1</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;P1::~P1()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
 </span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>It is also possible to have more complex initialization. For example, calling a static function:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">get_default_value</span><span class="p">();</span> <span class="c1">// OK</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="k">static</span> <span class="kt">int</span> <span class="n">get_default_value</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">P2</span> <span class="o">:</span> <span class="n">P1</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">P2</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;P2::P2()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">P2</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;P2::~P2()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">do_p2_specific_work</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="p">();</span>
 </span><span class='line'>    <span class="p">}</span>
 </span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Or even a method:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="n">init_y</span><span class="p">();</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">init_y</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">auto_ptr</span><span class="o">&lt;</span><span class="n">P1</span><span class="o">&gt;</span> <span class="n">ptr</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">:</span> <span class="n">p</span><span class="p">(</span><span class="n">ptr</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="c1">// Store a pointer</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;A::A(int)&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">init</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// Release a pointer only if &quot;init()&quot; did not throw.</span>
+</span><span class='line'>        <span class="c1">// From this point, destructor shall take care of memory cleanup.</span>
+</span><span class='line'>        <span class="n">ptr</span><span class="p">.</span><span class="n">release</span><span class="p">();</span>
 </span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">double</span> <span class="n">f</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">auto_ptr</span><span class="o">&lt;</span><span class="n">P2</span><span class="o">&gt;</span> <span class="n">ptr</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">:</span> <span class="n">p</span><span class="p">(</span><span class="n">ptr</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="c1">// Store a pointer</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;A::A(double)&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">init</span><span class="p">(</span><span class="n">lround</span><span class="p">(</span><span class="n">f</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">ptr</span><span class="o">-&gt;</span><span class="n">do_p2_specific_work</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// Release a pointer only if &quot;init()&quot; did not throw.</span>
+</span><span class='line'>        <span class="c1">// From this point, destructor shall take care of memory cleanup.</span>
+</span><span class='line'>        <span class="n">ptr</span><span class="p">.</span><span class="n">release</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;A::~A()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">delete</span> <span class="n">p</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">init</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">x</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">n</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">P1</span><span class="o">*</span> <span class="n">p</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Somewhat tricky part here is to remember that fields of a class are always initialized in the order of their declaration. If the constructor does not specify a value to initialize a field, the default initialization is used, which in the above example is a value specified along with a declaration of the field. And any constructor of the class can initialize any member with a different value, possibly using members that has been initialized already, and/or affect the initialization of members that would use previously initialized fields.</p>
-
-<p>Interestingly enough, C# does not allow to reference fields of the same class in instance fields initialization and the following C# code would be ill-formed:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">y</span> <span class="p">=</span> <span class="n">x</span> <span class="p">+</span> <span class="m">1</span><span class="p">;</span> <span class="c1">// Error, reference to instance member of this</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">auto_ptr</span><span class="o">&lt;</span><span class="n">P2</span><span class="o">&gt;</span> <span class="n">p</span><span class="p">(</span><span class="k">new</span> <span class="n">P2</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">A</span> <span class="n">a2</span><span class="p">(</span><span class="mf">7.5</span><span class="p">,</span> <span class="n">p</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h2>References</h2>
+<p>When ran, the program would produce the following output:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">P1</span><span class="o">::</span><span class="n">P1</span><span class="p">()</span>
+</span><span class='line'><span class="n">P2</span><span class="o">::</span><span class="n">P2</span><span class="p">()</span>
+</span><span class='line'><span class="n">A</span><span class="o">::</span><span class="n">A</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span>
+</span><span class='line'><span class="n">P2</span><span class="o">::~</span><span class="n">P2</span><span class="p">()</span>
+</span><span class='line'><span class="n">P1</span><span class="o">::~</span><span class="n">P1</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This works because if constructor threw an exception and A&rsquo;s destructor did not run, thus leaving <code>std::auto_ptr</code>object alone to delete a pointer.</p>
+
+<p>This might no longer be the case if using delegating constructors. If not careful, programmers might mistakenly improve the code as following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;memory&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdexcept&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cmath&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">P1</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">P1</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;P1::P1()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">P1</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;P1::~P1()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">P2</span> <span class="o">:</span> <span class="n">P1</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">P2</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;P2::P2()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">P2</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;P2::~P2()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="n">do_p2_specific_work</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">P1</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="o">:</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">n</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">p</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">P1</span><span class="o">&gt;</span> <span class="n">ptr</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">ptr</span><span class="p">.</span><span class="n">get</span><span class="p">())</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;A::A(int)&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">ptr</span><span class="p">.</span><span class="n">release</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">double</span> <span class="n">f</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">P2</span><span class="o">&gt;</span> <span class="n">ptr</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">lround</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">ptr</span><span class="p">.</span><span class="n">get</span><span class="p">())</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;A::A(double)&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">ptr</span><span class="o">-&gt;</span><span class="n">do_p2_specific_work</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">ptr</span><span class="p">.</span><span class="n">release</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;A::~A()&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">delete</span> <span class="n">p</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">P1</span><span class="o">*</span> <span class="n">p</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">A</span> <span class="n">a2</span><span class="p">(</span><span class="mf">7.5</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">P2</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">P2</span><span class="p">));</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This, however, would trigger undefined behavior because A&rsquo;s constructor that takes &ldquo;double&rdquo; (delegating constructor) delegated the object construction to another constructor that takes &ldquo;int&rdquo; (target constructor). So when <code>do_p2_specific_work()</code> method threw an exception in a delegating constructor, a destructor is still called because a target constructor has finished successfully. As a result, such a faulty program would try to delete an instance of <code>P2</code> object twice (and runtime would hopefully abort the program):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">P1</span><span class="o">::</span><span class="n">P1</span><span class="p">()</span>
+</span><span class='line'><span class="n">P2</span><span class="o">::</span><span class="n">P2</span><span class="p">()</span>
+</span><span class='line'><span class="n">A</span><span class="o">::</span><span class="n">A</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span>
+</span><span class='line'><span class="n">A</span><span class="o">::~</span><span class="n">A</span><span class="p">()</span>
+</span><span class='line'><span class="n">P2</span><span class="o">::~</span><span class="n">P2</span><span class="p">()</span>
+</span><span class='line'><span class="n">P1</span><span class="o">::~</span><span class="n">P1</span><span class="p">()</span>
+</span><span class='line'><span class="n">P1</span><span class="o">::~</span><span class="n">P1</span><span class="p">()</span>
+</span><span class='line'><span class="n">test</span><span class="p">(</span><span class="mi">5111</span><span class="p">,</span><span class="mh">0x7fff76df6310</span><span class="p">)</span> <span class="nl">malloc:</span> <span class="o">***</span> <span class="n">error</span> <span class="k">for</span> <span class="n">object</span> <span class="mh">0x7ffc98c039c0</span><span class="o">:</span> <span class="n">pointer</span> <span class="n">being</span> <span class="n">freed</span> <span class="n">was</span> <span class="n">not</span> <span class="n">allocated</span>
+</span><span class='line'><span class="o">***</span> <span class="n">set</span> <span class="n">a</span> <span class="n">breakpoint</span> <span class="n">in</span> <span class="n">malloc_error_break</span> <span class="n">to</span> <span class="n">debug</span>
+</span><span class='line'><span class="n">Abort</span> <span class="nl">trap:</span> <span class="mi">6</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In order to avoid this and similar problems, programmers must follow two rules:</p>
 
 <ul>
-<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2008/n2756.htm">N2756: Non-static data member initializers</a> by Michael Spertus and Bill Seymour</li>
-<li><a href="http://docs.oracle.com/javase/tutorial/java/javaOO/initial.html">Java: Initializing Fields</a></li>
-<li><a href="http://msdn.microsoft.com/en-us/library/aa645759(v=vs.71).aspx">C# Instance field initialization</a></li>
-<li><a href="http://en.cppreference.com/w/cpp/language/data_members">Non-static Data Members</a> by <a href="cppreference.com">cppreference.com</a></li>
+<li>Always initialize POD types, especially pointers, in a utmost base constructor(s) so that destructor does not accidentally access uninitialized values.</li>
+<li>Try to avoid using raw pointers and rely on RAII to properly handle resources.</li>
+</ul>
+
+
+<h3>See Also</h3>
+
+<ul>
+<li><a href="/inheriting-constructors/">Inheriting constructors in C++11</a></li>
+</ul>
+
+
+<h3>References</h3>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1986.pdf">N1986</a> proposal for delegating constructors by Herb Sutter and Francis Glassborow.</li>
+<li><a href="http://codemonkeyism.com/top-5-things-to-know-about-constructors-in-scala/">Top 5 Things to Know About Constructors in Scala</a> by Stephan Schmidt</li>
+<li><a href="http://thenewcpp.wordpress.com/2013/07/25/delegating-constructors/">Delegating constructors</a> by Jarryd Beck</li>
+<li><a href="http://stackoverflow.com/questions/4009013/call-one-constructor-from-another">C#: Call one constructor from another</a> via <a href="http://stackoverflow.com">StackOverflow.com</a></li>
 </ul>
 
 </div>
@@ -345,6 +576,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/coding-hungover/">Coding While Hungover</a>
+    
     <a class="list-group-item " href="/smart-getopt/">Smart Command Line Options Parsing</a>
     
     <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
@@ -362,8 +595,6 @@
     <a class="list-group-item " href="/member-initializers/">Non-Static Data Member Initializers</a>
     
     <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
-    
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
     
   </div>
 </section>
@@ -399,7 +630,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/life">
-        <span class="badge">2</span>
+        <span class="badge">3</span>
         Life
       </a>
     

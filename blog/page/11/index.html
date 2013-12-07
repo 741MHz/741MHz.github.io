@@ -119,47 +119,72 @@
 
 <span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-07T00:00:00-04:00" pubdate data-updated="true">May 7<span>th</span>, 2013</time>
         
-           | <a href="/read-it-aloud/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/read-it-aloud/">Comments</a>
+           | <a href="/static-assert/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/static-assert/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/read-it-aloud/">Read It Aloud to Yourself</a></h1>
+      <h1 class="entry-title"><a href="/static-assert/">Static Assert</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Once in a while I like to learn a new technology, a programming language or a trick to entertain myself and, hopefully, keep the mind open. To shift the perception on programming languages a little, I’ve decided to code some Ruby. The mind shift attempt was not successful this time. The language itself didn’t really impress me a lot — it is nice, well designed, has quite a community and a lot of stuff is built around it. But that’s about all there is in it for me. Almost. One of the books about Ruby that I stumbled upon is too damn good. It is the most entertaining and interesting read about programming language that I had in quite some time. It is called “<a href="http://mislav.uniqpath.com/poignant-guide/book/">Why’s (poignant) Guide to Ruby</a>” and is freely available online under the <a href="http://creativecommons.org/licenses/by-sa/2.5/">Attribution-ShareAlike license</a>. Here is an excerpt from a beautiful introduction to Ruby on Chapter 3:</p>
+  <div class="entry-content clearfix"><h2>Introduction</h2>
 
-<blockquote><p>My conscience won’t let me call Ruby a computer language. That would imply that the language works primarily on the computer’s terms. That the language is designed to accommodate the computer, first and foremost. That therefore, we, the coders, are foreigners, seeking citizenship in the computer’s locale. It’s the computer’s language and we are translators for the world.
-But what do you call the language when your brain begins to think in that language? When you start to use the language’s own words and colloquialisms to express yourself. Say, the computer can’t do that. How can it be the computer’s language? It is ours, we speak it natively!
-We can no longer truthfully call it a computer language. It is coderspeak. It is the language of our thoughts.
-Read the following aloud to yourself:
-5.times { print &ldquo;Odelay!&rdquo; }
-In English sentences, punctuation (such as periods, exclamations, parentheses) are silent. Punctuation adds meaning to words, helps give cues as to what the author intended by a sentence. So let’s read the above as: Five times print “Odelay!”</p></blockquote>
+<p>Assertions is one of they key features of almost every programming language that help programmers verify their assumptions made when writing the code.
+In C, assertion mechanism is provided by <a href="http://man7.org/linux/man-pages/man3/assert.3.html">assert()</a> preprocessor macro defined by <a href="http://en.wikipedia.org/wiki/Assert.h">assert.h</a> header file. C++ programs can also use it by including &ldquo;<a href="http://en.cppreference.com/w/cpp/header/cassert">cassert</a>&rdquo; header file. As an added benefit, assertions also serve as documentation of the internal details of the program enhancing the code maintainability. Here is a simple C++11 example:</p>
 
-<p>There were more examples that, if you read them aloud to yourself, totally make sense to any person:</p>
-
-<figure class='code'><figcaption><span>Exit unless the word restaurant includes the word aura:</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">exit</span> <span class="k">unless</span> <span class="s2">&quot;restaurant&quot;</span><span class="o">.</span><span class="n">include?</span> <span class="s2">&quot;aura&quot;</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cassert&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argc</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">assert</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nullptr</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p>GNU C library also provides a convenient function to check for error numbers called &ldquo;<a href="http://man7.org/linux/man-pages/man3/assert_perror.3.html">assert_perror()</a>&rdquo;.</p>
+
+<p>There are at least 71 more programming language that provide assertion mechanism. You can check them out along with examples at <a href="http://rosettacode.org/wiki/Assertions">http://rosettacode.org/wiki/Assertions</a></p>
+
+<h2>The Problem</h2>
+
+<p>The <code>assert()</code> macro in both C and C++ would only check for errors at <a href="http://en.wikipedia.org/wiki/Run_time_(program_lifecycle_phase">execution time</a>) when the program is actually running. By definition that implies that:</p>
+
+<ul>
+<li>It adds some overhead to the program execution (time, size or both).</li>
+<li>The assertion may not be exercised leaving a program undetected for a while (in the worse case, the program may pass a testing stage only to be discover by the end user later).</li>
+</ul>
 
 
-<figure class='code'><figcaption><span>With the words ‘toast’, ‘cheese’, and ‘wine’: take each food and print it capitalized:</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">[</span><span class="s1">&#39;toast&#39;</span><span class="p">,</span> <span class="s1">&#39;cheese&#39;</span><span class="p">,</span> <span class="s1">&#39;wine&#39;</span><span class="o">].</span><span class="n">each</span> <span class="p">{</span> <span class="o">|</span><span class="n">food</span><span class="o">|</span> <span class="nb">print</span> <span class="n">food</span><span class="o">.</span><span class="n">capitalize</span>  <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>The above two points sound like are necessary evil. But what if we could get rid of those tradeoffs?</p>
 
+<p>There are cases when there is enough information during <a href="http://en.wikipedia.org/wiki/Compile_time">compile-time</a> to detect a possible error. For example, macro definitions and <a href="http://msdn.microsoft.com/en-us/library/tby3xex3(v=vs.110">constant expressions</a>.aspx) are things that do not exist in compile-time.</p>
 
-<p>This is not to mention beautiful Cartoon Foxes:</p>
+<p>If only there was a way to check constant expressions in compile-time it would have been always preferred over runtime checking.</p>
 
-<p><img src="http://mislav.uniqpath.com/poignant-guide/images/the.foxes-3.png"></p>
+<p>Luckily, programmers have figured out a few different ways to do this.</p>
 
-<p>For a moment I thought it was pretty cool. But then I got back to earth. You see, programming in a human language is not fun at all and we all know it. There is a good non-programming life analogy to programming in a human language. It is called “The Law”. If you don’t believe me, go read your country’s tax, labor, criminal or any other law. You could read it as much as you want but chances are that you would either not understand it at all or misinterpret it unless you have a degree from a good law school. And those laws are written in proper English that you can read aloud to yourself. The point is that when it comes to precisely describing what should happen under what circumstances, there will be a domain specific language for it, and you will have to either master it yourself or hire a professional. The language itself doesn’t make things simpler and I would probably get around the law much better if it was written in a formal <a href="http://en.wikipedia.org/wiki/Turing_completeness">Turing-complete</a> language. And after all, I don’t really think like Ruby. Perhaps I’ve been doing low-level programming for too long now, I don’t know. It is definitely not the language of my thoughts. Not even close.</p>
+<h2>Workarounds</h2>
 
-<p>At any rate, Ruby is still a programming language that leaves a good impression as simple, fun and powerful tool that gets a lot of things done. I really enjoyed it during my crash course and thought it would be cool to write a C++ program in a way that you could read it aloud to your friends who are not programmers and have them understand what it does. Here is what I came up with for those first three Ruby examples:</p>
+<h3>Preprocessor Assertions</h3>
+
+<p>Both C and C++ preprocessors have <code>#error</code> directive that can be used to abort compilation with an error. It can be used to perform compile-time assertions.</p>
+
+<p>For example, consider a simple C program that reads data from into a buffer whose size is specified using a standard <a href="http://www.gnu.org/software/libc/manual/html_node/Controlling-Buffering.html"><code>BUFSIZ</code> macro</a> and the programmer wants to make sure that buffer is at least 1024 bytes large. The code using assertions might look like this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -173,22 +198,22 @@ In English sentences, punctuation (such as periods, exclamations, parentheses) a
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &quot;ruby.hh&quot;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;cassert&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// 5.times { print &quot;Odelay!&quot; }</span>
-</span><span class='line'>    <span class="mi">5</span><span class="n">_times</span> <span class="o">^</span> <span class="n">print</span><span class="p">(</span><span class="s">&quot;Odelay!&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="c1">// exit unless &quot;restaurant&quot;.include? &quot;aura&quot;</span>
-</span><span class='line'>    <span class="n">exit_unless</span> <span class="o">^</span> <span class="s">&quot;restaurant&quot;</span><span class="n">_includes</span><span class="p">(</span><span class="s">&quot;aura&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// Make sure we have at least 1024 bytes:</span>
+</span><span class='line'>    <span class="n">assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">);</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="c1">// [&#39;toast&#39;, &#39;cheese&#39;, &#39;wine&#39;].each { |food| print food.capitalize  }</span>
-</span><span class='line'>    <span class="n">each</span><span class="p">({</span> <span class="s">&quot;toast&quot;</span><span class="p">,</span> <span class="s">&quot;cheese&quot;</span><span class="p">,</span> <span class="s">&quot;wine&quot;</span> <span class="p">})</span> <span class="o">^</span> <span class="p">(</span><span class="n">print</span> <span class="o">|</span> <span class="n">capitalized</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>And as it often happens, C++ did not come with batteries included this time, so I had to come up with a little mess consisting of lambdas, function objects, user-defined literals and initializer lists in order for this mambo-jumbo to work. Most of those are part of C++11 and without them it would have been a lot worse. Here is my terrible code turning C++ into a crazy Ruby-like thing:</p>
+<p>Given that <code>BUFSIZ</code> is a macro, a better solution would be to use preprocessor and its <code>#error</code> directive to check for this at compile-time instead:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -202,214 +227,114 @@ In English sentences, punctuation (such as periods, exclamations, parentheses) a
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#ifndef RUBY_HH</span>
-</span><span class='line'><span class="cp">#define RUBY_HH</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="cp">#include &lt;cstdlib&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;initializer_list&gt;</span>
+</span><span class='line'><span class="cp">#if BUFSIZ &lt; 1024</span>
+</span><span class='line'><span class="cp"># error Buffer size is too small</span>
+</span><span class='line'><span class="cp">#endif</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">enum</span> <span class="n">fmt_flags</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">none</span><span class="p">,</span>
-</span><span class='line'>    <span class="n">capitalized</span>
-</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">Repeater</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">n</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">explicit</span> <span class="kr">inline</span> <span class="n">Repeater</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">n</span><span class="p">)</span> <span class="o">:</span> <span class="n">n</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">F</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="kt">void</span> <span class="k">operator</span> <span class="o">^</span> <span class="p">(</span><span class="k">const</span> <span class="n">F</span> <span class="o">&amp;</span><span class="n">f</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-</span><span class='line'>            <span class="n">f</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kr">inline</span> <span class="n">Repeater</span> <span class="k">operator</span><span class="s">&quot;&quot;</span> <span class="n">_times</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">Repeater</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
 </span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">printer</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">explicit</span> <span class="n">printer</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">)</span> <span class="o">:</span> <span class="n">s</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kr">inline</span> <span class="kt">void</span> <span class="k">operator</span><span class="p">()()</span> <span class="k">const</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">puts</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">fmt_printer</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">fmt_flags</span> <span class="n">f</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">explicit</span> <span class="n">fmt_printer</span><span class="p">(</span><span class="n">fmt_flags</span> <span class="n">f</span><span class="p">)</span> <span class="o">:</span> <span class="n">f</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kr">inline</span> <span class="kt">void</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">auto</span> <span class="n">s</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
-</span><span class='line'>        <span class="k">switch</span> <span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="k">case</span> <span class="nl">capitalized:</span>
-</span><span class='line'>              <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">c</span> <span class="o">:</span> <span class="n">s</span><span class="p">)</span>
-</span><span class='line'>                  <span class="n">c</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">toupper</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
-</span><span class='line'>          <span class="k">case</span> <span class="nl">none:</span>
-</span><span class='line'>              <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">puts</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">auto</span> <span class="n">print</span> <span class="o">=</span> <span class="p">[](</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">printer</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">StringIncludesCheck</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">haystack</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">explicit</span> <span class="n">StringIncludesCheck</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">haystack</span><span class="p">)</span>
-</span><span class='line'>        <span class="o">:</span> <span class="n">haystack</span><span class="p">(</span><span class="n">haystack</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kr">inline</span> <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">needle</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">strstr</span><span class="p">(</span><span class="n">haystack</span><span class="p">,</span> <span class="n">needle</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nullptr</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kr">inline</span> <span class="n">StringIncludesCheck</span> <span class="k">operator</span><span class="s">&quot;&quot;</span>
-</span><span class='line'><span class="n">_includes</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">haystack</span><span class="p">,</span> <span class="kt">long</span> <span class="kt">unsigned</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">StringIncludesCheck</span><span class="p">(</span><span class="n">haystack</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">ExiterUnless</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kr">inline</span> <span class="kt">void</span> <span class="k">operator</span> <span class="o">^</span> <span class="p">(</span><span class="kt">bool</span> <span class="n">v</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">v</span><span class="p">)</span>
-</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="n">ExiterUnless</span> <span class="n">exit_unless</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">EachFunc</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">elems</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">explicit</span> <span class="n">EachFunc</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">elems</span><span class="p">)</span> <span class="o">:</span> <span class="n">elems</span><span class="p">(</span><span class="n">elems</span><span class="p">)</span> <span class="p">{}</span>
-</span><span class='line'>    <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">F</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="kt">void</span> <span class="k">operator</span><span class="o">^</span><span class="p">(</span><span class="n">F</span> <span class="o">&amp;&amp;</span><span class="n">f</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">x</span> <span class="o">:</span> <span class="n">elems</span><span class="p">)</span>
-</span><span class='line'>            <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-</span><span class='line'><span class="n">EachFunc</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">each</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">elems</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">EachFunc</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">elems</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">fmt_printer</span> <span class="k">operator</span><span class="o">|</span><span class="p">(</span><span class="n">decltype</span><span class="p">(</span><span class="n">print</span><span class="p">)</span> <span class="n">printer</span><span class="p">,</span> <span class="n">fmt_flags</span> <span class="n">flags</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">fmt_printer</span><span class="p">(</span><span class="n">flags</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>When the buffer size defined by <code>BUFSIZ</code> is large enough, the program would compile as normal. But when it isn&rsquo;t, the compile would refuse to compile the program spitting out an error that might look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">g</span><span class="o">++</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">pedantic</span> <span class="p">.</span><span class="o">/</span><span class="n">assert_example</span><span class="p">.</span><span class="n">cc</span>
+</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">assert_example</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">4</span><span class="o">:</span><span class="mi">3</span><span class="o">:</span> <span class="nl">error:</span> <span class="n">Buffer</span> <span class="n">size</span> <span class="n">is</span> <span class="n">too</span> <span class="n">small</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Unfortunately, this mechanism can be used with binary operands only. In other words, something like this would not work by definition:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'><span class="cp">#if sizeof(mybuffer) &lt; 1024</span>
+</span><span class='line'><span class="cp"># error Buffer size is too small</span>
 </span><span class='line'><span class="cp">#endif</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Luckily, this kind of stuff is rarely needed in the real world C++ programming. Most folks simply code up a few classes, throw a few virtual functions on top and get the job done. But there are some good cases when such a mind-blowing complexity comes handy. <a href="http://www.boost.org/doc/libs/release/doc/html/xpressive.html">Xpressive</a> is an excellent examples — it is a template regular-expression library that pretty much builds regular expressions in compile-time. Just check this beautiful usage example:</p>
+<p>This is because preprocessor knows nothing about <code>sizeof</code> operator and cannot use the result of this expression to compare it against 1024.</p>
+
+<p>Of course, being limited to macros usage only is a big problem. And so people accepted the challenge and came up with another way to overcome this limitation&hellip;</p>
+
+<h3>Negative Buffer Size</h3>
+
+<p>C and C++ developers have been relying on the fact that it is impossible to have a buffer of negative size in order to implement compile time assertions. The mechanism is very simple &ndash; evaluate a constant expression and yield <code>1</code> if it evaluates as <code>true</code>, or <code>-1</code> otherwise, and use the result as size of the buffer. For example, let&rsquo;s say we want to make sure that size of the integer is exactly 4 bytes, we could write code like this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">typedef</span> <span class="kt">char</span> <span class="n">assert_int_size</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This approach, however, has its own limitations.</p>
+
+<p>In C, it can be used in both function and non-function scopes, but cannot be used inside structs and unions.</p>
+
+<p>Unlike C, C++ allows to have typedef statements, but there is another problem &ndash; if the static assertion is not dependent upon one or more template parameters, then the compiler is permitted to evaluate the static assertion at the point it is first seen, irrespective of whether the template is ever instantiated. In other words &ndash; it is hard to use with templates as programmers should always remember to use a template type in a condition.</p>
+
+<h2>Core Language Support</h2>
+
+<p>Over the years people have been working around issues associated with different workarounds to implement static assertions and realized that there is no way to implement them without a proper core language support.</p>
+
+<h3>C++</h3>
+
+<p>In 2004, Robert Klarer, Dr. John Maddock, Beman Dawes and Howard Hinnant wrote a proposal for adding a static assertion mechanism to the Core Language, known as <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a>.</p>
+
+<p>The proposal was accepted into the C++11 language specification and is implemented by the majority of C++ compilers today as &ldquo;<a href="http://en.cppreference.com/w/cpp/language/static_assert">static_assert()</a>&rdquo; keyword/function.</p>
+
+<p>It comes with no strings attached and accepts two parameters &ndash; a compile-time expressions that is evaluates to either <code>true</code> or <code>false</code> and a message. If the expression evaluates to <code>false</code>, the compilation is aborted and specified message is shown as an error message. <code>static_assert()</code> can be used in any scope, including templates. For example:</p>
+
+<figure class='code'><figcaption><span>Static Assert Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">static_assert</span><span class="p">(</span><span class="n">BUFSIZ</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&quot;Int size is not 4 bytes&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>C</h3>
+
+<p>In C, static assertions are introduced as part of <a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">ISO/IEC 9899:2011 standard</a>), informally known as C11. The mechanism is exactly the same as in C++, but the function name is <code>_Static_assert()</code>. For example:</p>
+
+<figure class='code'><figcaption><span>C11 Static Assert Example</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -431,46 +356,102 @@ In English sentences, punctuation (such as periods, exclamations, parentheses) a
 <span class='line-number'>20</span>
 <span class='line-number'>21</span>
 <span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;boost/xpressive/xpressive.hpp&gt;</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">xpressive</span><span class="p">;</span>
+</span><span class='line'><span class="n">_Static_assert</span><span class="p">(</span><span class="n">BUFSIZ</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span><span class="n">str</span> <span class="o">=</span> <span class="s">&quot;I was born on 5/30/1973 at 7am.&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="c1">// define some custom mark_tags with names more meaningful than s1, s2, etc.</span>
-</span><span class='line'>    <span class="n">mark_tag</span> <span class="n">day</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">month</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">year</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">delim</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+</span><span class='line'><span class="k">union</span> <span class="n">Bar</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">y</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="c1">// this regex finds a date</span>
-</span><span class='line'>    <span class="n">cregex</span> <span class="n">date</span> <span class="o">=</span> <span class="p">(</span><span class="n">month</span><span class="o">=</span> <span class="n">repeat</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_d</span><span class="p">))</span>           <span class="c1">// find the month ...</span>
-</span><span class='line'>               <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">delim</span><span class="o">=</span> <span class="p">(</span><span class="n">set</span><span class="o">=</span> <span class="sc">&#39;/&#39;</span><span class="p">,</span><span class="sc">&#39;-&#39;</span><span class="p">))</span>            <span class="c1">// followed by a delimiter ...</span>
-</span><span class='line'>               <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">day</span><span class="o">=</span>   <span class="n">repeat</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_d</span><span class="p">))</span> <span class="o">&gt;&gt;</span> <span class="n">delim</span>  <span class="c1">// and a day followed by the same delimiter ...</span>
-</span><span class='line'>               <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">year</span><span class="o">=</span>  <span class="n">repeat</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_d</span> <span class="o">&gt;&gt;</span> <span class="n">_d</span><span class="p">));</span>    <span class="c1">// and the year.</span>
+</span><span class='line'><span class="n">_Static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">union</span> <span class="n">Bar</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&quot;Size of int is not 4 bytes&quot;</span><span class="p">);</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="n">cmatch</span> <span class="n">what</span><span class="p">;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Allocate buffer on stack:</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">mybuffer</span><span class="p">[</span><span class="n">BUFSIZ</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">_Static_assert</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">mybuffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1024</span><span class="p">,</span> <span class="s">&quot;Buffer size is too small&quot;</span><span class="p">);</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span> <span class="n">regex_search</span><span class="p">(</span> <span class="n">str</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">date</span> <span class="p">)</span> <span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// whole match</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="n">day</span><span class="p">]</span>   <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// the day</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="n">month</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// the month</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>  <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// the year</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="n">delim</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// the delimiter</span>
-</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="c1">// Read data into &quot;mybuffer&quot;...</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Either way, I don’t think I can make a good Ruby programmer because I tend to write my C++ as if it was C with code-generation built into the compiler and stick to dataflow programming model rather than object-oriented one. And I love it. As my buddy often say, «Cobol programmer could write a Cobol program in pretty much any programming language.»</p>
+<p>It still cannot be used inside structs and unions, though.</p>
+
+<h3>Note on error messages</h3>
+
+<p>There is but one thing about <code>static_assert()</code> that can be pretty annoying &ndash; having to specify an error message even if it is an empty string. Of course, providing good error messages is the way to go. But there are a lot of cases when a condition used in assertion just does not need any extra words.</p>
+
+<p>The first solution that immediately comes to mind is to use the macro like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#define STATIC_ASSERT(Expr) static_assert((Expr), #Expr)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note, however, that it won&rsquo;t work well with expressions that contain a comma, like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Of course, programmers can enclose an expression in extra pair of <code>()</code>, but there is a better to do this, using <a href="http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html">variadic macros</a>. Here is a complete example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;type_traits&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define STATIC_ASSERT_IMPL(Expr) static_assert((Expr), #Expr)</span>
+</span><span class='line'><span class="cp">#define STATIC_ASSERT(...) STATIC_ASSERT_IMPL((__VA_ARGS__))</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">Foo</span> <span class="n">final</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">STATIC_ASSERT</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="http://www.robertgamble.net/2012/01/c11-static-assertions.html">C11 Static Assertions</a> by Robert Gamble</li>
+<li><a href="http://docs.oracle.com/javase/1.4.2/docs/guide/lang/assert.html">Java: Programming with assertions</a></li>
+<li><a href="http://www.boost.org/doc/libs/release/doc/html/boost_staticassert.html">Boost.StaticAssert library</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/dd293588.aspx">MSDN on &ldquo;static_assert()&rdquo;</a></li>
+<li><a href="http://www.drdobbs.com/compile-time-assertions/184401873">Compile-Time Assertions</a> by Ralf Holly</li>
+</ul>
+
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/C11_(C_standard_revision">C11 (C Standard Revision)</a>)</li>
+<li><a href="http://gcc.gnu.org/wiki/C11Status">GCC C11 Status</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1720.html">N1720</a></li>
+<li><a href="http://rosettacode.org/wiki/Assertions">Assertions</a> by RosettaCode.org</li>
+</ul>
+
 </div>
   
   
@@ -501,6 +482,8 @@ In English sentences, punctuation (such as periods, exclamations, parentheses) a
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/coding-hungover/">Coding While Hungover</a>
+    
     <a class="list-group-item " href="/smart-getopt/">Smart Command Line Options Parsing</a>
     
     <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
@@ -518,8 +501,6 @@ In English sentences, punctuation (such as periods, exclamations, parentheses) a
     <a class="list-group-item " href="/member-initializers/">Non-Static Data Member Initializers</a>
     
     <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
-    
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
     
   </div>
 </section>
@@ -555,7 +536,7 @@ In English sentences, punctuation (such as periods, exclamations, parentheses) a
     
     
     <a class="list-group-item " href="/blog/categories/life">
-        <span class="badge">2</span>
+        <span class="badge">3</span>
         Life
       </a>
     

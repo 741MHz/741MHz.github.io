@@ -117,46 +117,64 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-10T00:00:00-05:00" pubdate data-updated="true">Nov 10<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-10T02:00:00-05:00" pubdate data-updated="true">Nov 10<span>th</span>, 2013</time>
         
-           | <a href="/right-angle-brackets/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/right-angle-brackets/">Comments</a>
+           | <a href="/member-initializers/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/member-initializers/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/right-angle-brackets/">C++ and Right Angle Brackets</a></h1>
+      <h1 class="entry-title"><a href="/member-initializers/">Non-Static Data Member Initializers</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>When it comes to computers, both programming and science have a &ldquo;longest match&rdquo; principe also known as &ldquo;maximal munch&rdquo;. This principle states that when creating some construct, as much of the available input as possible should be consumed. Which in turn leads to the fact that lexical syntax of many programming languages requires that tokens be built from the maximum possible number of characters from the input stream.</p>
+  <div class="entry-content clearfix"><p>Non-static data member initialization is one of the new core language features introduced in C++11. It allows to provide an initial value for a field in class declaration.</p>
 
-<p>As a result of this, C++ has been suffering a minor, but persisting, annoying, and somewhat embarrassing problem that required programmers to avoid having two consecutive right angle brackets when writing templates. For example, the following code has been incorrect in C++ for decades:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">matrix</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This is because the longest token in this expression is <code>&gt;&gt;</code>, which is a token for <a href="http://en.wikipedia.org/wiki/Logical_shift">right logical shift</a>, and it has nothing to do with templates. So the compiler would give an error. For example:</p>
+<p>For a long time this feature existed in other object oriented languages. In Java, for instance, fields can be initialized like this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp"># g++ ./matrix.cc</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">matrix</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">21</span><span class="o">:</span><span class="mi">32</span><span class="o">:</span> <span class="nl">error:</span> <span class="n">a</span> <span class="n">space</span> <span class="n">is</span> <span class="n">required</span> <span class="n">between</span> <span class="n">consecutive</span> <span class="n">right</span> <span class="n">angle</span> <span class="n">brackets</span> <span class="p">(</span><span class="n">use</span> <span class="err">&#39;</span><span class="o">&gt;</span> <span class="o">&gt;</span><span class="err">&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">matrix</span><span class="p">;</span>
-</span><span class='line'>                               <span class="o">^~</span>
-</span><span class='line'>                               <span class="o">&gt;</span> <span class="o">&gt;</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BedAndBreakfast</span> <span class="o">{</span>
+</span><span class='line'>    <span class="c1">// initialize to 10</span>
+</span><span class='line'>      <span class="kd">public</span> <span class="kt">int</span> <span class="n">capacity</span> <span class="o">=</span> <span class="mi">10</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// initialize to false</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">full</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>And the programmers had to put a space between <code>&gt;</code> to fix it, like this: <code>std::vector&lt;std::vector&lt;int&gt; &gt; matrix;</code></p>
+<p>But C++ programmers, to achieve the same thing, had to write a constructor:</p>
 
-<p>This is not the only example of maximal munch drawbacks. Another notable case is unintended beginning of multi-line comment as in this program:</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">BedAndBreakfast</span> <span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="n">BedAndBreakfast</span><span class="p">()</span> <span class="o">:</span> <span class="n">capacity</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">full</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">capacity</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>    <span class="kt">bool</span> <span class="n">full</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The benefit of being able to specify an initial value along with a field&rsquo;s declaration becomes more apparent once we add more constructors. Consider the following class:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -170,41 +188,41 @@
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span> <span class="o">:</span> <span class="n">x_</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">y_</span><span class="p">(</span><span class="n">x_</span> <span class="o">*</span> <span class="n">x_</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">()</span> <span class="o">:</span> <span class="n">x_</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">y_</span><span class="p">(</span><span class="n">x_</span> <span class="o">*</span> <span class="n">x_</span><span class="p">)</span> <span class="p">{}</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">a</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="o">*</span><span class="n">z</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">get_x</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">x_</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">get_y</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">y_</span><span class="p">;</span> <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">z</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">y</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">x</span> <span class="o">=</span> <span class="n">y</span><span class="o">/*</span><span class="n">z</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x_</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">y_</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>For both humans and even a syntax highlighter it is clear that the intention of <code>x = y/*z</code> statement is to assigne <code>x</code> a result of dividing <code>y</code> by the value obtained through dereferencing <code>z</code> pointer. Yet <code>/*</code> is the longest match which corresponds to the beginning of the multiline comment, so the compiler would most likely fail:</p>
+<p>The initialization of field <code>y_</code> is already duplicated twice, and this will only become less maintainable as more constructors are added.</p>
+
+<h2>New C++ Syntax</h2>
+
+<p>This problem is addressed in C++11 by allowing non-static data members to be initialized along with a declaration. For example, the following syntax is allowed:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&gt;</span> <span class="n">g</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">example</span><span class="p">.</span><span class="n">cc</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">example</span><span class="p">.</span><span class="n">cc</span><span class="o">:</span><span class="mi">25</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span> <span class="n">error</span><span class="o">:</span> <span class="n">unterminated</span> <span class="o">/*</span> <span class="n">comment</span>
-</span><span class='line'>    <span class="n">x</span> <span class="o">=</span> <span class="n">y</span><span class="o">/*</span><span class="n">z</span><span class="p">;</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">foo</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">double</span> <span class="n">x</span> <span class="o">=</span> <span class="mf">1.23</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">z</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>For the good of all C++ developers, Daveed Vandevoorde from Edison Design Group has proposed three possible ways to fix C++ grammar to eliminate the problem of two consecutive right angle brackets in templates. One of them was chosen over other two and starting with C++11, programmers can now use <code>&gt;&gt;</code> in templates like this &ndash;  <code>std::vector&lt;std::vector&lt;std::vector&lt;int&gt;&gt;&gt;</code></p>
-
-<p>It is important that this change also breaks backwards compatibility which could affect some programs. Consider the following program:</p>
+<p>This also works well with multiple constructors. The class described above could now be simplified and made easier to maintain further down the road:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -218,42 +236,22 @@
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span> <span class="o">:</span> <span class="n">x_</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">template</span><span class="o">&lt;</span><span class="kt">int</span> <span class="n">I</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n">X</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">static</span> <span class="kt">int</span> <span class="k">const</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">get_x</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">x_</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">get_y</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">y_</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x_</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">y_</span> <span class="o">=</span> <span class="n">x_</span> <span class="o">*</span> <span class="n">x_</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">template</span><span class="o">&lt;&gt;</span> <span class="k">struct</span> <span class="n">X</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">typedef</span> <span class="kt">int</span> <span class="n">c</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n">Y</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">static</span> <span class="kt">int</span> <span class="k">const</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="k">const</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">Y</span><span class="o">&lt;</span><span class="n">X</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span> <span class="o">&gt;::</span><span class="n">c</span> <span class="o">&gt;::</span><span class="n">c</span><span class="o">&gt;::</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">Y</span><span class="o">&lt;</span><span class="n">X</span><span class="o">&lt;</span> <span class="mi">1</span><span class="o">&gt;&gt;::</span><span class="n">c</span> <span class="o">&gt;::</span><span class="n">c</span><span class="o">&gt;::</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>It is valid in both old and new C++. However, it would produce different results.</p>
-
-<p>This is because in the old C++ <code>&gt;&gt;</code> was treated as the right shift operator that shifted 1 by the value of global <code>c</code> as part of <code>1&gt;&gt;::c</code> expression. But with a new grammar introduced in C++ this is no longer the case and so the same program would print <code>0</code> and <code>3</code> in pre-C++11, and two zeroes in C++11.</p>
-
-<p>Some compiler developers, when started working on implementing new C++ standard, have put a special feature their compilers that would warn users about such cases. For example, clang compiler would issue a warning in case it runs into this code:</p>
+<p>It is also possible to have more complex initialization. For example, calling a static function:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -261,24 +259,60 @@
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="err">$</span> <span class="n">clang</span><span class="o">++</span> <span class="p">.</span><span class="o">/</span><span class="n">right_angle_brackets</span><span class="p">.</span><span class="n">cc</span> <span class="o">&amp;&amp;</span> <span class="p">.</span><span class="o">/</span><span class="n">test</span>
-</span><span class='line'><span class="p">.</span><span class="o">/</span><span class="n">right_angle_brackets</span><span class="p">.</span><span class="nl">cc:</span><span class="mi">19</span><span class="o">:</span><span class="mi">25</span><span class="o">:</span> <span class="nl">warning:</span> <span class="n">use</span> <span class="n">of</span> <span class="n">right</span><span class="o">-</span><span class="n">shift</span> <span class="k">operator</span> <span class="p">(</span><span class="err">&#39;</span><span class="o">&gt;&gt;</span><span class="err">&#39;</span><span class="p">)</span> <span class="n">in</span> <span class="k">template</span> <span class="n">argument</span> <span class="n">will</span> <span class="n">require</span>
-</span><span class='line'>      <span class="n">parentheses</span> <span class="n">in</span> <span class="n">C</span><span class="o">++</span><span class="mi">11</span> <span class="p">[</span><span class="o">-</span><span class="n">Wc</span><span class="o">++</span><span class="mi">11</span><span class="o">-</span><span class="n">compat</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">Y</span><span class="o">&lt;</span><span class="n">X</span><span class="o">&lt;</span> <span class="mi">1</span><span class="o">&gt;&gt;::</span><span class="n">c</span> <span class="o">&gt;::</span><span class="n">c</span><span class="o">&gt;::</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
-</span><span class='line'>                        <span class="o">^</span>
-</span><span class='line'>                       <span class="p">(</span>     <span class="p">)</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">get_default_value</span><span class="p">();</span> <span class="c1">// OK</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">static</span> <span class="kt">int</span> <span class="n">get_default_value</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Hopefully, not many developers have intentionally used logical shifts as part of template parameters, and the amount of those cases are far less from those when an annoying extra space was required for no good reason.</p>
+<p>Or even a method:</p>
 
-<p>As for the problem with comments &ndash; it still exists in both C and C++. But how much of a problem is it, really?</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="n">init_y</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">init_y</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Somewhat tricky part here is to remember that fields of a class are always initialized in the order of their declaration. If the constructor does not specify a value to initialize a field, the default initialization is used, which in the above example is a value specified along with a declaration of the field. And any constructor of the class can initialize any member with a different value, possibly using members that has been initialized already, and/or affect the initialization of members that would use previously initialized fields.</p>
+
+<p>Interestingly enough, C# does not allow to reference fields of the same class in instance fields initialization and the following C# code would be ill-formed:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">y</span> <span class="p">=</span> <span class="n">x</span> <span class="p">+</span> <span class="m">1</span><span class="p">;</span> <span class="c1">// Error, reference to instance member of this</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <h2>References</h2>
 
 <ul>
-<li><a href="http://en.wikipedia.org/wiki/Maximal_munch">Maximal much principle</a></li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html">N1757 &ndash; Right Angle Brackets</a></li>
+<li><a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2008/n2756.htm">N2756: Non-static data member initializers</a> by Michael Spertus and Bill Seymour</li>
+<li><a href="http://docs.oracle.com/javase/tutorial/java/javaOO/initial.html">Java: Initializing Fields</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/aa645759(v=vs.71).aspx">C# Instance field initialization</a></li>
+<li><a href="http://en.cppreference.com/w/cpp/language/data_members">Non-static Data Members</a> by <a href="cppreference.com">cppreference.com</a></li>
 </ul>
 
 </div>
@@ -311,6 +345,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/coding-hungover/">Coding While Hungover</a>
+    
     <a class="list-group-item " href="/smart-getopt/">Smart Command Line Options Parsing</a>
     
     <a class="list-group-item " href="/range-for/">Range-Based for Loop</a>
@@ -328,8 +364,6 @@
     <a class="list-group-item " href="/member-initializers/">Non-Static Data Member Initializers</a>
     
     <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
-    
-    <a class="list-group-item " href="/static-assert/">Static Assert</a>
     
   </div>
 </section>
@@ -365,7 +399,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/life">
-        <span class="badge">2</span>
+        <span class="badge">3</span>
         Life
       </a>
     
