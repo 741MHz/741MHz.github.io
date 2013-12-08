@@ -4,7 +4,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Use free and delete correctly. - Ranting @ 741 MHz</title>
+  <title>Colophon - Ranting @ 741 MHz</title>
   <meta name="author" content="741MHz.com">
 
   
@@ -16,7 +16,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://741MHz.com/free-delete">
+  <link rel="canonical" href="http://741MHz.com/colophon">
   <link href="/favicon.png" type="image/png" rel="icon">
   <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
 
@@ -58,7 +58,7 @@
 
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li class="active">
+                <li >
                     <a href="/">Blog</a>
                 </li>
                 <li >
@@ -103,123 +103,71 @@
         <div id="content">
           <div class="row">
   <div class="page-content col-md-9">
-    <article class="hentry" role="article">
+    <article role="article">
       
-  <header class="page-header">
-    
-      <p class="meta text-muted text-uppercase">
-        
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-13T00:00:00-04:00" pubdate data-updated="true">Mar 13<span>th</span>, 2013</time>
-        
-           | <a href="#disqus_thread"
-             data-disqus-identifier="http://741MHz.com">Comments</a>
-        
-      </p>
-    
-    
-    <h1 class="entry-title">
-        Use Free and Delete Correctly.
-        
-    </h1>
-    
-  </header>
-
-
-<div class="entry-content clearfix"><p>The Internet is full of programming jokes <a href="http://bash.org/?946461">like this one</a>:</p>
-
-<blockquote><p>&lt;@joosa> how do you say float in java? just 1.5f?<br/>
-&lt;@Gliptic> FloatFactoryFactory.getInstance (FloatFactoryFactory.defaultInstanceDescriptionString).getFactory (Locale.getLocale (“en-US”)).createBuilder ().setString (“1.5″).getResult ()</p></blockquote>
-
-<p>Java people please read on, that’s only a joke! More often than not the jokes are directed at those using higher-level programming languages. This is a little unfair because C programmers (and C++ ones for that matter) write some funny code, too. For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">ptr</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">free</span><span class="p">(</span><span class="n">ptr</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This perhaps could be a joke or maybe even an interview question. What’s wrong with the above C code (assuming everything else including the usage is correct)? It turns out that many can’t spot anything. If you do — congratulations! For those who don’t, let’s read the <a href="http://man7.org/linux/man-pages/man3/free.3.html">documentation of <code>free()</code> function</a>:</p>
-
-<blockquote><p>The free() function frees the memory space pointed to by ptr, which must have been returned by a previous call to malloc(), calloc() or realloc(). Otherwise, or if free(ptr) has already been called before, undefined behavior occurs. If ptr is NULL, no operation is performed.</p></blockquote>
-
-<p>In other words, there is no need to check if pointer is not NULL. The same applies to C++ programmers who often check for <strike><code>NULL</code></strike> <code>nullptr</code> before calling <code>delete</code>. If you don’t trust manual pages, check out §7.20.3/2 of the C standard that states the following:</p>
-
-<blockquote><p>The free function causes the space pointed to by ptr to be deallocated, that is, made available for further allocation. If ptr is a null pointer, no action occurs. Otherwise, if the argument does not match a pointer earlier returned by the calloc, malloc, or realloc function, or if the space has been deallocated by a call to free or realloc, the behavior is undefined.</p></blockquote>
-
-<p>For C++, see §5.3.5/2:</p>
-
-<blockquote><p>… if the value of the operand of delete is the null pointer the operation has no effect.</p></blockquote>
-
-<p>Possibly, an extra checking for NULL was a necessity some 20 years ago, according to some Internet rumors claiming that a few implementations of the standard C library had a bug back then and free() could crash the program when passed a NULL pointer. I couldn’t find any information about what it was. But no matter what was going on two decades ago — it is pretty hard to find pre-ANSI C code these days. Yet unnecessary NULL checking can be seen a lot. For example, <a href="http://krugle.org/">krugle.org</a> shows the following three projects right away:</p>
-
-<ul>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/apache_http_server1945779753/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_305/tags/1.3/djg_nspr_split/src/regex/regfree.c">Apache Web Server</a></li>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/apache_hadoop618243895/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_528/trunk/hadoop-common-project/hadoop-common/src/main/native/src/org/apache/hadoop/security/getGroup.c">Apache Hadoop</a></li>
-<li><a href="http://opensearch.krugle.org/document/view_filecontent/miranda1067994304/scmi_filer2-scmi.ofc.krugle.net_8799/scmi_705/miranda/protocols/Gadu-Gadu/ownerinfo.c">Miranda</a> (an ICQ client popular in ex-USSR countries)</li>
-</ul>
-
-
-<p>I thought that maybe people are worrying about performance too much and don’t want to do an extra function call (extra cycles, procedure linkage tables, etc). But then using <code>malloc()</code> and <code>free()</code> in performance critical path would have been even more silly.</p>
-
-<p>So is it paranoia, a failure to read documentation, or maybe a thoughtless copy-paste that went too far?</p>
-
-<p>Who knows.</p>
-</div>
-
-
-      <footer>
-        <p class="meta text-muted">
+        <header class="page-header">
           
-  
+            <p class="meta text-muted text-uppercase">
 
-<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
 
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-12-08T16:33:00-05:00" pubdate data-updated="true">Dec 8<span>th</span>, 2013</time></p>
           
-
-
-
-
-
-
-
-
-
-
-
-
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-13T00:00:00-04:00" pubdate data-updated="true">Mar 13<span>th</span>, 2013</time>
           
+            <h1 class="entry-title">
+              Colophon
+              
+            </h1>
+          
+        </header>
+      
+      <div class="entry-content">
+        <p>This blog is powered by <a href="http://octopress.org/">Octopress</a>, a framework designed by <a href="http://brandonmathis.com/">Brandon Mathis</a>.</p>
 
-<span class="glyphicon glyphicon-tags"></span>&nbsp;
-<span class="categories">
-  
-    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
-  
-</span>
+<p>Octopress itself is built on <a href="https://github.com/mojombo/jekyll">Jekyll</a> by <a href="http://tom.preston-werner.com/">Tom Preston-Werner</a> who is one of the founders of <a href="https://github.com/">GitHub</a>.</p>
+
+<p>Design is based on <a href="https://github.com/kAworu/octostrap3">OctoStrap3</a> theme built using Twitter&rsquo;s <a href="http://getbootstrap.com/">Bootstrap</a> front-end framework by <a href="https://kaworu.ch/about/">Alexandre Perrin</a>.</p>
+
+<p>All content is written in <a href="http://bywordapp.com/">Byword</a> text editor using <a href="http://en.wikipedia.org/wiki/Markdown">Markdown</a> syntax developed by <a href="http://daringfireball.net/">John Gruber</a>.</p>
+
+<p>The source code of the site and all of its content is managed using <a href="http://git-scm.com/">Git</a> and hosted by <a href="https://www.atlassian.com/software/bitbucket/overview">Bitbucket</a>.</p>
+
+<p>The site is hosted by <a href="http://pages.github.com/">GitHub Pages</a>.</p>
+
+      </div>
+      
+        <footer>
+          <p class="meta text-muted">
+            
+            
 
 
-        </p>
-        
-          <div class="sharing">
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-12-08T16:33:00-05:00" pubdate data-updated="true">Dec 8<span>th</span>, 2013</time>
+            
+          </p>
+          
+            <div class="sharing">
   
-  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/free-delete/" data-via="" data-counturl="http://741MHz.com/free-delete/" >Tweet</a>
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/colophon/index.html" data-via="" data-counturl="http://741MHz.com/colophon/index.html" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -227,18 +175,9 @@
   
 </div>
 
-        
-        
-          <ul class="meta text-muted pager">
-            
-            <li class="previous"><a href="/pyusb/" title="Previous Post: Linux, HID and PyUSB">&laquo; Linux, HID and PyUSB</a></li>
-            
-            
-            <li class="next"><a href="/fix-checksum/" title="Next Post: Calculating FIX Message Checksum">Calculating FIX Message Checksum &raquo;</a></li>
-            
-          </ul>
-        
-      </footer>
+          
+        </footer>
+      
     </article>
     
       <section>
@@ -250,9 +189,9 @@
   </div>
 
   
-  <aside class="sidebar col-md-3">
-    
-      <section class="panel panel-default">
+    <aside class="sidebar col-md-3">
+      
+        <section class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title">Recent Posts</h3>
   </div>
@@ -333,8 +272,8 @@
 (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
 
-    
-  </aside>
+      
+    </aside>
   
 </div>
 
@@ -357,8 +296,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://741MHz.com/free-delete/';
-        var disqus_url = 'http://741MHz.com/free-delete/';
+        var disqus_identifier = 'http://741MHz.com/colophon/index.html';
+        var disqus_url = 'http://741MHz.com/colophon/index.html';
         var disqus_script = 'embed.js';
       
     (function () {
