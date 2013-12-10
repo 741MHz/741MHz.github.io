@@ -125,20 +125,49 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-06T00:00:00-04:00" pubdate data-updated="true">May 6<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-05-07T00:00:00-04:00" pubdate data-updated="true">May 7<span>th</span>, 2013</time>
         
-           | <a href="/cpp-like-python/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/cpp-like-python/">Comments</a>
+           | <a href="/read-it-aloud/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/read-it-aloud/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/cpp-like-python/">C++ Like Python</a></h1>
+      <h1 class="entry-title"><a href="/read-it-aloud/">Read It Aloud to Yourself</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Today I ran into a somewhat classy piece of code that was analyzing user’s answer to a <a href="https://en.wikipedia.org/wiki/Yes%E2%80%93no_question">Yes or No question</a>. The idea was to compare input to various possible answers disregarding the case. The code looked something like this:</p>
+  <div class="entry-content clearfix"><p>Once in a while I like to learn a new technology, a programming language or a trick to entertain myself and, hopefully, keep the mind open. To shift the perception on programming languages a little, I’ve decided to code some Ruby. The mind shift attempt was not successful this time. The language itself didn’t really impress me a lot — it is nice, well designed, has quite a community and a lot of stuff is built around it. But that’s about all there is in it for me. Almost. One of the books about Ruby that I stumbled upon is too damn good. It is the most entertaining and interesting read about programming language that I had in quite some time. It is called “<a href="http://mislav.uniqpath.com/poignant-guide/book/">Why’s (poignant) Guide to Ruby</a>” and is freely available online under the <a href="http://creativecommons.org/licenses/by-sa/2.5/">Attribution-ShareAlike license</a>. Here is an excerpt from a beautiful introduction to Ruby on Chapter 3:</p>
+
+<blockquote><p>My conscience won’t let me call Ruby a computer language. That would imply that the language works primarily on the computer’s terms. That the language is designed to accommodate the computer, first and foremost. That therefore, we, the coders, are foreigners, seeking citizenship in the computer’s locale. It’s the computer’s language and we are translators for the world.
+But what do you call the language when your brain begins to think in that language? When you start to use the language’s own words and colloquialisms to express yourself. Say, the computer can’t do that. How can it be the computer’s language? It is ours, we speak it natively!
+We can no longer truthfully call it a computer language. It is coderspeak. It is the language of our thoughts.
+Read the following aloud to yourself:
+5.times { print &ldquo;Odelay!&rdquo; }
+In English sentences, punctuation (such as periods, exclamations, parentheses) are silent. Punctuation adds meaning to words, helps give cues as to what the author intended by a sentence. So let’s read the above as: Five times print “Odelay!”</p></blockquote>
+
+<p>There were more examples that, if you read them aloud to yourself, totally make sense to any person:</p>
+
+<figure class='code'><figcaption><span>Exit unless the word restaurant includes the word aura:</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">exit</span> <span class="k">unless</span> <span class="s2">&quot;restaurant&quot;</span><span class="o">.</span><span class="n">include?</span> <span class="s2">&quot;aura&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>With the words ‘toast’, ‘cheese’, and ‘wine’: take each food and print it capitalized:</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">[</span><span class="s1">&#39;toast&#39;</span><span class="p">,</span> <span class="s1">&#39;cheese&#39;</span><span class="p">,</span> <span class="s1">&#39;wine&#39;</span><span class="o">].</span><span class="n">each</span> <span class="p">{</span> <span class="o">|</span><span class="n">food</span><span class="o">|</span> <span class="nb">print</span> <span class="n">food</span><span class="o">.</span><span class="n">capitalize</span>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is not to mention beautiful Cartoon Foxes:</p>
+
+<p><img src="http://mislav.uniqpath.com/poignant-guide/images/the.foxes-3.png"></p>
+
+<p>For a moment I thought it was pretty cool. But then I got back to earth. You see, programming in a human language is not fun at all and we all know it. There is a good non-programming life analogy to programming in a human language. It is called “The Law”. If you don’t believe me, go read your country’s tax, labor, criminal or any other law. You could read it as much as you want but chances are that you would either not understand it at all or misinterpret it unless you have a degree from a good law school. And those laws are written in proper English that you can read aloud to yourself. The point is that when it comes to precisely describing what should happen under what circumstances, there will be a domain specific language for it, and you will have to either master it yourself or hire a professional. The language itself doesn’t make things simpler and I would probably get around the law much better if it was written in a formal <a href="http://en.wikipedia.org/wiki/Turing_completeness">Turing-complete</a> language. And after all, I don’t really think like Ruby. Perhaps I’ve been doing low-level programming for too long now, I don’t know. It is definitely not the language of my thoughts. Not even close.</p>
+
+<p>At any rate, Ruby is still a programming language that leaves a good impression as simple, fun and powerful tool that gets a lot of things done. I really enjoyed it during my crash course and thought it would be cool to write a C++ program in a way that you could read it aloud to your friends who are not programmers and have them understand what it does. Here is what I came up with for those first three Ruby examples:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -152,98 +181,22 @@
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;string&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;strings.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &quot;ruby.hh&quot;</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">positive</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Y&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Yes&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;OK&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;True&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Sure&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Of Course&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span>
-</span><span class='line'>            <span class="n">strcasecmp</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&quot;Why not?&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// 5.times { print &quot;Odelay!&quot; }</span>
+</span><span class='line'>    <span class="mi">5</span><span class="n">_times</span> <span class="o">^</span> <span class="n">print</span><span class="p">(</span><span class="s">&quot;Odelay!&quot;</span><span class="p">);</span>
 </span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
+</span><span class='line'>    <span class="c1">// exit unless &quot;restaurant&quot;.include? &quot;aura&quot;</span>
+</span><span class='line'>    <span class="n">exit_unless</span> <span class="o">^</span> <span class="s">&quot;restaurant&quot;</span><span class="n">_includes</span><span class="p">(</span><span class="s">&quot;aura&quot;</span><span class="p">);</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Could you please give me $100? &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">flush</span><span class="p">;</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">positive</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">c_str</span><span class="p">()))</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>            <span class="k">break</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
-</span><span class='line'>                      <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="c1">// [&#39;toast&#39;, &#39;cheese&#39;, &#39;wine&#39;].each { |food| print food.capitalize  }</span>
+</span><span class='line'>    <span class="n">each</span><span class="p">({</span> <span class="s">&quot;toast&quot;</span><span class="p">,</span> <span class="s">&quot;cheese&quot;</span><span class="p">,</span> <span class="s">&quot;wine&quot;</span> <span class="p">})</span> <span class="o">^</span> <span class="p">(</span><span class="n">print</span> <span class="o">|</span> <span class="n">capitalized</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>What I wanted was to extend that funky <code>positive()</code> function to add more possibilities and it made me sad a little. Since I am writing Python scripts once in a while, I remembered about Python’s “in” statement. If I were to write this in Python, I’d do something like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
-</span><span class='line'><span class="c"># -*- coding: utf-8 -*-</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-</span><span class='line'>    <span class="n">answer</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s">&#39;Could you please give me $100? &#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;yes&#39;</span><span class="p">,</span> <span class="s">&#39;ok&#39;</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">,</span> <span class="s">&#39;sure&#39;</span><span class="p">,</span> <span class="s">&#39;of course&#39;</span><span class="p">,</span> <span class="s">&#39;why not?&#39;</span><span class="p">):</span>
-</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;Thank You!&quot;</span>
-</span><span class='line'>        <span class="k">break</span>
-</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
-</span><span class='line'>        <span class="k">print</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then I though, “Hey, C++ is by far a lot more powerful than Python syntax-wise, does this program really have to be that long and ugly?” Challenge accepted. A minute later, it looked even shorter than my Python version:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">in</span><span class="p">(</span><span class="n">lower</span><span class="p">(</span><span class="n">raw_input</span><span class="p">(</span><span class="s">&quot;Could you please give me $100? &quot;</span><span class="p">)),</span>
-</span><span class='line'>           <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">,</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;true&quot;</span><span class="p">,</span> <span class="s">&quot;sure&quot;</span><span class="p">,</span> <span class="s">&quot;of course&quot;</span><span class="p">,</span> <span class="s">&quot;why not?&quot;</span><span class="p">))</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Well, of course this took some “magic” to work, which went to a reusable header. The complete program is a bit larger if put into a single source file:</p>
+<p>And as it often happens, C++ did not come with batteries included this time, so I had to come up with a little mess consisting of lambdas, function objects, user-defined literals and initializer lists in order for this mambo-jumbo to work. Most of those are part of C++11 and without them it would have been a lot worse. Here is my terrible code turning C++ into a crazy Ruby-like thing:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -283,50 +236,249 @@
 <span class='line-number'>36</span>
 <span class='line-number'>37</span>
 <span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;string&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;cctype&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#ifndef RUBY_HH</span>
+</span><span class='line'><span class="cp">#define RUBY_HH</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">raw_input</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">prompt</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">answer</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">prompt</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">flush</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">answer</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">answer</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#include &lt;cstdlib&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;initializer_list&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">enum</span> <span class="n">fmt_flags</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">none</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">capitalized</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">Repeater</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">n</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">explicit</span> <span class="kr">inline</span> <span class="n">Repeater</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">n</span><span class="p">)</span> <span class="o">:</span> <span class="n">n</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">F</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="k">operator</span> <span class="o">^</span> <span class="p">(</span><span class="k">const</span> <span class="n">F</span> <span class="o">&amp;</span><span class="n">f</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+</span><span class='line'>            <span class="n">f</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">inline</span> <span class="n">Repeater</span> <span class="k">operator</span><span class="s">&quot;&quot;</span> <span class="n">_times</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">Repeater</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;&amp;</span><span class="n">lower</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;&amp;</span><span class="n">s</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">c</span> <span class="o">:</span> <span class="n">s</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">c</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">tolower</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">printer</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">printer</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">)</span> <span class="o">:</span> <span class="n">s</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kr">inline</span> <span class="kt">void</span> <span class="k">operator</span><span class="p">()()</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">puts</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">fmt_printer</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">fmt_flags</span> <span class="n">f</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">fmt_printer</span><span class="p">(</span><span class="n">fmt_flags</span> <span class="n">f</span><span class="p">)</span> <span class="o">:</span> <span class="n">f</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kr">inline</span> <span class="kt">void</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">auto</span> <span class="n">s</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">switch</span> <span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">case</span> <span class="nl">capitalized:</span>
+</span><span class='line'>              <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">c</span> <span class="o">:</span> <span class="n">s</span><span class="p">)</span>
+</span><span class='line'>                  <span class="n">c</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">toupper</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+</span><span class='line'>          <span class="k">case</span> <span class="nl">none:</span>
+</span><span class='line'>              <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">puts</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">auto</span> <span class="n">print</span> <span class="o">=</span> <span class="p">[](</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">printer</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">StringIncludesCheck</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">haystack</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">StringIncludesCheck</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">haystack</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">:</span> <span class="n">haystack</span><span class="p">(</span><span class="n">haystack</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kr">inline</span> <span class="kt">bool</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">needle</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">strstr</span><span class="p">(</span><span class="n">haystack</span><span class="p">,</span> <span class="n">needle</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nullptr</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">inline</span> <span class="n">StringIncludesCheck</span> <span class="k">operator</span><span class="s">&quot;&quot;</span>
+</span><span class='line'><span class="n">_includes</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">haystack</span><span class="p">,</span> <span class="kt">long</span> <span class="kt">unsigned</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">StringIncludesCheck</span><span class="p">(</span><span class="n">haystack</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">in</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">ExiterUnless</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kr">inline</span> <span class="kt">void</span> <span class="k">operator</span> <span class="o">^</span> <span class="p">(</span><span class="kt">bool</span> <span class="n">v</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">v</span><span class="p">)</span>
+</span><span class='line'>            <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="n">ExiterUnless</span> <span class="n">exit_unless</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">EachFunc</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">elems</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">explicit</span> <span class="n">EachFunc</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">elems</span><span class="p">)</span> <span class="o">:</span> <span class="n">elems</span><span class="p">(</span><span class="n">elems</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">F</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="k">operator</span><span class="o">^</span><span class="p">(</span><span class="n">F</span> <span class="o">&amp;&amp;</span><span class="n">f</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="n">x</span> <span class="o">:</span> <span class="n">elems</span><span class="p">)</span>
+</span><span class='line'>            <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">EachFunc</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">each</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">elems</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">EachFunc</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">elems</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="n">size_t</span> <span class="n">N</span><span class="p">,</span> <span class="k">typename</span> <span class="p">...</span><span class="n">Args</span><span class="o">&gt;</span>
-</span><span class='line'><span class="k">static</span> <span class="kt">bool</span> <span class="n">in</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">s</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">arg0</span><span class="p">)[</span><span class="n">N</span><span class="p">],</span> <span class="n">Args</span> <span class="o">&amp;&amp;</span> <span class="p">...</span><span class="n">argN</span><span class="p">)</span>
+</span><span class='line'><span class="n">fmt_printer</span> <span class="k">operator</span><span class="o">|</span><span class="p">(</span><span class="n">decltype</span><span class="p">(</span><span class="n">print</span><span class="p">)</span> <span class="n">printer</span><span class="p">,</span> <span class="n">fmt_flags</span> <span class="n">flags</span><span class="p">)</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">s</span> <span class="o">==</span> <span class="n">arg0</span> <span class="o">||</span> <span class="n">in</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">argN</span><span class="p">)...);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">fmt_printer</span><span class="p">(</span><span class="n">flags</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Luckily, this kind of stuff is rarely needed in the real world C++ programming. Most folks simply code up a few classes, throw a few virtual functions on top and get the job done. But there are some good cases when such a mind-blowing complexity comes handy. <a href="http://www.boost.org/doc/libs/release/doc/html/xpressive.html">Xpressive</a> is an excellent examples — it is a template regular-expression library that pretty much builds regular expressions in compile-time. Just check this beautiful usage example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;boost/xpressive/xpressive.hpp&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">xpressive</span><span class="p">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">in</span><span class="p">(</span><span class="n">lower</span><span class="p">(</span><span class="n">raw_input</span><span class="p">(</span><span class="s">&quot;Could you please give me $100? &quot;</span><span class="p">)),</span>
-</span><span class='line'>               <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;yes&quot;</span><span class="p">,</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span> <span class="s">&quot;true&quot;</span><span class="p">,</span> <span class="s">&quot;sure&quot;</span><span class="p">,</span> <span class="s">&quot;of course&quot;</span><span class="p">,</span> <span class="s">&quot;why not?&quot;</span><span class="p">))</span>
-</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;We don&#39;t take «No» for an answer. Did you mean «Yes»?&quot;</span>
-</span><span class='line'>                  <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Thank you!&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span><span class="n">str</span> <span class="o">=</span> <span class="s">&quot;I was born on 5/30/1973 at 7am.&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// define some custom mark_tags with names more meaningful than s1, s2, etc.</span>
+</span><span class='line'>    <span class="n">mark_tag</span> <span class="n">day</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">month</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">year</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">delim</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// this regex finds a date</span>
+</span><span class='line'>    <span class="n">cregex</span> <span class="n">date</span> <span class="o">=</span> <span class="p">(</span><span class="n">month</span><span class="o">=</span> <span class="n">repeat</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_d</span><span class="p">))</span>           <span class="c1">// find the month ...</span>
+</span><span class='line'>               <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">delim</span><span class="o">=</span> <span class="p">(</span><span class="n">set</span><span class="o">=</span> <span class="sc">&#39;/&#39;</span><span class="p">,</span><span class="sc">&#39;-&#39;</span><span class="p">))</span>            <span class="c1">// followed by a delimiter ...</span>
+</span><span class='line'>               <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">day</span><span class="o">=</span>   <span class="n">repeat</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_d</span><span class="p">))</span> <span class="o">&gt;&gt;</span> <span class="n">delim</span>  <span class="c1">// and a day followed by the same delimiter ...</span>
+</span><span class='line'>               <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">year</span><span class="o">=</span>  <span class="n">repeat</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_d</span> <span class="o">&gt;&gt;</span> <span class="n">_d</span><span class="p">));</span>    <span class="c1">// and the year.</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">cmatch</span> <span class="n">what</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span> <span class="n">regex_search</span><span class="p">(</span> <span class="n">str</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">date</span> <span class="p">)</span> <span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// whole match</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="n">day</span><span class="p">]</span>   <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// the day</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="n">month</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// the month</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>  <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// the year</span>
+</span><span class='line'>        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">what</span><span class="p">[</span><span class="n">delim</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// the delimiter</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><a href="http://en.wikipedia.org/wiki/Variadic_templates">Variadic templates</a> and <a href="http://en.wikipedia.org/wiki/Tail_call">tail recursion</a> can do magic (and compiler unrolls everything, I’ve checked).</p>
-
-<p>I don’t want to start a language war or anything, but my opinion is that Python’s beauty is not in its simple or powerful syntax. Not at all.</p>
+<p>Either way, I don’t think I can make a good Ruby programmer because I tend to write my C++ as if it was C with code-generation built into the compiler and stick to dataflow programming model rather than object-oriented one. And I love it. As my buddy often say, «Cobol programmer could write a Cobol program in pretty much any programming language.»</p>
 </div>
   
   
@@ -357,6 +509,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/why-do-we-ask-questions/">Why Do We Ask Questions?</a>
+    
     <a class="list-group-item " href="/coding-hungover/">Coding While Hungover</a>
     
     <a class="list-group-item " href="/smart-getopt/">Smart Command Line Options Parsing</a>
@@ -374,8 +528,6 @@
     <a class="list-group-item " href="/delegating-constructors/">Delegating Constructors in C++11</a>
     
     <a class="list-group-item " href="/member-initializers/">Non-Static Data Member Initializers</a>
-    
-    <a class="list-group-item " href="/right-angle-brackets/">C++ and Right Angle Brackets</a>
     
   </div>
 </section>
@@ -411,7 +563,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/life">
-        <span class="badge">3</span>
+        <span class="badge">4</span>
         Life
       </a>
     
