@@ -125,22 +125,118 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-11T00:37:00-05:00" pubdate data-updated="true">Nov 11<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-11-13T23:20:00-05:00" pubdate data-updated="true">Nov 13<span>th</span>, 2013</time>
         
-           | <a href="/decltype/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/decltype/">Comments</a>
+           | <a href="/auto-type/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/auto-type/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/decltype/">Type of Expression in C++</a></h1>
+      <h1 class="entry-title"><a href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><h3>The Problem</h3>
+  <div class="entry-content clearfix"><p>Programming languages matter. Type theory matters, too. Some say that C++ programming language is a type-safe language. But is that really so?</p>
 
-<p>Those who program in C++ for a while must know how difficult it is sometimes to figure out a type of an expression, especially when in comes to <a href="http://en.wikipedia.org/wiki/Generic_programming">generic programming</a> using C++ templates. <a href="http://www.boost.org/doc/libs/release/doc/html/typeof.html">Boost.Typeof</a> library provides a great example where a simple expression using <a href="http://www.boost.org/doc/libs/release/doc/html/lambda.html">Boost.Lambda</a> that looks like this &ndash; <code>_1 &gt; 15 &amp;&amp; _2 &lt; 20</code> may returns an object of a complex type that can easily take a few dozen lines of code to describe, and may look like this:</p>
+<p>There is an alternative opinion on type safety where type safety is considered to be a property of a computer program rather than the language in which that program is written. That is, type-safety features of the language can be worked around to write a type unsafe program.</p>
+
+<p>C++ does not make it impossible to cast types (i.e. convert a void pointer to a pointer of other type), so writing extremely unsafe programs is still possible. However, as a language it tries its best to help programmers write type safe programs. Yet it is still easy to make a mistake. Consider the following example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">float</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">z</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above program will print &ldquo;1&rdquo;. But why? An alternative scenario could have been <code>1.333...</code> Is this a bug? Or is this behavior intended?</p>
+
+<p>We do not know what was the programmer&rsquo;s intention here and therefore we cannot know. According to the language specification, however, the <code>x / y</code> expression in the above example yields a result of type <code>float</code>. This is described in §5/9 of the C++ standard and may also be referred to as &ldquo;implicit type conversion&rdquo;.</p>
+
+<blockquote><p>Many binary operators that expect operands of arithmetic or enumeration type cause conversions and yield result types in a similar way. The purpose is to yield a common type, which is also the type of the result.</p>
+
+<p>This pattern is called the usual arithmetic conversions, which are defined as follows:</p>
+
+<p>If either operand is of type long double, the other shall be converted to long double.</p>
+
+<p>— Otherwise, if either operand is double, the other shall be converted to double.</p>
+
+<p>— Otherwise, if either operand is float, the other shall be converted to float.</p>
+
+<p>— Otherwise, the integral promotions (4.5) shall be performed on both operands.54)</p>
+
+<p>— Then, if either operand is unsigned long the other shall be converted to unsigned long.</p>
+
+<p>— Otherwise, if one operand is a long int and the other unsigned int, then if a long int can represent all the values of an unsigned int, the unsigned int shall be converted to a long int; otherwise both operands shall be converted to unsigned long int.</p>
+
+<p>— Otherwise, if either operand is long, the other shall be converted to long.</p>
+
+<p>— Otherwise, if either operand is unsigned, the other shall be converted to unsigned.</p>
+
+<p>[Note: otherwise, the only remaining case is that both operands are int ]</p></blockquote>
+
+<p>So what actually happened is an explicit type casting where a <code>float</code> was casted back to to <code>int</code> when programmer wrote <code>int z = x / y</code>. If he or she wrote <code>float z = x / y</code> instead, then output of the program would have been <code>1.333</code>.</p>
+
+<p>But how many programmers remember all of the type conversion rules for binary operators? How to figure out whether a type cast was intentional or not?</p>
+
+<p>But more importantly, what type to choose when writing a generic code, such as a template function? Like in this case, for example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span> <span class="cm">/* or B? or something else? */</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In other words, every time programmers specify a type explicitly, they oftentimes may accidentally introduce violate type safety theory. And this is a problem.</p>
+
+<p>Fortunately, C++11 provides a way to solve it in a uniform way though the introduction of a &ldquo;old&rdquo; new <code>auto</code> keyword.</p>
+
+<h3>The &ldquo;auto&rdquo; keyword. Reloaded.</h3>
+
+<p>The reason &ldquo;old&rdquo; is in a previous sentence is because C++ always had an <code>auto</code> keyword. It basically meant that a variable has automatic storage duration. However, because a special keyword for type-safety was needed and the old <code>auto</code> keyword was not that useful (and the research has shown that it was almost never used), it was decided to give <code>auto</code> keyword a new meaning not to introduce any new keywords.</p>
+
+<p>Since the introduction of C++11, the <code>auto</code> keyword is used to indicate that the type of a variable is to be deduced from its initializer expression. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span> <span class="n">x</span> <span class="o">=</span> <span class="mf">3.14</span><span class="p">;</span> <span class="c1">// x has type double</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In other words, <code>auto</code> let&rsquo;s the compiler figure out / deduce the type automatically. Getting back to our old template problem, it can be now solved by using <code>auto</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">//  ^^^^ we now let compiler worry about the type here.</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Jumping a little bit upfront, a major concern in discussions of <code>auto</code> features prior to proposing it into a standard was the potential difficulty in figuring out whether the declared variable will be of a reference type or not. And it was decided that the rules of type deduction in case with <code>auto</code> should be the exactly the same as the rules of template argument deduction. Examples (the notation x : T in the comments is read as &ldquo;x has type T&rdquo;):</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -156,148 +252,117 @@
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">lambda_functor</span><span class="o">&lt;</span>
-</span><span class='line'>    <span class="n">lambda_functor_base</span><span class="o">&lt;</span>
-</span><span class='line'>        <span class="n">logical_action</span><span class="o">&lt;</span><span class="n">and_action</span><span class="o">&gt;</span><span class="p">,</span>
-</span><span class='line'>        <span class="n">tuple</span><span class="o">&lt;</span>
-</span><span class='line'>            <span class="n">lambda_functor</span><span class="o">&lt;</span>
-</span><span class='line'>                <span class="n">lambda_functor_base</span><span class="o">&lt;</span>
-</span><span class='line'>                    <span class="n">relational_action</span><span class="o">&lt;</span><span class="n">greater_action</span><span class="o">&gt;</span><span class="p">,</span>
-</span><span class='line'>                    <span class="n">tuple</span><span class="o">&lt;</span>
-</span><span class='line'>                        <span class="n">lambda_functor</span><span class="o">&lt;</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span> <span class="o">&gt;</span><span class="p">,</span>
-</span><span class='line'>                        <span class="kt">int</span> <span class="k">const</span>
-</span><span class='line'>                    <span class="o">&gt;</span>
-</span><span class='line'>                <span class="o">&gt;</span>
-</span><span class='line'>            <span class="o">&gt;</span><span class="p">,</span>
-</span><span class='line'>            <span class="n">lambda_functor</span><span class="o">&lt;</span>
-</span><span class='line'>                <span class="n">lambda_functor_base</span><span class="o">&lt;</span>
-</span><span class='line'>                    <span class="n">relational_action</span><span class="o">&lt;</span><span class="n">less_action</span><span class="o">&gt;</span><span class="p">,</span>
-</span><span class='line'>                    <span class="n">tuple</span><span class="o">&lt;</span>
-</span><span class='line'>                        <span class="n">lambda_functor</span><span class="o">&lt;</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;</span> <span class="o">&gt;</span><span class="p">,</span>
-</span><span class='line'>                        <span class="kt">int</span> <span class="k">const</span>
-</span><span class='line'>                    <span class="o">&gt;</span>
-</span><span class='line'>                <span class="o">&gt;</span>
-</span><span class='line'>            <span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&gt;</span>
-</span><span class='line'><span class="o">&gt;</span>
-</span><span class='line'><span class="n">f</span> <span class="o">=</span> <span class="n">_1</span> <span class="o">&gt;</span> <span class="mi">15</span> <span class="o">&amp;&amp;</span> <span class="n">_2</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">A</span> <span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">bar</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// &quot;x1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span> <span class="c1">// &quot;x1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span>  <span class="c1">// error, we cannot bind a non−lvalue to a non-const reference</span>
+</span><span class='line'><span class="k">auto</span><span class="o">&amp;</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span>  <span class="c1">// error</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y1&quot; is of type &quot;A&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">A</span><span class="o">&amp;</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y2&quot; is of type &quot;A&amp;&quot;</span>
+</span><span class='line'><span class="k">auto</span><span class="o">&amp;</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span> <span class="c1">// &quot;y2&quot; is of type &quot;A&amp;&quot;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>In most cases programmers had to create more template functions and classes to have compiler deduct those types automatically. In some cases, this approach was creating unnecessary overhead and reduce maintainability of the code.</p>
-
-<h3>Typeof Solution</h3>
-
-<p>In the meantime, both GCC and EDG compilers have implemented a non-standard extension to C and C++ known as <code>typeof</code> operator. It worked extremely well for C, but there was a slight problem with C++ &ndash; the declared type of an expression deduced by <code>typeof</code> did not retain a reference if there was one. Consider the following example:</p>
+<p>The <code>auto</code> keyword can also be used to declare more than one variable. The requirement in this case is that both deductions must lead to the same type. For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;cstdio&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>    <span class="kt">int</span><span class="o">&amp;</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">typeof</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span> <span class="c1">// expected c to be of type `int&amp;`, but it is just `int`.</span>
-</span><span class='line'>    <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">);</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">auto</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">b</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">d</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">;</span> <span class="c1">// OK: &quot;c&quot; is of type &quot;int&quot;, &quot;d&quot; is &quot;int*&quot;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">e</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">f</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">b</span><span class="p">;</span> <span class="c1">// ERROR: &quot;e&quot; is of type &quot;int&quot;, &quot;f&quot; is &quot;float*&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Auto in function declarations</h4>
+
+<p>For a moment, let&rsquo;s get back to our template example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The above program outputs <code>1</code> and not <code>2</code>, which means that type of <code>c</code> is in fact <code>int</code> and not <code>int&amp;</code>.</p>
+<p>Using auto has solved a problem of determining a type of &ldquo;c&rdquo;. However, there is potentially another problem. Let&rsquo;s say that we now want to return a result of addition from <code>foo()</code>, what should we specify as its return type?</p>
 
-<h3>Boost.Typeof</h3>
-
-<p>The first code snippet with a very long type is taken from a &ldquo;Motivation&rdquo; section of Boost.Typeof library. And you guessed it right &ndash; that library is aiming at solving the problem.</p>
-
-<p>The Boost.Typeof library was a great success, and it did solve a lot of problems. Unfortunately, it did not provide a uniform solution, and certainly did not solve all of the problem. But most importantly, it proved that core C++ language does not provide powerful enough facilities to have a uniform, generic solution to determine a type of an expression, which seemingly is such a simple thing to do.</p>
-
-<h3>On The Way Into C++ Standard</h3>
-
-<p>Both <code>typeof</code> keyword and <code>Boost.Typeof</code> libraries quickly became &ldquo;celebrities&rdquo; in the programming world, gaining a lot of traction, usages and ever growing fan club. And it became obvious that people need a real, uniform, standard and portable solution.</p>
-
-<p>In 2002, Bjarne Stroustrup observed that the reference-dropping semantics offered by the <code>typeof</code> operator provided by the GCC and EDG compilers could be problematic and suggested extending the C++ language with mechanisms for querying the type of an expression, and initializing objects without specifying the type.</p>
-
-<p>In other words, the <code>typeof</code> operator was suggested to become a part of core language standard with a semantical improvement for not dropping a &ldquo;reference&rdquo;.</p>
-
-<p>In 2008, Jaakko Järvi have found an issue with <code>decltype</code> &ndash; it was not possible to use it to form a qualified-id. The <code>typeof</code> suffered the same problem. For example, the following code would not compile:</p>
+<p>Luckily, folks designing C++ language has thought about this problem and put a special provision into the language that allows <code>auto</code> to be used with functions as part of the trailing notation syntax. The basic idea is to allow &ldquo;auto&rdquo; be specified in place of a return type, and then specify the actual type later. For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#include &lt;vector&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">typeof</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">::</span><span class="n">value_type</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">void</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>This, and similar issues pertaining to the wording inhibiting the use of decltype in the declaration of a derived class and in a destructor call, were addressed by David Vandevoorde, and voted into the working paper in March 2010.</p>
-
-<h3>The Solution: C++11 decltype</h3>
-
-<p>As a result, C++ officially got a new keyword named <code>decltype</code> that is now a part of ISO/IEC 14882:2011 standard also known as C++11. It effectively obsoletes <code>Boost.Typeof</code> and replaces non-standard <code>typeof</code> keyword. Here is an example (<a href="http://en.wikipedia.org/wiki/Decltype">taken from Wikipedia</a>):</p>
+<p>This alone does not solve the problem. However, a <code>decltype</code> keyword that we have talked about in the <a href="/decltype">previous article</a>, can now be used to perform type deduction. For example:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">const</span> <span class="kt">int</span><span class="o">&amp;&amp;</span> <span class="n">foo</span><span class="p">();</span>
-</span><span class='line'><span class="k">const</span> <span class="kt">int</span> <span class="n">bar</span><span class="p">();</span>
-</span><span class='line'><span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span> <span class="kt">double</span> <span class="n">x</span><span class="p">;</span> <span class="p">};</span>
-</span><span class='line'><span class="k">const</span> <span class="n">A</span><span class="o">*</span> <span class="n">a</span> <span class="o">=</span> <span class="k">new</span> <span class="n">A</span><span class="p">();</span>
-</span><span class='line'><span class="n">decltype</span><span class="p">(</span><span class="n">foo</span><span class="p">())</span> <span class="n">x1</span><span class="p">;</span> <span class="c1">// type is const int&amp;&amp;</span>
-</span><span class='line'><span class="n">decltype</span><span class="p">(</span><span class="n">bar</span><span class="p">())</span> <span class="n">x2</span><span class="p">;</span> <span class="c1">// type is int</span>
-</span><span class='line'><span class="n">decltype</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="n">x3</span><span class="p">;</span> <span class="c1">// type is int</span>
-</span><span class='line'><span class="n">decltype</span><span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">x</span><span class="p">)</span> <span class="n">x4</span><span class="p">;</span> <span class="c1">// type is double</span>
-</span><span class='line'><span class="n">decltype</span><span class="p">((</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">x</span><span class="p">))</span> <span class="n">x5</span><span class="p">;</span> <span class="c1">// type is const double&amp;</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">decltype</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>It can also be used inside structures, with declarations of derived classes, scope resolution operator and so on.</p>
+<p>Note that <code>decltype</code> alone can be used in some cases, for example:</p>
 
-<p>Those who have sinned by using non-standard <code>typeof</code> or suffered from numerous inconveniences and limitations of <code>Boost.Typeof</code>, behold the new power of <code>decltype</code>. And enjoy!</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="p">,</span> <span class="k">typename</span> <span class="n">B</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">decltype</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="n">foo</span><span class="p">(</span><span class="n">A</span> <span class="n">a</span><span class="p">,</span> <span class="n">B</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>However, if used without <code>auto</code> and is not placed into &ldquo;trailing&rdquo; part, function arguments cannot be used in inside <code>decltype()</code> as they have not even been declared yet (at the time of parsing).</p>
+
+<h3>Summary</h3>
+
+<p>All in all, <code>auto</code> is very similar to <code>decltype</code> but is &ldquo;prettier&rdquo; in terms of syntax,  allows for special case with return type deduction, and has reference-dropping semantics (similar to that of <a href="http://en.wikipedia.org/wiki/Typeof"><code>typeof</code> GCC extension</a>).</p>
+
+<p>Programmers are encouraged to use auto where possible unless explicit type conversion/cast is required &ndash; this would make the program even more type safe which in turn will help eliminate bugs related to type errors.</p>
+
+<h3>See Also</h3>
+
+<ul>
+<li><a href="/decltype/">Determining Type of Expression in C++</a></li>
+</ul>
+
 
 <h3>References</h3>
 
 <ul>
-<li><a href="http://gcc.gnu.org/onlinedocs/gcc/Typeof.html">GCC Typeof &ndash; Referring to a Type with typeof</a></li>
-<li><a href="http://en.wikipedia.org/wiki/Decltype">Wikipedia article on <code>decltype</code></a></li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2343.pdf">N2343 Decltype: proposed wording</a></li>
-<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3276.pdf">N3276 Decltype and Call Expressions</a></li>
-<li><a href="http://www.edg.com/docs/edg_cpp.pdf">EDG C++ Front End (Internal Documentation)</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1984.pdf">N1984 &ndash; Deducing the type of variable from its initializer expression</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/vstudio/6k3ybftz.aspx">&ldquo;auto&rdquo; keyword</a> @ MSDN</li>
+<li><a href="http://en.wikipedia.org/wiki/Type_safety#C.2B.2B">C++ type safety</a> @ Wikipedia</li>
+<li><a href="http://jameso.be/2012/02/11/language-matters.html">Why programming languages matter</a> by James O&#8217;Beirne</li>
+<li><a href="http://en.cppreference.com/w/cpp/language/auto">&ldquo;auto&rdquo; specifier</a> @ cppreference.com</li>
+<li><a href="http://stackoverflow.com/questions/5563000/implicit-type-conversion-rules-in-c-operators">Implicit type conversion rules in C++ operators</a> via Stack Overflow</li>
+<li><a href="http://en.wikipedia.org/wiki/Typeof">Typeof keyword</a> @ Wikipedia</li>
 </ul>
 
 </div>
@@ -330,6 +395,8 @@
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/devirtualize/">C++ Devirtualization</a>
+    
     <a class="list-group-item " href="/why-do-we-ask-questions/">Why Do We Ask Questions?</a>
     
     <a class="list-group-item " href="/coding-hungover/">Coding While Hungover</a>
@@ -348,8 +415,6 @@
     
     <a class="list-group-item " href="/delegating-constructors/">Delegating Constructors in C++11</a>
     
-    <a class="list-group-item " href="/member-initializers/">Non-Static Data Member Initializers</a>
-    
   </div>
 </section>
 <section class="panel panel-default">
@@ -360,7 +425,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">26</span>
+        <span class="badge">27</span>
         C++
       </a>
     
@@ -372,7 +437,7 @@
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">34</span>
+        <span class="badge">35</span>
         Tech
       </a>
     

@@ -125,131 +125,43 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-29T21:00:00-04:00" pubdate data-updated="true">Mar 29<span>th</span>, 2013</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-03-29T22:00:00-04:00" pubdate data-updated="true">Mar 29<span>th</span>, 2013</time>
         
-           | <a href="/network-evolution/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/network-evolution/">Comments</a>
+           | <a href="/ask-smart/#disqus_thread"
+             data-disqus-identifier="http://741MHz.com/ask-smart/">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/network-evolution/">The Evolution of Computer Networking</a></h1>
+      <h1 class="entry-title"><a href="/ask-smart/">Ask Smart Questions and You Will Succeed</a></h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Do you remember 56k modems? Me too. The sound it used to produce when connecting still gives me a warm fuzzy feeling and a bit of excitement. The last time I have used that modem was in 2003. Fifty six thousand bits per seconds — that was a lot back then. For the sake of comparison, I went to speedtest.net to check the speed of my phone that uses 4G LTE from Verizon, and my Verizon Fios home network. Here are my results:</p>
+  <div class="entry-content clearfix"><p>Asking is ultimately one of the most important ways for you to succeed. You shall not be afraid to ask. You shall ask often. Ask for help and for a raise, ask for an advice and ask questions. Asking is very powerful. Not only it might help you to get an answer, you may as well receive something that is a lot more valuable, something you haven’t even thought of before. Asking helps you to make your way. It helps others to understand you better. Asking connects people. In English we say, “It doesn’t hurt to ask.” Russians say, “Nobody punches your nose for asking.” I am sure that other cultures have a similar saying.</p>
 
-<p><img src="/images/network-evolution/home_speed_test.jpg"></p>
+<p>I have been hanging out on <a href="http://stackoverflow.com/">Stack Overflow</a>, a nice Q&amp;A site, for about two years now, and have answered some 770 questions. Not a lot, but I have enjoyed each and every question I have either answered or at least tried to answer. Yet my questions are what I am proud of the most. They were most helpful, at least for me. Sometimes, answering a question creates more questions and leads to a research, helps to learn something new — be that a programming trick, a new technology, a new interesting person that you didn’t know before. It is always better to ask than not to ask. In any case it makes you richer.</p>
 
-<p>The phone’s Internet connection is roughly 263 faster; the home network is 821 times faster. This is just mind-blowing. But that is a simple home networking — a standard phone and a standard gigabit Ethernet adapter. The industrial networking is a lot more complicated, a lot faster, and is far ahead of technologies commonly used in our homes. In order to achieve lower latency characteristics and better bandwidth, the industry took a few large steps to get where we are now. Let’s take a quick look at what is going on there!</p>
+<p>OK, now it sounds like a crap from a cheap inspiration book. Things cannot be that simple. Indeed there is a catch to asking — just asking doesn’t really get you anywhere. You want people to be interested in your question, you want the question to be wise, you want your question to make others think, and oftentimes you want your question to be answered.</p>
 
-<h2>Direct Memory Access</h2>
+<blockquote><p>Whoever said “there’s no such thing as a bad question” clearly had never seen the Internet.<br/>
+— <a href="https://twitter.com/AndrewLBarber">Andrew Barber</a></p></blockquote>
 
-<p>One of the first steps was an introduction of <a href="http://en.wikipedia.org/wiki/Direct_memory_access">Direct Memory Access</a>, or <em>DMA</em>. Basically, it allowed peripheral devices to access computer’s memory without having CPU being involved in this process. I was trying to find some information about the history of DMA and found <a href="http://www.ganssle.com/articles/adma.htm">this interesting article</a> dated back to 1994. At that time, DMA was gaining popularity in embedded systems. Today, it can be found in any computer, and is used in all systems and not only embedded.</p>
-
-<h2>Network Interface Controllers</h2>
-
-<p>Before, computers used to access the network by communicating with the <a href="http://en.wikipedia.org/wiki/PHY_(chip">Ethernet PHY</a>) directly. Its only task is to send and receive data over a physical medium, such as famous <a href="http://en.wikipedia.org/wiki/Registered_jack">RJ-45 cable</a>.</p>
-
-<p><img src="/images/network-evolution/phy_and_cat6.jpg"></p>
-
-<p>The problem was in having CPU perform a lot of simple yet time-consuming operations in order to communicate over the network using just a PHY device. With the ever growing demand for better performance, engineers came up with special hardware called <a href="http://en.wikipedia.org/wiki/Network_interface_controller">Network Interface Controller</a> (NIC). Initially, it was handling tasks related to the <a href="http://en.wikipedia.org/wiki/Data_link_layer">Data Link Layer</a>, such as <a href="http://en.wikipedia.org/wiki/Media_access_control">Media Access Control</a>. This made it possible to perform many tasks on the card and not waste CPU resources. For example, NIC could filter data that was not intended for this computer (based on MAC address or IP address, for example).</p>
-
-<h2>PCI Express 3.0</h2>
-
-<p>The first NICs used to communicate with PC over <a href="http://en.wikipedia.org/wiki/Industry_Standard_Architecture">ISA bus</a>. ISA was later replaced with PCI and then <a href="http://en.wikipedia.org/wiki/PCI_Express#PCI_Express_3.0">PCI Express</a> (aka PCIe). The PCIe has evolved significantly since its first release. The currently used version 3 of the PCIe can handle up to 8 gigatransfers per second and provides a tremendous advantage not only to Network Interface Controllers, but general purpose computing with technologies like <a href="http://en.wikipedia.org/wiki/CUDA">CUDA</a>, <a href="http://en.wikipedia.org/wiki/OpenCL">OpenCL</a>, <a href="http://en.wikipedia.org/wiki/C%2B%2B_AMP">C++ AMP</a> etc. The version 4 of the PCIe standard is already on its way.</p>
-
-<p><img src="/images/network-evolution/nic_in_90s.jpg"></p>
-
-<h2>Optical Fiber, 100 Gigabit Ethernet and Special Hardware</h2>
-
-<p>The old good copper cables got replaced with <a href="http://en.wikipedia.org/wiki/Optical_fiber">optical fiber</a> which are effectively transferring data with a speed of light. The speed at which network cards can transfer data has also increased. It jumped from 10 to 100 Mbps, then from 100 Mbps to 1 Gigabit per second – a common speed our PCs are operating at home these days. <a href="https://en.wikipedia.org/wiki/10-gigabit_Ethernet">10 Gigabit Ethernet</a> started to evolve around 2002 and over six million ports were shipped by 2010. This is the most common Ethernet speed currently used by the industry. In 2010, there were two new Ethernet standards supporting <a href="https://en.wikipedia.org/wiki/100_Gigabit_Ethernet">40 and 100 Gigabit per second</a> line rates. This technology is already being used today, powering our “Clouds” and having people ranting about “Big Data”.</p>
-
-<p>One interesting thing about these new and crazy bandwidth capabilities is that computers cannot really handle it, so you cannot just plug a 100 GbE controller into your PCIe slot and download the whole Internet. Not at all. Simply because no general-purpose CPU can handle that amount of data, at least not yet. So far these loads can only be handled by special hardware – Ethernet ICs which are commonly implemented as <a href="http://en.wikipedia.org/wiki/Application-specific_integrated_circuit">ASICs</a>, but there are also <a href="http://en.wikipedia.org/wiki/Field-programmable_gate_array">FPGA</a> based solutions. One of the great examples of such devices are network switches. For example, Arista makes a few switches capable of handling 1.28 terabytes per second.</p>
-
-<p>If you are a big electronics enthusiast and know how to program FPGAs, then you can make your own 100 GbE device at home. There are plenty of kits available on the market already. For example, the following Altera board looks very interesting:</p>
-
-<p><img src="/images/network-evolution/100g_dk_stratix_v_gx.jpg"></p>
-
-<p>Though I can think of better ways to spend $25,000. But that’s just me. Let’s get back to the software and general-purpose CPUs. Engineers from all around the world have been trying to solve a problem of having a software that can handle large amount of traffic with lowest possible latency, and there is indeed some progress.</p>
-
-<h2>Software, Berkeley Sockets and C10K</h2>
-
-<p><img class="right" src="/images/network-evolution/code_monkey_by_gloriouskyle.jpg"></p>
-
-<p>The software hasn’t really changed much in the last two decades, unfortunately. Developers are still using a classic <a href="http://en.wikipedia.org/wiki/Berkeley_sockets">Berkeley Socket API</a> for network programming, as they used two decades ago. This has been a big problem because sticking to the same old programming model does not allow for a lot of great optimizations.</p>
-
-<p>In early 2000s, Alexey Kuznetsov, Jamal Hadi Salim and Robert Olsson have developed a new technique for network packet processing called «<a href="http://en.wikipedia.org/wiki/New_API">New API</a>». It was not affecting the socket API used by the application developers. Instead, it was a modification to the device driver packet processing framework that was designed to improve the performance of high-speed networking.</p>
-
-<p>There were also a few improvements for which programmers should be grateful and thank to NIC designers. Modern NICs provide something called «offloading» where some tasks that were done by software are now handled by the NICs. This at least includes a <a href="http://en.wikipedia.org/wiki/Large_segment_offload">Large Segment Offload</a>, <a href="http://en.wikipedia.org/wiki/Large_receive_offload">Large Receive Offload</a>, and TCP/IP, UDP and Ethernet checksum calculation. These “tricks” are very common these days and won’t surprise anyone.</p>
-
-<p>The above improvements helped a lot but it soon turned out to be not enough. In 2003, Dan Kegel described <a href="http://www.kegel.com/c10k.html">the C10K problem</a>. It highlights that hardware is no longer a bottleneck – the software is, or at least the way it is written. And that affects everything and not only the Web. Here is a real world example from a financial industry. I remember when I first joined the company I am currently with, we had an application designed to process <a href="http://opradata.com/">OPRA data</a> – an information aggregated from participating <a href="http://en.wikipedia.org/wiki/Option_(finance">option</a>) exchanges (currently 11). The data was distributed over some 30+ multicast channels at that time, and the application was creating a <a href="http://en.wikipedia.org/wiki/Thread_(computing">thread</a>) per UDP socket/channel to handle all of that data. That was truly embarrassing, and as the amount of data increased over time, the application would just lose half of the data or even crash. Luckily, we quickly threw that crappy app away and wrote a new one that handles everything with ease even during the peak loads.</p>
-
-<p>I was laughing out loud when a few days ago, <a href="http://www.ft.com/intl/cms/s/0/5771ec7a-90ce-11e2-862b-00144feabdc0.html">according to Mr. O’Malia</a>, the government reportedly had similar problems after deciding to regulate a swap market. After market participants started to report their activity, the government simply failed to handle the amount of data:</p>
-
-<blockquote><p>The commission now receives data on thousands of swaps each day. So far, however, none of our computer programs loads this data without crashing.</p></blockquote>
-
-<p>As a result of a higher awareness of this problem among <a href="https://www.youtube.com/watch?v=v4Wy7gRGgeA">code monkeys</a>, an asynchronous network I/O approach quickly gained popularity and more applications started to use it. Generally speaking, a well written application using asynchronous approach can handle a reasonable amount of traffic on a powerful multi-core server – at least enough for most of generic applications like web servers, bit torrents etc. Yet handling a constant load of anything close to 10 GbE is still beyond the imaginable. And even if CPUs could handle that, that would leave no resources to actually do something meaningful with that data. This slowly but surely becomes a problem. Luckily, there are a number of solutions aiming at solving this problem by taking the whole new approach to computer networking.</p>
-
-<h2>What’s Trending</h2>
-
-<p>A lot of work towards a better networking has been emerging since 2005 with a number of companies already providing industrial grade solutions today. There is not yet an official name for it, no standard, and no solutions are exactly the same. Yet they all share the same philosophy and similar implementations. There are few main points shared by all of them:</p>
+<p>There ain’t no such thing as a free lunch. And just like with everything else, in order for your questions to make you successful, some efforts from you are required. Of course nobody knows everything, and there is absolutely nothing wrong with saying, “I don’t know”. But you must at least show some efforts, some respect to those who read the question, or those who have already answered it million times over. There is a lot of great information about how to ask smart questions, and just in case you haven’t read it already, below are some links to a great tutorials about how to ask great questions. Trust me, you won’t waste your time by reading them. Those tutorials will definitely help you to succeed whatever your goals are:</p>
 
 <ul>
-<li>Operating system kernel is a bottleneck and its use must be avoided.</li>
-<li>Applications must access the NIC directly and perform DMA transactions.</li>
-<li>As much work as possible must be done by the NIC hardware.</li>
+<li><a href="http://www.catb.org/esr/faqs/smart-questions.html">How To Ask Questions The Smart Way</a> by Eric Steven Raymond</li>
+<li><a href="http://www.forbes.com/sites/stevedenning/2011/09/11/learning-to-ask-the-right-question-2/">Learning To Ask The Right Question</a> by Steve Denning, Forbes</li>
+<li><a href="http://mattgemmell.com/2008/12/08/what-have-you-tried/">What have You tried so far?</a> by Matt Gemmell</li>
+<li><a href="http://www.youngbloodcoaching.com/powerful-questions.html">The Art of Asking Powerful Questions</a></li>
 </ul>
 
 
-<p><img class="right" src="/images/network-evolution/modern_nic.png" title="'Modern NIC with full kernel-bypass, offload and zero-copy support as well as on-board FPGA for custom hardware logic.'" >
-There are three buzz words for the above points – Kernel-Bypass, Zero-Copy and Offload respectively. Here are just a few popular solution provides that implement all of the above and provide extremely high-performance networking solutions (in no particular order):</p>
+<p>And if you are looking for the right place to ask your questions online, you might find one of the <a href="http://stackexchange.com/">Stack Exchange Q&amp;A sites</a> very useful. Whether you are into LEGO, Marital Arts, Politics or Physics, interested in Chemistry, or History, or the history of chemistry, or whatever that is you are interested in – there is a web site for it.</p>
 
-<ul>
-<li><a href="http://www.6wind.com/">6WIND</a></li>
-<li><a href="http://www.plda.com/index.php">PLDA</a></li>
-<li><a href="http://www.napatech.com/">Napatech</a></li>
-<li><a href="http://www.mellanox.com/">Mellanox</a></li>
-<li><a href="http://www.myricom.com/">Myricom</a></li>
-<li><a href="http://www.solarflare.com/">SolarFlare</a></li>
-<li><a href="http://www.velocytech.com/">VelociTech</a></li>
-<li><a href="http://www.intilop.com/">Intilop</a></li>
-<li><a href="http://www.ntop.org/products/pf_ring/dna/">NTOP.ORG DNA</a></li>
-</ul>
+<p><a href="http://stackexchange.com/"><img src="/images/stack-exchange-top-sites.png"></a></p>
 
-
-<p>Some of the technologies provided by the above companies can speed up network processing anywhere from 20 to 100 times. In order to achieve the best performance, however, a different programming model (as well as API) must be used. It is simply impossible to have a Berkeley Socket API anymore — it is way too old and does not account for many things, making it impossible to write the efficient (from hardware point of view) program.</p>
-
-<h2>What To Expect Next</h2>
-
-<p>Given the current trends, it would be logical to expect a few things to happen.</p>
-
-<h3>Standard API</h3>
-
-<p>The first thing is a consolidation of APIs. Having 10+ different ways to do the same thing just does not sound good. Sooner or later we should get a standard API that would provide developers with a stable, thought-through and efficient way to program network applications using these cutting edge technologies. This would probably be something like <a href="http://en.wikipedia.org/wiki/OpenCL">OpenCL</a> but for networking.</p>
-
-<h3>Lower Cost</h3>
-
-<p>To get one of those programmable network adapters of the new era today, one should pay through the nose. The price can vary anywhere from $5000 to $50000, depending on the functionality provided. We should (hopefully) see the price go down as technology gets stabilized and the sales increase in quantities. After all, creating such a device is no harder than an iPhone. Yet we don’t pay 50K for an iPhone, right?</p>
-
-<h3>Integration</h3>
-
-<p>Recently, the Xilinx has released the <a href="http://www.xilinx.com/publications/prod_mktg/quickpath-interconnect-ip-product-brief.pdf">worlds first FPGA running QPI</a> at full width — 21 lanes at 6.4 GHz per lane. So we can now have a motherboard that has a cutting edge Intel CPU for general-purpose processing in one socket, and a special purpose FPGA in another socket, both sharing the host memory at maximum speed and the lowest possible latency. In other words, Intel CPU will communicate with FPGA just like it communicates with other CPUs on the same board. This will indeed help to get rid of PCI Express that has always been a bottleneck when it comes to both throughput and latency. Amazing, isn’t it? Below is the video from Xilinx explaining this in more details:</p>
-
-<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/NHkpMlL0bZ8 "></iframe></div>
-
-
-<p>At the same time Altera, another leading FPGA vendor, has released <a href="http://www.altera.com/corporate/news_room/releases/2012/products/nr-optical-fpga-demo.html">the worlds first optical FPGA technology</a> that was developed in conjunction with Avago Technologies, breaking through the barriers of traditional copper interconnect. To put it simple, we can now plug the optical fiber directly into the FPGA’s transceiver and achieve a bandwidth of approximately 120 gigabits per second:</p>
-
-<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/cC5g3rE9DZ8 "></iframe></div>
-
-
-<p>Now, here is what I think is going to happen. In the next few years we would have an FPGA chip sitting in a CPU socket right next to the high-end Intel CPU, interconnected by QPI with the highest possible bandwidth, and lowest possible latency. The FPGA would have an optical fiber cable attached to it and beaming the data straight into the fabrics. The FPGA would then handle all of the network processing, including high-level protocols such as TCP/IP or even higher ones like <a href="https://bitcoin.it/wiki/Protocol_specification">BitCoin</a>, <a href="http://fixprotocol.org/">FIX</a>, etc.</p>
-
-<p>Once that is done, we could take all of that and integrate it with a human’s brain :)</p>
-
-<p>Hope it was interesting. Thanks for reading!</p>
+<p>Hope it helps. Good Luck!</p>
 </div>
   
   
@@ -280,6 +192,8 @@ There are three buzz words for the above points – Kernel-Bypass, Zero-Copy and
   
   <div id="recent_posts" class="list-group">
     
+    <a class="list-group-item " href="/devirtualize/">C++ Devirtualization</a>
+    
     <a class="list-group-item " href="/why-do-we-ask-questions/">Why Do We Ask Questions?</a>
     
     <a class="list-group-item " href="/coding-hungover/">Coding While Hungover</a>
@@ -298,8 +212,6 @@ There are three buzz words for the above points – Kernel-Bypass, Zero-Copy and
     
     <a class="list-group-item " href="/delegating-constructors/">Delegating Constructors in C++11</a>
     
-    <a class="list-group-item " href="/member-initializers/">Non-Static Data Member Initializers</a>
-    
   </div>
 </section>
 <section class="panel panel-default">
@@ -310,7 +222,7 @@ There are three buzz words for the above points – Kernel-Bypass, Zero-Copy and
     
     
     <a class="list-group-item " href="/blog/categories/c-plus-plus">
-        <span class="badge">26</span>
+        <span class="badge">27</span>
         C++
       </a>
     
@@ -322,7 +234,7 @@ There are three buzz words for the above points – Kernel-Bypass, Zero-Copy and
     
     
     <a class="list-group-item " href="/blog/categories/tech">
-        <span class="badge">34</span>
+        <span class="badge">35</span>
         Tech
       </a>
     

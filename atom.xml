@@ -4,7 +4,7 @@
   <title><![CDATA[Ranting @ 741 MHz]]></title>
   <link href="http://741MHz.com/atom.xml" rel="self"/>
   <link href="http://741MHz.com/"/>
-  <updated>2013-12-09T23:34:15-05:00</updated>
+  <updated>2013-12-15T21:28:14-05:00</updated>
   <id>http://741MHz.com/</id>
   <author>
     <name><![CDATA[741MHz.com]]></name>
@@ -12,6 +12,485 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[C++ Devirtualization]]></title>
+    <link href="http://741MHz.com/devirtualize/"/>
+    <updated>2013-12-15T21:12:00-05:00</updated>
+    <id>http://741MHz.com/devirtualize</id>
+    <content type="html"><![CDATA[<p>Using a virtual dispatch might get relatively expensive in terms of clock cycles due to multiple levels of <a href="http://en.wikipedia.org/wiki/Indirection">indirections</a> including <a href="http://en.wikipedia.org/wiki/Indirect_branch">indirect branching</a> as well as <a href="http://gcc.gnu.org/onlinedocs/gcc/Bound-member-functions.html"><code>this</code> pointer adjustment</a>. Wise programmers do not use virtual dispatch without a good reason but oftentimes it is required either by design or when creating non-template reusable components/libraries and the final implementation of some parts of the program is not known.</p>
+
+<p>Optimizing compilers do a great deal of work trying to optimize virtual dispatch as much as possible, sometimes even eliminating it in the end program entirely.  Let&rsquo;s take a quick look at how compilers implement virtual dispatch, how it can be optimized away and go over a few tricks that programmers can do to achieve better runtime performance.</p>
+
+<h2>Virtual Dispatch Mechanics</h2>
+
+<p>Implementation of the virtual dispatch in C++ is not covered by the language standard. It is up to compiler to decide how to implement it. All of the compilers that I&rsquo;ve worked with implement it using a <a href="http://en.wikipedia.org/wiki/Virtual_method_table">virtual method table</a> concept. The details of an exact implementation tend to get very complex once multiple inheritance, virtual inheritance and optimization gets involved. For utmost simple cases, one can think of a straightforward implementation where a base class has a pointer to an array of function pointers. To demonstrate this, let&rsquo;s write a functional equivalent of the below C++ program in C.</p>
+
+<figure class='code'><figcaption><span>Simple C++ Example Using Virtual Dispatch</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">A</span> <span class="n">a</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">a</span><span class="p">.</span><span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Assuming that no optimization is performed, the above code can be described in C like this:</p>
+
+<p><a name="c_vtable_example"></a></p>
+
+<figure class='code'><figcaption><span>Simple Virtual Table Example in C</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">struct</span> <span class="n">A</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/*</span>
+</span><span class='line'><span class="cm"> * A virtual table for class A implicitly generated by C++ compiler.</span>
+</span><span class='line'><span class="cm"> * It consists of two &quot;methods&quot; - a pointer to a destructor of class A</span>
+</span><span class='line'><span class="cm"> * and a pointer to A&#39;s &quot;foo&quot; virtual method implementation. In both cases</span>
+</span><span class='line'><span class="cm"> * &quot;this&quot; pointer is a pointer to base class A which is passed to methods</span>
+</span><span class='line'><span class="cm"> * implicitly.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">A_vtable</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">destructor</span><span class="p">)(</span><span class="k">struct</span> <span class="n">A</span> <span class="o">*</span><span class="n">this</span><span class="p">);</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">foo</span><span class="p">)(</span><span class="k">struct</span> <span class="n">A</span> <span class="o">*</span><span class="n">this</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>        <span class="cm">/* A class implicitly gets a &quot;vtable&quot; pointer as its first field */</span>
+</span><span class='line'>        <span class="k">const</span> <span class="k">struct</span> <span class="n">A_vtable</span> <span class="o">*</span><span class="n">vtable</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Implementation of A&#39;s destructor */</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">A_destructor</span><span class="p">(</span><span class="k">struct</span> <span class="n">A</span> <span class="o">*</span><span class="n">this</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Implementation of A&#39;s foo method. */</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">A_foo</span><span class="p">(</span><span class="k">struct</span> <span class="n">A</span> <span class="o">*</span><span class="n">this</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Virtual table for class A generated by the compiler */</span>
+</span><span class='line'><span class="k">static</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">A_vtable</span> <span class="n">A_vtable_instance</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">A_destructor</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">A_foo</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">ret</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">struct</span> <span class="n">A</span> <span class="n">a</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="cm">/*</span>
+</span><span class='line'><span class="cm">         * Initialize class A by setting its virtual table pointer.</span>
+</span><span class='line'><span class="cm">         * This pointer can be set to a different &quot;table&quot; instance</span>
+</span><span class='line'><span class="cm">         * in case of derived classes. This happens implicitly during</span>
+</span><span class='line'><span class="cm">         * class construction.</span>
+</span><span class='line'><span class="cm">         */</span>
+</span><span class='line'>        <span class="n">a</span><span class="p">.</span><span class="n">vtable</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">A_vtable_instance</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="cm">/* Invoke A&#39;s foo method through the virtual table. */</span>
+</span><span class='line'>        <span class="n">ret</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">vtable</span><span class="o">-&gt;</span><span class="n">foo</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">a</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="cm">/*</span>
+</span><span class='line'><span class="cm">         * Call A&#39;s destructor. In our case this happens implicitly</span>
+</span><span class='line'><span class="cm">         * because of RAII.</span>
+</span><span class='line'><span class="cm">         * http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization</span>
+</span><span class='line'><span class="cm">         */</span>
+</span><span class='line'>        <span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">vtable</span><span class="o">-&gt;</span><span class="n">destructor</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">a</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="cm">/* Return from main */</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By looking at how virtual functions are called, it becomes apparent that invocation of a virtual function has some overhead. Basically, three steps need to be performed to call a virtual function:</p>
+
+<ol>
+<li>Offset must be applied to a virtual table in order to obtain an address of a function to call.</li>
+<li>A pointer to a virtual table must be dereferenced to read the address of a function.</li>
+<li>An <a href="http://en.wikipedia.org/wiki/Indirect_branch">indirect call</a> must be made to call a function by address stored in register.</li>
+</ol>
+
+
+<h3>x86_64 Machine Code</h3>
+
+<p>To demonstrate this, let&rsquo;s look at the disassembled function that gets an instance of class <code>A</code> by reference and calls its virtual <code>foo()</code> method:</p>
+
+<figure class='code'><figcaption><span>Simple Invocation of Virtual Method in C++</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">int</span> <span class="n">call</span><span class="p">(</span><span class="n">A</span><span class="o">&amp;</span> <span class="n">obj</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">obj</span><span class="p">.</span><span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>GCC would generate the following code for x86_64 with all optimizations turned off:</p>
+
+<figure class='code'><figcaption><span>Equivalent code in x86_64 assembler (unoptimised)</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='nasm'><span class='line'><span class="nf">push</span>   <span class="o">%</span><span class="nb">rbp</span>
+</span><span class='line'><span class="nf">mov</span>    <span class="o">%</span><span class="nb">rsp</span><span class="p">,</span><span class="o">%</span><span class="nb">rbp</span>
+</span><span class='line'><span class="nf">sub</span>    <span class="kc">$</span><span class="mh">0x10</span><span class="p">,</span><span class="o">%</span><span class="nb">rsp</span>
+</span><span class='line'><span class="nf">mov</span>    <span class="o">%</span><span class="nb">rdi</span><span class="p">,</span><span class="o">-</span><span class="mh">0x8</span><span class="p">(</span><span class="o">%</span><span class="nb">rbp</span><span class="p">)</span>
+</span><span class='line'><span class="nf">mov</span>    <span class="o">-</span><span class="mh">0x8</span><span class="p">(</span><span class="o">%</span><span class="nb">rbp</span><span class="p">),</span><span class="o">%</span><span class="nb">rax</span>
+</span><span class='line'><span class="nf">mov</span>    <span class="p">(</span><span class="o">%</span><span class="nb">rax</span><span class="p">),</span><span class="o">%</span><span class="nb">rax</span>
+</span><span class='line'><span class="nf">add</span>    <span class="kc">$</span><span class="mh">0x10</span><span class="p">,</span><span class="o">%</span><span class="nb">rax</span>
+</span><span class='line'><span class="nf">mov</span>    <span class="p">(</span><span class="o">%</span><span class="nb">rax</span><span class="p">),</span><span class="o">%</span><span class="nb">rax</span>
+</span><span class='line'><span class="nf">mov</span>    <span class="o">-</span><span class="mh">0x8</span><span class="p">(</span><span class="o">%</span><span class="nb">rbp</span><span class="p">),</span><span class="o">%</span><span class="nb">rdx</span>
+</span><span class='line'><span class="nf">mov</span>    <span class="o">%</span><span class="nb">rdx</span><span class="p">,</span><span class="o">%</span><span class="nb">rdi</span>
+</span><span class='line'><span class="nf">callq</span>  <span class="o">*%</span><span class="nb">rax</span>
+</span><span class='line'><span class="nf">leaveq</span>
+</span><span class='line'><span class="nf">retq</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Putting irrelevant parts aside, there are four instructions involved in virtual function call:</p>
+
+<ol>
+<li>Load vtable base address: <code>mov    (%rax),%rax</code></li>
+<li>Apply offset to get address of the function to call: <code>add    $0x10,%rax</code></li>
+<li>Read the address of the function: <code>mov    (%rax),%rax</code></li>
+<li>Perform indirect call: <code>callq  *%rax</code></li>
+</ol>
+
+
+<p>With optimization turned on, GCC omits a frame pointer, gets rid of one extra memory load, does not move around parameters on the stack. The code is much better, yet the most expensive operations are still there:</p>
+
+<figure class='code'><figcaption><span>Equivalent code in x86_64 assembler (optimised)</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='nasm'><span class='line'>   <span class="nf">mov</span>    <span class="p">(</span><span class="o">%</span><span class="nb">rdi</span><span class="p">),</span><span class="o">%</span><span class="nb">rax</span>
+</span><span class='line'>   <span class="nf">mov</span>    <span class="mh">0x10</span><span class="p">(</span><span class="o">%</span><span class="nb">rax</span><span class="p">),</span><span class="o">%</span><span class="nb">rax</span>
+</span><span class='line'>   <span class="nf">jmpq</span>   <span class="o">*%</span><span class="nb">rax</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>In more complex scenarios, such as multiple inheritance, compiler might also need to adjust an the value of <code>this</code> pointer that is implicitly passed to the virtual function so that it points to a correct base class in the inheritance hierarchy. One more extra level of indirection might also be needed in case of virtual inheritance.</p>
+
+<h2>Optimizations</h2>
+
+<p>There are a few optimizations that compilers can do to improve the runtime performance when it comes to virtual dispatch.</p>
+
+<h3>Extracting the Function Pointer</h3>
+
+<p>Calling a virtual function involves multiple steps. In case when virtual function is called multiple times, such as calling the function in a loop or subsequently calling the same function of the same object, compiler optimizes the code by performing the following steps just once:</p>
+
+<ol>
+<li>Loading the member pointer from a virtual table. It consists of a function pointer and information needed to adjust <code>this</code> pointer.</li>
+<li>Adjusting <code>this</code> pointer.</li>
+<li>Extracting a function pointer from member pointer.</li>
+</ol>
+
+
+<p>Then compilers simply perform the fourth step by calling a function using an extracted function pointer with adjusted <code>this</code> pointer.</p>
+
+<h4>GCC Extension</h4>
+
+<p>The function pointer extraction is &ldquo;unsafe&rdquo; and &ldquo;dangerous&rdquo; and done by the compiler automatically, behind the scenes. GCC, unlike other compilers, provides a non-standard extension for brave developers who know what they are doing, so that they can do this manually. It is part of pointer-to-member function (PMF) conversion functionality and is described in §7.6:</p>
+
+<blockquote><p><strong>7.6 Extracting the function pointer from a bound pointer to member function</strong></p>
+
+<p>In C++, pointer to member functions (PMFs) are implemented using a wide pointer of sorts to handle all the possible call mechanisms; the PMF needs to store information about how to adjust the <code>this</code> pointer, and if the function pointed to is virtual, where to find the vtable, and where in the vtable to look for the member function. If you are using PMFs in an inner loop, you should really reconsider that decision. If that is not an option, you can extract the pointer to the function that would be called for a given object/PMF pair and call it directly inside the inner loop, to save a bit of time.</p>
+
+<p>Note that you still pay the penalty for the call through a function pointer; on most modern architectures, such a call defeats the branch prediction features of the CPU. This is also true of normal virtual function calls.</p>
+
+<p>The syntax for this extension is</p>
+
+<pre><code>extern A a;
+extern int (A::*fp)();
+typedef int (*fptr)(A *);
+
+fptr p = (fptr)(a.*fp);
+</code></pre>
+
+<p>For PMF constants (i.e. expressions of the form <code>&amp;Klasse::Member</code>), no object is needed to obtain the address of the function. They can be converted to function pointers directly:</p>
+
+<pre><code>fptr p1 = (fptr)(&amp;A::foo);
+</code></pre>
+
+<p>You must specify <code>-Wno-pmf-conversions</code> to use this extension.</p></blockquote>
+
+<h4>Manual PMF</h4>
+
+<p>This is also possible to do with other compilers, though in a lot more dangerous manner. For example, having a member pointer and knowing the ABI of a given platform (for example, Itanium C++  ABI describes member pointers &ldquo;layout&rdquo; in §2.3 <a href="http://refspecs.linuxbase.org/cxxabi-1.83.html#member-pointers"><em>Member Pointers</em></a>), programmers can &ldquo;extract&rdquo; <code>this</code> adjustment information as well as raw function pointer, essentially performing PMF manually.</p>
+
+<h3>Devirtualization</h3>
+
+<p>In order to reduce the overhead and improve runtime performance, optimizing compilers attempt to convert calls to virtual functions to direct calls. This is done both within a procedure and interprocedurally as part of indirect inlining and interprocedural constant propagation.</p>
+
+<p>This optimization technique is implemented by most production grade C++ compilers. For example, both GCC and clang perform this optimization. To demonstrate what it does, let&rsquo;s say we got a piece of code written by a third-party company that does a lot of great things and looks like this:</p>
+
+<figure class='code'><figcaption><span>A great API</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">inline</span> <span class="kt">int</span> <span class="n">do_something</span><span class="p">(</span><span class="n">A</span><span class="o">&amp;</span> <span class="n">obj</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">obj</span><span class="p">.</span><span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>At this point, there isn&rsquo;t much that can be done because the end-user use case is unknown at this stage. But let&rsquo;s say the user of the above API writes the following program:</p>
+
+<figure class='code'><figcaption><span>A great API end-usage</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">B</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">B</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">do_something</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By looking at the code, it is obvious that class <code>B</code> is the final class in the inheritance hierarchy. Therefore, when <code>do_something()</code> function is called, calling <code>B</code>&rsquo;s <code>foo()</code> method directly would result in a functional equivalent of calling it through the virtual table.</p>
+
+<p>When compiling the above program with optimization turned on, compiler takes that information into account. Since compilers has a definition of <code>do_something()</code> function body, a wise compiler chooses to perform a direct call or even inline the body of a derived class&rsquo;s virtual function, which in the above case is <code>B::foo()</code>.</p>
+
+<p>Interestingly enough, since all of the code is known to the compiler, it optimizes the program further, eventually reducing it to just a few CPU instructions:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='nasm'><span class='line'><span class="nl">_main:</span>
+</span><span class='line'>  <span class="nf">mov</span>    <span class="nb">eax</span><span class="p">,</span><span class="mh">0x1</span>
+</span><span class='line'>  <span class="nf">ret</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>From the above observation we can draw a conclusion that when compiler has all of the information needed, it optimizes away the virtual dispatch.</p>
+
+<h3>Link Time Optimization</h3>
+
+<p>Needless to say that the above example is very simple and naive. In real-life it is unlikely that <code>do_something()</code> function body will be known. Because it was chosen to use virtual dispatch instead of template meta-programming, body of the function is likely complex and resides in a compiled object file. In that case compiler would not be able to deduce the information it needs to perform devirtualization. This makes this optimization unlikely to occur in real-life.</p>
+
+<p>There is a way to make it work though. Both GCC and clang provide a feature called Link Time Optimization (aka LTO). When this feature is enabled, compilers generate object files in intermediate language. GCC uses <a href="http://gcc.gnu.org/onlinedocs/gccint/GIMPLE.html">GIMPLE</a>  for this purpose while Clang is using <a href="http://llvm.org/docs/BitCodeFormat.html">LLVM bitcode</a>. Such &ldquo;intermediate&rdquo; object files can later be used by the compiler to perform intermodular optimizations. At the same time, source code is not required to be distributed shown, which makes it great for paranoid software vendors. Intermodular optimizations, which in case of LTO are performed at linking stage, allow the compiler to inline functions defined in separate object files or, what&rsquo;s most important in our case, perform devirtualization across different translation units.</p>
+
+<p>Getting back to our simple example, given that user program is stored in <code>file1.cc</code> and <code>do_something()</code> function is defined in <code>file2.cc</code>, compiler does not perform devirtualization. However, when both files are compiled with LTO enabled, the resulting program is optimized down to two CPU instructions. Here is an example of compiling and linking two separate files with LTO using GCC:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>g++ -Wall -O3 -flto -c ./file1.cc
+</span><span class='line'><span class="nv">$ </span>g++ -Wall -O3 -flto -c ./file2.cc
+</span><span class='line'><span class="nv">$ </span>g++ -Wall -O3 -flto ./file1.o ./file2.o -o prog
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The only time when this won&rsquo;t work is when the code is provided in a form of shared object because LTO does not work across shared object boundaries.</p>
+
+<p>So if you plan on providing a library that must use a virtual dispatch and is performance critical to the point where tradeoffs of the virtual dispatch start to matter, consider distributing the code in a form of pre-compiled static library built with LTO support.</p>
+
+<h3>C++11 Final Keyword</h3>
+
+<p>Sometimes compilers are not able to determine that a class is a final instance in the inheritance hierarchy. Consider the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">B</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">do_something</span><span class="p">(</span><span class="n">B</span><span class="o">&amp;</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">b</span><span class="p">.</span><span class="n">foo</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the above example, compiler does not know whether some other classes could inherit from class <code>B</code> or not. Therefore, it would not devirtualize the invocation of <code>b.foo()</code> when generating the code for <code>do_something()</code> function body.</p>
+
+<p>If, however, nothing else inherits from <code>B</code>, then programmers might want to consider using a <code>final</code> keyword that was introduced in C++11. Once the class <code>B</code> is marked as <code>final</code>, compiler knows that <code>B</code> is the final instance in the inheritance tree and immediately optimizes away all indirect calls.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">struct</span> <span class="n">B</span> <span class="n">final</span> <span class="o">:</span> <span class="n">A</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="o">~</span><span class="n">B</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">virtual</span> <span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Devirtualization in C</h3>
+
+<p>Even though C language does not have a concept of virtual dispatch built into the language, compilers do recognize this concept and can still optimize away all indirect calls. Both GCC and clang have compiled a simple <a href="#c_vtable_example">C virtual dispatch example</a> program into, well, almost nothing. Here is what Clang generated:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="mo">00000000004004</span><span class="n">b0</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;:</span>
+</span><span class='line'>  <span class="mi">4004</span><span class="nl">b0:</span>       <span class="mi">31</span> <span class="n">c0</span>                   <span class="n">xor</span>    <span class="n">eax</span><span class="p">,</span><span class="n">eax</span>
+</span><span class='line'>  <span class="mi">4004</span><span class="nl">b2:</span>       <span class="n">c3</span>                      <span class="n">ret</span>
+</span><span class='line'>  <span class="mi">4004</span><span class="nl">b3:</span>       <span class="mi">66</span> <span class="mi">2</span><span class="n">e</span> <span class="mf">0f</span> <span class="mf">1f</span> <span class="mi">84</span> <span class="mo">00</span> <span class="mo">00</span>    <span class="n">nop</span>    <span class="n">WORD</span> <span class="n">PTR</span> <span class="nl">cs:</span><span class="p">[</span><span class="n">rax</span><span class="o">+</span><span class="n">rax</span><span class="o">*</span><span class="mi">1</span><span class="o">+</span><span class="mh">0x0</span><span class="p">]</span>
+</span><span class='line'>  <span class="mi">4004</span><span class="nl">ba:</span>       <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span>
+</span><span class='line'>  <span class="mi">4004</span><span class="nl">bd:</span>       <span class="mf">0f</span> <span class="mf">1f</span> <span class="mo">00</span>                <span class="n">nop</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rax</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And here is what GCC have done:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="mo">0000000000400400</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;:</span>
+</span><span class='line'>  <span class="mi">400400</span><span class="o">:</span>       <span class="mi">31</span> <span class="n">c0</span>                   <span class="n">xor</span>    <span class="n">eax</span><span class="p">,</span><span class="n">eax</span>
+</span><span class='line'>  <span class="mi">400402</span><span class="o">:</span>       <span class="n">c3</span>                      <span class="n">ret</span>
+</span><span class='line'>  <span class="mi">400403</span><span class="o">:</span>       <span class="mi">90</span>                      <span class="n">nop</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>Thanks for reading!</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='nasm'><span class='line'><span class="nl">_the_end:</span>
+</span><span class='line'>  <span class="nf">as</span> <span class="nb">al</span><span class="nv">ways</span>
+</span><span class='line'>  <span class="nf">thanks</span> <span class="nv">for</span>
+</span><span class='line'>  <span class="nf">reading</span>
+</span><span class='line'>  <span class="nf">nop</span>
+</span><span class='line'>  <span class="nf">nop</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="http://741MHz.com/wide-pointers/">Why C++ Member Function Pointers Are 16 Bytes Wide</a></li>
+<li><a href="http://741MHz.com/final-override/">C++11 Final Override</a></li>
+<li><a href="http://741MHz.com/switch/">From Switch Statement Down to Machine Code</a></li>
+<li><a href="http://741MHz.com/blog/categories/c-plus-plus-11">Posts about C++11 features</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Why Do We Ask Questions?]]></title>
@@ -4600,126 +5079,6 @@ In English sentences, punctuation (such as periods, exclamations, parentheses) a
 <p><a href="http://stackexchange.com/"><img src="http://741MHz.com/images/stack-exchange-top-sites.png"></a></p>
 
 <p>Hope it helps. Good Luck!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[The Evolution of Computer Networking]]></title>
-    <link href="http://741MHz.com/network-evolution/"/>
-    <updated>2013-03-29T21:00:00-04:00</updated>
-    <id>http://741MHz.com/network-evolution</id>
-    <content type="html"><![CDATA[<p>Do you remember 56k modems? Me too. The sound it used to produce when connecting still gives me a warm fuzzy feeling and a bit of excitement. The last time I have used that modem was in 2003. Fifty six thousand bits per seconds — that was a lot back then. For the sake of comparison, I went to speedtest.net to check the speed of my phone that uses 4G LTE from Verizon, and my Verizon Fios home network. Here are my results:</p>
-
-<p><img src="http://741MHz.com/images/network-evolution/home_speed_test.jpg"></p>
-
-<p>The phone’s Internet connection is roughly 263 faster; the home network is 821 times faster. This is just mind-blowing. But that is a simple home networking — a standard phone and a standard gigabit Ethernet adapter. The industrial networking is a lot more complicated, a lot faster, and is far ahead of technologies commonly used in our homes. In order to achieve lower latency characteristics and better bandwidth, the industry took a few large steps to get where we are now. Let’s take a quick look at what is going on there!</p>
-
-<h2>Direct Memory Access</h2>
-
-<p>One of the first steps was an introduction of <a href="http://en.wikipedia.org/wiki/Direct_memory_access">Direct Memory Access</a>, or <em>DMA</em>. Basically, it allowed peripheral devices to access computer’s memory without having CPU being involved in this process. I was trying to find some information about the history of DMA and found <a href="http://www.ganssle.com/articles/adma.htm">this interesting article</a> dated back to 1994. At that time, DMA was gaining popularity in embedded systems. Today, it can be found in any computer, and is used in all systems and not only embedded.</p>
-
-<h2>Network Interface Controllers</h2>
-
-<p>Before, computers used to access the network by communicating with the <a href="http://en.wikipedia.org/wiki/PHY_(chip">Ethernet PHY</a>) directly. Its only task is to send and receive data over a physical medium, such as famous <a href="http://en.wikipedia.org/wiki/Registered_jack">RJ-45 cable</a>.</p>
-
-<p><img src="http://741MHz.com/images/network-evolution/phy_and_cat6.jpg"></p>
-
-<p>The problem was in having CPU perform a lot of simple yet time-consuming operations in order to communicate over the network using just a PHY device. With the ever growing demand for better performance, engineers came up with special hardware called <a href="http://en.wikipedia.org/wiki/Network_interface_controller">Network Interface Controller</a> (NIC). Initially, it was handling tasks related to the <a href="http://en.wikipedia.org/wiki/Data_link_layer">Data Link Layer</a>, such as <a href="http://en.wikipedia.org/wiki/Media_access_control">Media Access Control</a>. This made it possible to perform many tasks on the card and not waste CPU resources. For example, NIC could filter data that was not intended for this computer (based on MAC address or IP address, for example).</p>
-
-<h2>PCI Express 3.0</h2>
-
-<p>The first NICs used to communicate with PC over <a href="http://en.wikipedia.org/wiki/Industry_Standard_Architecture">ISA bus</a>. ISA was later replaced with PCI and then <a href="http://en.wikipedia.org/wiki/PCI_Express#PCI_Express_3.0">PCI Express</a> (aka PCIe). The PCIe has evolved significantly since its first release. The currently used version 3 of the PCIe can handle up to 8 gigatransfers per second and provides a tremendous advantage not only to Network Interface Controllers, but general purpose computing with technologies like <a href="http://en.wikipedia.org/wiki/CUDA">CUDA</a>, <a href="http://en.wikipedia.org/wiki/OpenCL">OpenCL</a>, <a href="http://en.wikipedia.org/wiki/C%2B%2B_AMP">C++ AMP</a> etc. The version 4 of the PCIe standard is already on its way.</p>
-
-<p><img src="http://741MHz.com/images/network-evolution/nic_in_90s.jpg"></p>
-
-<h2>Optical Fiber, 100 Gigabit Ethernet and Special Hardware</h2>
-
-<p>The old good copper cables got replaced with <a href="http://en.wikipedia.org/wiki/Optical_fiber">optical fiber</a> which are effectively transferring data with a speed of light. The speed at which network cards can transfer data has also increased. It jumped from 10 to 100 Mbps, then from 100 Mbps to 1 Gigabit per second – a common speed our PCs are operating at home these days. <a href="https://en.wikipedia.org/wiki/10-gigabit_Ethernet">10 Gigabit Ethernet</a> started to evolve around 2002 and over six million ports were shipped by 2010. This is the most common Ethernet speed currently used by the industry. In 2010, there were two new Ethernet standards supporting <a href="https://en.wikipedia.org/wiki/100_Gigabit_Ethernet">40 and 100 Gigabit per second</a> line rates. This technology is already being used today, powering our “Clouds” and having people ranting about “Big Data”.</p>
-
-<p>One interesting thing about these new and crazy bandwidth capabilities is that computers cannot really handle it, so you cannot just plug a 100 GbE controller into your PCIe slot and download the whole Internet. Not at all. Simply because no general-purpose CPU can handle that amount of data, at least not yet. So far these loads can only be handled by special hardware – Ethernet ICs which are commonly implemented as <a href="http://en.wikipedia.org/wiki/Application-specific_integrated_circuit">ASICs</a>, but there are also <a href="http://en.wikipedia.org/wiki/Field-programmable_gate_array">FPGA</a> based solutions. One of the great examples of such devices are network switches. For example, Arista makes a few switches capable of handling 1.28 terabytes per second.</p>
-
-<p>If you are a big electronics enthusiast and know how to program FPGAs, then you can make your own 100 GbE device at home. There are plenty of kits available on the market already. For example, the following Altera board looks very interesting:</p>
-
-<p><img src="http://741MHz.com/images/network-evolution/100g_dk_stratix_v_gx.jpg"></p>
-
-<p>Though I can think of better ways to spend $25,000. But that’s just me. Let’s get back to the software and general-purpose CPUs. Engineers from all around the world have been trying to solve a problem of having a software that can handle large amount of traffic with lowest possible latency, and there is indeed some progress.</p>
-
-<h2>Software, Berkeley Sockets and C10K</h2>
-
-<p><img class="right" src="http://741MHz.com/images/network-evolution/code_monkey_by_gloriouskyle.jpg"></p>
-
-<p>The software hasn’t really changed much in the last two decades, unfortunately. Developers are still using a classic <a href="http://en.wikipedia.org/wiki/Berkeley_sockets">Berkeley Socket API</a> for network programming, as they used two decades ago. This has been a big problem because sticking to the same old programming model does not allow for a lot of great optimizations.</p>
-
-<p>In early 2000s, Alexey Kuznetsov, Jamal Hadi Salim and Robert Olsson have developed a new technique for network packet processing called «<a href="http://en.wikipedia.org/wiki/New_API">New API</a>». It was not affecting the socket API used by the application developers. Instead, it was a modification to the device driver packet processing framework that was designed to improve the performance of high-speed networking.</p>
-
-<p>There were also a few improvements for which programmers should be grateful and thank to NIC designers. Modern NICs provide something called «offloading» where some tasks that were done by software are now handled by the NICs. This at least includes a <a href="http://en.wikipedia.org/wiki/Large_segment_offload">Large Segment Offload</a>, <a href="http://en.wikipedia.org/wiki/Large_receive_offload">Large Receive Offload</a>, and TCP/IP, UDP and Ethernet checksum calculation. These “tricks” are very common these days and won’t surprise anyone.</p>
-
-<p>The above improvements helped a lot but it soon turned out to be not enough. In 2003, Dan Kegel described <a href="http://www.kegel.com/c10k.html">the C10K problem</a>. It highlights that hardware is no longer a bottleneck – the software is, or at least the way it is written. And that affects everything and not only the Web. Here is a real world example from a financial industry. I remember when I first joined the company I am currently with, we had an application designed to process <a href="http://opradata.com/">OPRA data</a> – an information aggregated from participating <a href="http://en.wikipedia.org/wiki/Option_(finance">option</a>) exchanges (currently 11). The data was distributed over some 30+ multicast channels at that time, and the application was creating a <a href="http://en.wikipedia.org/wiki/Thread_(computing">thread</a>) per UDP socket/channel to handle all of that data. That was truly embarrassing, and as the amount of data increased over time, the application would just lose half of the data or even crash. Luckily, we quickly threw that crappy app away and wrote a new one that handles everything with ease even during the peak loads.</p>
-
-<p>I was laughing out loud when a few days ago, <a href="http://www.ft.com/intl/cms/s/0/5771ec7a-90ce-11e2-862b-00144feabdc0.html">according to Mr. O’Malia</a>, the government reportedly had similar problems after deciding to regulate a swap market. After market participants started to report their activity, the government simply failed to handle the amount of data:</p>
-
-<blockquote><p>The commission now receives data on thousands of swaps each day. So far, however, none of our computer programs loads this data without crashing.</p></blockquote>
-
-<p>As a result of a higher awareness of this problem among <a href="https://www.youtube.com/watch?v=v4Wy7gRGgeA">code monkeys</a>, an asynchronous network I/O approach quickly gained popularity and more applications started to use it. Generally speaking, a well written application using asynchronous approach can handle a reasonable amount of traffic on a powerful multi-core server – at least enough for most of generic applications like web servers, bit torrents etc. Yet handling a constant load of anything close to 10 GbE is still beyond the imaginable. And even if CPUs could handle that, that would leave no resources to actually do something meaningful with that data. This slowly but surely becomes a problem. Luckily, there are a number of solutions aiming at solving this problem by taking the whole new approach to computer networking.</p>
-
-<h2>What’s Trending</h2>
-
-<p>A lot of work towards a better networking has been emerging since 2005 with a number of companies already providing industrial grade solutions today. There is not yet an official name for it, no standard, and no solutions are exactly the same. Yet they all share the same philosophy and similar implementations. There are few main points shared by all of them:</p>
-
-<ul>
-<li>Operating system kernel is a bottleneck and its use must be avoided.</li>
-<li>Applications must access the NIC directly and perform DMA transactions.</li>
-<li>As much work as possible must be done by the NIC hardware.</li>
-</ul>
-
-
-<p><img class="right" src="http://741MHz.com/images/network-evolution/modern_nic.png" title="'Modern NIC with full kernel-bypass, offload and zero-copy support as well as on-board FPGA for custom hardware logic.'" >
-There are three buzz words for the above points – Kernel-Bypass, Zero-Copy and Offload respectively. Here are just a few popular solution provides that implement all of the above and provide extremely high-performance networking solutions (in no particular order):</p>
-
-<ul>
-<li><a href="http://www.6wind.com/">6WIND</a></li>
-<li><a href="http://www.plda.com/index.php">PLDA</a></li>
-<li><a href="http://www.napatech.com/">Napatech</a></li>
-<li><a href="http://www.mellanox.com/">Mellanox</a></li>
-<li><a href="http://www.myricom.com/">Myricom</a></li>
-<li><a href="http://www.solarflare.com/">SolarFlare</a></li>
-<li><a href="http://www.velocytech.com/">VelociTech</a></li>
-<li><a href="http://www.intilop.com/">Intilop</a></li>
-<li><a href="http://www.ntop.org/products/pf_ring/dna/">NTOP.ORG DNA</a></li>
-</ul>
-
-
-<p>Some of the technologies provided by the above companies can speed up network processing anywhere from 20 to 100 times. In order to achieve the best performance, however, a different programming model (as well as API) must be used. It is simply impossible to have a Berkeley Socket API anymore — it is way too old and does not account for many things, making it impossible to write the efficient (from hardware point of view) program.</p>
-
-<h2>What To Expect Next</h2>
-
-<p>Given the current trends, it would be logical to expect a few things to happen.</p>
-
-<h3>Standard API</h3>
-
-<p>The first thing is a consolidation of APIs. Having 10+ different ways to do the same thing just does not sound good. Sooner or later we should get a standard API that would provide developers with a stable, thought-through and efficient way to program network applications using these cutting edge technologies. This would probably be something like <a href="http://en.wikipedia.org/wiki/OpenCL">OpenCL</a> but for networking.</p>
-
-<h3>Lower Cost</h3>
-
-<p>To get one of those programmable network adapters of the new era today, one should pay through the nose. The price can vary anywhere from $5000 to $50000, depending on the functionality provided. We should (hopefully) see the price go down as technology gets stabilized and the sales increase in quantities. After all, creating such a device is no harder than an iPhone. Yet we don’t pay 50K for an iPhone, right?</p>
-
-<h3>Integration</h3>
-
-<p>Recently, the Xilinx has released the <a href="http://www.xilinx.com/publications/prod_mktg/quickpath-interconnect-ip-product-brief.pdf">worlds first FPGA running QPI</a> at full width — 21 lanes at 6.4 GHz per lane. So we can now have a motherboard that has a cutting edge Intel CPU for general-purpose processing in one socket, and a special purpose FPGA in another socket, both sharing the host memory at maximum speed and the lowest possible latency. In other words, Intel CPU will communicate with FPGA just like it communicates with other CPUs on the same board. This will indeed help to get rid of PCI Express that has always been a bottleneck when it comes to both throughput and latency. Amazing, isn’t it? Below is the video from Xilinx explaining this in more details:</p>
-
-<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/NHkpMlL0bZ8 "></iframe></div>
-
-
-<p>At the same time Altera, another leading FPGA vendor, has released <a href="http://www.altera.com/corporate/news_room/releases/2012/products/nr-optical-fpga-demo.html">the worlds first optical FPGA technology</a> that was developed in conjunction with Avago Technologies, breaking through the barriers of traditional copper interconnect. To put it simple, we can now plug the optical fiber directly into the FPGA’s transceiver and achieve a bandwidth of approximately 120 gigabits per second:</p>
-
-<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/cC5g3rE9DZ8 "></iframe></div>
-
-
-<p>Now, here is what I think is going to happen. In the next few years we would have an FPGA chip sitting in a CPU socket right next to the high-end Intel CPU, interconnected by QPI with the highest possible bandwidth, and lowest possible latency. The FPGA would have an optical fiber cable attached to it and beaming the data straight into the fabrics. The FPGA would then handle all of the network processing, including high-level protocols such as TCP/IP or even higher ones like <a href="https://bitcoin.it/wiki/Protocol_specification">BitCoin</a>, <a href="http://fixprotocol.org/">FIX</a>, etc.</p>
-
-<p>Once that is done, we could take all of that and integrate it with a human’s brain :)</p>
-
-<p>Hope it was interesting. Thanks for reading!</p>
 ]]></content>
   </entry>
   

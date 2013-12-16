@@ -4,7 +4,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Ranting @ 741 MHz</title>
+  <title>C++ Devirtualization - Ranting @ 741 MHz</title>
   <meta name="author" content="741MHz.com">
 
   
@@ -16,7 +16,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://741MHz.com">
+  <link rel="canonical" href="http://741MHz.com/devirtualize">
   <link href="/favicon.png" type="image/png" rel="icon">
   <link href="/atom.xml" rel="alternate" title="Ranting @ 741 MHz" type="application/atom+xml">
 
@@ -103,12 +103,8 @@
         <div id="content">
           <div class="row">
   <div class="page-content col-md-9">
-    <div class="blog-index">
+    <article class="hentry" role="article">
       
-      
-      
-        <article class="post">
-          
   <header class="page-header">
     
       <p class="meta text-muted text-uppercase">
@@ -127,18 +123,21 @@
 
 <span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-12-15T21:12:00-05:00" pubdate data-updated="true">Dec 15<span>th</span>, 2013</time>
         
-           | <a href="/devirtualize/#disqus_thread"
-             data-disqus-identifier="http://741MHz.com/devirtualize/">Comments</a>
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://741MHz.com">Comments</a>
         
       </p>
     
     
-      <h1 class="entry-title"><a href="/devirtualize/">C++ Devirtualization</a></h1>
+    <h1 class="entry-title">
+        C++ Devirtualization
+        
+    </h1>
     
   </header>
 
 
-  <div class="entry-content clearfix"><p>Using a virtual dispatch might get relatively expensive in terms of clock cycles due to multiple levels of <a href="http://en.wikipedia.org/wiki/Indirection">indirections</a> including <a href="http://en.wikipedia.org/wiki/Indirect_branch">indirect branching</a> as well as <a href="http://gcc.gnu.org/onlinedocs/gcc/Bound-member-functions.html"><code>this</code> pointer adjustment</a>. Wise programmers do not use virtual dispatch without a good reason but oftentimes it is required either by design or when creating non-template reusable components/libraries and the final implementation of some parts of the program is not known.</p>
+<div class="entry-content clearfix"><p>Using a virtual dispatch might get relatively expensive in terms of clock cycles due to multiple levels of <a href="http://en.wikipedia.org/wiki/Indirection">indirections</a> including <a href="http://en.wikipedia.org/wiki/Indirect_branch">indirect branching</a> as well as <a href="http://gcc.gnu.org/onlinedocs/gcc/Bound-member-functions.html"><code>this</code> pointer adjustment</a>. Wise programmers do not use virtual dispatch without a good reason but oftentimes it is required either by design or when creating non-template reusable components/libraries and the final implementation of some parts of the program is not known.</p>
 
 <p>Optimizing compilers do a great deal of work trying to optimize virtual dispatch as much as possible, sometimes even eliminating it in the end program entirely.  Let&rsquo;s take a quick look at how compilers implement virtual dispatch, how it can be optimized away and go over a few tricks that programmers can do to achieve better runtime performance.</p>
 
@@ -610,36 +609,82 @@ fptr p = (fptr)(a.*fp);
 </ul>
 
 </div>
+
+
+      <footer>
+        <p class="meta text-muted">
+          
+  
+
+<span class="glyphicon glyphicon-user"></span> <span class="byline author vcard">Posted by <span class="fn">741MHz.com</span></span>
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2013-12-15T21:12:00-05:00" pubdate data-updated="true">Dec 15<span>th</span>, 2013</time>
+          
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category label label-primary' href='/blog/categories/c-plus-plus/'>C++</a> <a class='category label label-primary' href='/blog/categories/tech/'>Tech</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://741MHz.com/devirtualize/" data-via="" data-counturl="http://741MHz.com/devirtualize/" >Tweet</a>
   
   
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
 
-
-        </article>
-      
-    </div>
-
-    <ul class="pager">
-      
-        <li class="previous"><a href="/blog/page/2/">&larr;&nbsp;Older</a></li>
-      
-      <li><a href="/blog/archives">Blog Archives</a></li>
-      
-        <li class="next disabled"><a href="#">Newer&nbsp;&rarr;</a></li>
-      
-    </ul>
+        
+        
+          <ul class="meta text-muted pager">
+            
+            <li class="previous"><a href="/why-do-we-ask-questions/" title="Previous Post: Why Do We Ask Questions?">&laquo; Why Do We Ask Questions?</a></li>
+            
+            
+          </ul>
+        
+      </footer>
+    </article>
+    
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+      </section>
+    
   </div>
 
   
-    <aside class="sidebar col-md-3">
-      
-        <section class="panel panel-default">
+  <aside class="sidebar col-md-3">
+    
+      <section class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title">Recent Posts</h3>
   </div>
   
   <div id="recent_posts" class="list-group">
     
-    <a class="list-group-item " href="/devirtualize/">C++ Devirtualization</a>
+    <a class="list-group-item active" href="/devirtualize/">C++ Devirtualization</a>
     
     <a class="list-group-item " href="/why-do-we-ask-questions/">Why Do We Ask Questions?</a>
     
@@ -653,7 +698,7 @@ fptr p = (fptr)(a.*fp);
     
     <a class="list-group-item " href="/default-function-template-arguments/">Default Template Arguments for Functions</a>
     
-    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With &#8216;Auto&#8217; Keyword</a>
+    <a class="list-group-item " href="/auto-type/">Automatic Type Deduction With 'Auto' Keyword</a>
     
     <a class="list-group-item " href="/decltype/">Type of Expression in C++</a>
     
@@ -713,8 +758,8 @@ fptr p = (fptr)(a.*fp);
 (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
 
-      
-    </aside>
+    
+  </aside>
   
 </div>
 
@@ -736,7 +781,10 @@ fptr p = (fptr)(a.*fp);
       var disqus_shortname = '741mhz';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://741MHz.com/devirtualize/';
+        var disqus_url = 'http://741MHz.com/devirtualize/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
